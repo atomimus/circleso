@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { access, mkdir, readFile, rename, unlink } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 type SpecDefinition = {
@@ -23,6 +24,7 @@ const SPECS: SpecDefinition[] = [
 ];
 
 const ROOT = process.cwd();
+const require = createRequire(import.meta.url);
 
 async function run() {
   const outDir = path.resolve(ROOT, "src", "generated");
@@ -58,16 +60,12 @@ function exportsPaths(contents: string) {
 }
 
 async function runOpenApiTypescript(inputPath: string, outputPath: string) {
-  const binName = process.platform === "win32" ? "openapi-typescript.cmd" : "openapi-typescript";
-  const localBin = path.resolve(ROOT, "node_modules", ".bin", binName);
-  const bin = (await access(localBin)
-    .then(() => localBin)
-    .catch(() => binName)) as string;
-  const args = [inputPath, "-o", outputPath, "--alphabetize"];
-  const useShell = process.platform === "win32" && bin.endsWith(".cmd");
+  const pkgPath = require.resolve("openapi-typescript/package.json");
+  const cliPath = path.resolve(path.dirname(pkgPath), "bin", "cli.js");
+  const args = [cliPath, inputPath, "-o", outputPath, "--alphabetize"];
 
   return new Promise<void>((resolve, reject) => {
-    const child = spawn(bin, args, { stdio: "inherit", shell: useShell });
+    const child = spawn(process.execPath, args, { stdio: "inherit" });
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
