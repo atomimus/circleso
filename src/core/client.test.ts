@@ -5,7 +5,7 @@ import { HEADER_AUTHORIZATION, HEADER_CONTENT_TYPE } from "./headers";
 describe("createClient", () => {
   it("builds urls, headers, and parses JSON", async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const request = input instanceof Request ? input : new Request(input, init);
+      const _request = input instanceof Request ? input : new Request(input, init);
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: {

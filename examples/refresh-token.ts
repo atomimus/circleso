@@ -16,7 +16,7 @@ const auth = createAuth({
 
 try {
   const data = await auth.accessToken.refresh({
-    body: { refresh_token: refreshToken },
+    refresh_token: refreshToken,
   });
 
   console.log(JSON.stringify(data, null, 2));

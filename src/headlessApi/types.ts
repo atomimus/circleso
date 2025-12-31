@@ -40,35 +40,28 @@ export type RequestBody<Path extends HeadlessPath, Method extends HeadlessMethod
   Operation<HeadlessPaths, Path, Method>
 >;
 
-type HasRequiredBody<Path extends HeadlessPath, Method extends HeadlessMethod> = Operation<
-  HeadlessPaths,
-  Path,
-  Method
-> extends { requestBody: { content: unknown } }
-  ? true
-  : false;
-
-export type RequestOptions<Path extends HeadlessPath, Method extends HeadlessMethod> = {
-  query?: QueryParams<Path, Method>;
+export type RequestMeta = {
   headers?: HeadersInit;
   signal?: AbortSignal;
 };
 
+type FlatQueryOptions<Path extends HeadlessPath, Method extends HeadlessMethod> = RequestMeta &
+  (QueryParams<Path, Method> extends undefined ? object : QueryParams<Path, Method>);
+
+export type RequestOptions<
+  Path extends HeadlessPath,
+  Method extends HeadlessMethod,
+> = FlatQueryOptions<Path, Method>;
+
 type EmptyObject = object;
 
-type BodyOption<Path extends HeadlessPath, Method extends HeadlessMethod> = HasRequiredBody<
-  Path,
-  Method
-> extends true
-  ? { body: RequestBody<Path, Method> }
-  : RequestBody<Path, Method> extends undefined
-    ? EmptyObject
-    : { body?: RequestBody<Path, Method> };
+type FlatBodyOptions<Path extends HeadlessPath, Method extends HeadlessMethod> = RequestMeta &
+  (RequestBody<Path, Method> extends undefined ? object : RequestBody<Path, Method>);
 
 export type RequestOptionsWithBody<
   Path extends HeadlessPath,
   Method extends HeadlessMethod,
-> = RequestOptions<Path, Method> & BodyOption<Path, Method>;
+> = FlatBodyOptions<Path, Method>;
 
 type PathOption<Path extends HeadlessPath, Method extends HeadlessMethod> = PathParams<
   Path,
@@ -80,4 +73,7 @@ type PathOption<Path extends HeadlessPath, Method extends HeadlessMethod> = Path
 export type RequestConfig<
   Path extends HeadlessPath,
   Method extends HeadlessMethod,
-> = RequestOptionsWithBody<Path, Method> & PathOption<Path, Method>;
+> = (Method extends "post" | "put" | "patch"
+  ? RequestOptionsWithBody<Path, Method>
+  : RequestOptions<Path, Method>) &
+  PathOption<Path, Method>;

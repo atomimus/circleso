@@ -24,7 +24,8 @@ const headless = createHeadless({
 
 try {
   const data = await headless.bookmarks.create({
-    body: { record_id: recordId, bookmark_type: bookmarkType },
+    record_id: recordId,
+    bookmark_type: bookmarkType,
   });
 
   console.log(JSON.stringify(data, null, 2));

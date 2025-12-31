@@ -3,8 +3,18 @@ import type { RequestOptions, RequestOptionsWithBody } from "../types";
 
 export function createFlaggedContentsResource(request: AdminRequester) {
   return {
+    /**
+     * List flagged content.
+     * @param options Query params (flat) plus request metadata.
+     * @returns Flagged content list response.
+     */
     list: (options?: RequestOptions<"/api/admin/v2/flagged_contents", "get">) =>
       request.get("/api/admin/v2/flagged_contents", options),
+    /**
+     * Report flagged content.
+     * @param options Body fields (flat) plus request metadata.
+     * @returns Report response.
+     */
     report: (options: RequestOptionsWithBody<"/api/admin/v2/flagged_contents", "post">) =>
       request.post("/api/admin/v2/flagged_contents", options),
   };

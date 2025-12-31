@@ -58,7 +58,7 @@ const sdk = new CircleSo({
   retries: { retries: 2, baseDelayMs: 200, maxDelayMs: 2000 },
 });
 
-const posts = await sdk.admin.posts.list({ query: { page: 1, per_page: 20 } });
+const posts = await sdk.admin.posts.list({ page: 1, per_page: 20 });
 console.log(posts?.records ?? []);
 ```
 
@@ -78,7 +78,8 @@ const admin = createAdmin({
 });
 
 const data = await admin.accessGroups.list({
-  query: { page: 1, per_page: 50 },
+  page: 1,
+  per_page: 50,
 });
 
 console.log(data?.records ?? []);
@@ -101,7 +102,8 @@ const headless = createHeadless({
 });
 
 const data = await headless.bookmarks.list({
-  query: { page: 1, per_page: 20 },
+  page: 1,
+  per_page: 20,
 });
 
 console.log(data?.records ?? []);
@@ -140,7 +142,7 @@ const auth = createAuth({
 });
 
 const data = await auth.accessToken.refresh({
-  body: { refresh_token: refreshToken },
+  refresh_token: refreshToken,
 });
 
 console.log(data?.access_token);
@@ -225,7 +227,8 @@ const pages = paginateOffset({
   maxItems: 120,
   fetchPage: async ({ page, perPage }) => {
     const data = await admin.accessGroups.list({
-      query: { page, per_page: perPage },
+      page,
+      per_page: perPage,
     });
     return data ?? { records: [], has_next_page: false };
   },
@@ -299,12 +302,6 @@ Run the sync and generation scripts together:
 ```bash
 npm run spec:sync && npm run gen:types
 ```
-
-## Versioning and changelog
-
-- Follows SemVer: breaking changes are MAJOR, new features MINOR, fixes PATCH.
-- While pre-1.0, minor versions may include breaking changes.
-- Changelog notes are published in GitHub Releases alongside version tags.
 
 ## License
 

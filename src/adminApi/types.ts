@@ -40,35 +40,28 @@ export type RequestBody<Path extends AdminPath, Method extends AdminMethod> = Bo
   Operation<AdminPaths, Path, Method>
 >;
 
-type HasRequiredBody<Path extends AdminPath, Method extends AdminMethod> = Operation<
-  AdminPaths,
-  Path,
-  Method
-> extends { requestBody: { content: unknown } }
-  ? true
-  : false;
-
-export type RequestOptions<Path extends AdminPath, Method extends AdminMethod> = {
-  query?: QueryParams<Path, Method>;
+export type RequestMeta = {
   headers?: HeadersInit;
   signal?: AbortSignal;
 };
 
-type EmptyObject = object;
+type FlatQueryOptions<Path extends AdminPath, Method extends AdminMethod> = RequestMeta &
+  (QueryParams<Path, Method> extends undefined ? object : QueryParams<Path, Method>);
 
-type BodyOption<Path extends AdminPath, Method extends AdminMethod> = HasRequiredBody<
+export type RequestOptions<Path extends AdminPath, Method extends AdminMethod> = FlatQueryOptions<
   Path,
   Method
-> extends true
-  ? { body: RequestBody<Path, Method> }
-  : RequestBody<Path, Method> extends undefined
-    ? EmptyObject
-    : { body?: RequestBody<Path, Method> };
+>;
+
+type EmptyObject = object;
+
+type FlatBodyOptions<Path extends AdminPath, Method extends AdminMethod> = RequestMeta &
+  (RequestBody<Path, Method> extends undefined ? object : RequestBody<Path, Method>);
 
 export type RequestOptionsWithBody<
   Path extends AdminPath,
   Method extends AdminMethod,
-> = RequestOptions<Path, Method> & BodyOption<Path, Method>;
+> = FlatBodyOptions<Path, Method>;
 
 type PathOption<Path extends AdminPath, Method extends AdminMethod> = PathParams<
   Path,
@@ -77,7 +70,10 @@ type PathOption<Path extends AdminPath, Method extends AdminMethod> = PathParams
   ? EmptyObject
   : { path: PathParams<Path, Method> };
 
-export type RequestConfig<
-  Path extends AdminPath,
-  Method extends AdminMethod,
-> = RequestOptionsWithBody<Path, Method> & PathOption<Path, Method>;
+export type RequestConfig<Path extends AdminPath, Method extends AdminMethod> = (Method extends
+  | "post"
+  | "put"
+  | "patch"
+  ? RequestOptionsWithBody<Path, Method>
+  : RequestOptions<Path, Method>) &
+  PathOption<Path, Method>;

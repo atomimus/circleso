@@ -17,7 +17,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "get">,
   ) => {
-    const init = buildInit<Path, "get">(options);
+    const init = buildInit<Path, "get">(options, "get");
     const result = await client.GET(path, init);
     return handleResult(result, "GET", path);
   };
@@ -26,7 +26,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "post">,
   ) => {
-    const init = buildInit<Path, "post">(options);
+    const init = buildInit<Path, "post">(options, "post");
     const result = await client.POST(path, init);
     return handleResult(result, "POST", path);
   };
@@ -35,7 +35,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "put">,
   ) => {
-    const init = buildInit<Path, "put">(options);
+    const init = buildInit<Path, "put">(options, "put");
     const result = await client.PUT(path, init);
     return handleResult(result, "PUT", path);
   };
@@ -44,7 +44,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "patch">,
   ) => {
-    const init = buildInit<Path, "patch">(options);
+    const init = buildInit<Path, "patch">(options, "patch");
     const result = await client.PATCH(path, init);
     return handleResult(result, "PATCH", path);
   };
@@ -53,7 +53,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "delete">,
   ) => {
-    const init = buildInit<Path, "delete">(options);
+    const init = buildInit<Path, "delete">(options, "delete");
     const result = await client.DELETE(path, init);
     return handleResult(result, "DELETE", path);
   };
@@ -78,7 +78,10 @@ type OpenApiResult<Data> = {
 function buildInit<
   Path extends PathsWithMethod<HeadlessPaths, Method>,
   Method extends HeadlessMethod,
->(options?: RequestConfig<Path, Method>): FetchOptions<HeadlessPaths[Path][Method]> {
+>(
+  options: RequestConfig<Path, Method> | undefined,
+  method: Method,
+): FetchOptions<HeadlessPaths[Path][Method]> {
   type Init = {
     body?: RequestBody<Path, Method>;
     headers?: HeadersInit;
@@ -89,40 +92,87 @@ function buildInit<
     };
   };
   const init: Init = {};
+  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(method));
 
-  const pathValue = (options as { path?: PathParams<Path, Method> } | undefined)?.path;
-  const queryValue = (options as { query?: QueryParams<Path, Method> } | undefined)?.query;
-  const bodyValue = (
-    options as
-      | {
-          body?: RequestBody<Path, Method>;
-        }
-      | undefined
-  )?.body;
-
-  if (bodyValue !== undefined) {
-    init.body = bodyValue;
+  if (normalized.body !== undefined) {
+    init.body = normalized.body;
   }
 
-  if (options?.headers !== undefined) {
-    init.headers = options.headers;
+  if (normalized.headers !== undefined) {
+    init.headers = normalized.headers;
   }
-  if (options?.signal !== undefined) {
-    init.signal = options.signal;
+  if (normalized.signal !== undefined) {
+    init.signal = normalized.signal;
   }
 
-  if (pathValue !== undefined || queryValue !== undefined) {
+  if (normalized.path !== undefined || normalized.query !== undefined) {
     const paramsValue: { path?: PathParams<Path, Method>; query?: QueryParams<Path, Method> } = {};
-    if (pathValue !== undefined) {
-      paramsValue.path = pathValue;
+    if (normalized.path !== undefined) {
+      paramsValue.path = normalized.path;
     }
-    if (queryValue !== undefined) {
-      paramsValue.query = queryValue;
+    if (normalized.query !== undefined) {
+      paramsValue.query = normalized.query;
     }
     init.params = paramsValue;
   }
 
   return init as FetchOptions<HeadlessPaths[Path][Method]>;
+}
+
+function isBodyMethod(method: HeadlessMethod) {
+  return method === "post" || method === "put" || method === "patch";
+}
+
+function normalizeOptions<
+  Path extends PathsWithMethod<HeadlessPaths, Method>,
+  Method extends HeadlessMethod,
+>(
+  options: RequestConfig<Path, Method> | undefined,
+  treatExtraAsBody: boolean,
+): {
+  headers?: HeadersInit;
+  signal?: AbortSignal;
+  path?: PathParams<Path, Method>;
+  query?: QueryParams<Path, Method>;
+  body?: RequestBody<Path, Method>;
+} {
+  if (!options || typeof options !== "object") {
+    return {};
+  }
+
+  const headers = (options as { headers?: HeadersInit }).headers;
+  const signal = (options as { signal?: AbortSignal }).signal;
+  const path = (options as { path?: PathParams<Path, Method> }).path;
+
+  const extra = extractExtra(options);
+
+  const query = !treatExtraAsBody ? (extra as QueryParams<Path, Method>) : undefined;
+  const body = treatExtraAsBody ? (extra as RequestBody<Path, Method>) : undefined;
+
+  return {
+    ...(headers !== undefined ? { headers } : {}),
+    ...(signal !== undefined ? { signal } : {}),
+    ...(path !== undefined ? { path } : {}),
+    ...(query !== undefined ? { query } : {}),
+    ...(body !== undefined ? { body } : {}),
+  };
+}
+
+function extractExtra(input: Record<string, unknown>) {
+  const extra: Record<string, unknown> = {};
+  let hasExtra = false;
+
+  for (const [key, value] of Object.entries(input)) {
+    if (key === "headers" || key === "signal" || key === "path") {
+      continue;
+    }
+    if (value !== undefined) {
+      extra[key] = value;
+      hasExtra = true;
+    }
+  }
+
+  return hasExtra ? extra : undefined;
 }
 
 async function handleResult<Data>(

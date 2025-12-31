@@ -2,8 +2,8 @@ import { createWriteStream } from "node:fs";
 import { mkdir, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable, Transform } from "node:stream";
-import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { pipeline } from "node:stream/promises";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 
 type SpecEntry = {
   url: string;

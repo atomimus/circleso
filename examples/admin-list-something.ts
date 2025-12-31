@@ -16,7 +16,7 @@ const admin = createAdmin({
 });
 
 try {
-  const data = await admin.accessGroups.list({ query: { page: 1, per_page: 50 } });
+  const data = await admin.accessGroups.list({ page: 1, per_page: 50 });
 
   for (const group of data?.records ?? []) {
     console.log(`${group.id} ${group.name}`);

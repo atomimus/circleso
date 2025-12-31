@@ -16,7 +16,9 @@ async function run() {
 
   while (true) {
     const data = await admin.posts.list({
-      query: { space_id: spaceId, page, per_page: perPage },
+      space_id: spaceId,
+      page,
+      per_page: perPage,
     });
 
     const records = Array.isArray(data?.records) ? data.records : [];
