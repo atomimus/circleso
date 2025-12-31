@@ -1,0 +1,435 @@
+---
+openapi: 3.0.1
+info:
+  title: Headless Auth API
+  version: v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Authorization header in the format "Bearer AUTH_TOKEN"
+  schemas:
+    headless_auth_token:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        access_token_expires_at:
+          type: string
+        refresh_token_expires_at:
+          type: string
+        community_member_id:
+          type: integer
+          minimum: 1
+        community_id:
+          type: integer
+          minimum: 1
+    refreshed_access_token:
+      type: object
+      properties:
+        access_token:
+          type: string
+        access_token_expires_at:
+          type: string
+    error_response:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        error_details:
+          type: object
+          nullable: true
+paths:
+  "/api/v1/headless/access_token/refresh":
+    patch:
+      summary: Refresh an access token
+      tags:
+      - Headless
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiJ9.eyJjb21tdW5pdHlfaWQiOjEsImNvbW11bml0eV9tZW1iZXJfaWQiOjEsInNzb191c2VyX2lkIjoiMzI3NjBjNzE3NjcxMTI3ODRlZmQ0Mzc5YjBjNmM2NzAiLCJleHAiOjE3MDg2MDc4MTIsImp0aSI6ImQ1ZjcyY2M1LTE3MWUtNDRlMy1hZWRmLTk0YTNlOGVjM2Q2NCJ9.MLhVBGtmScRCZWbAQ1T-g5wAzwMe4ly1hwgKdv2ie94
+                    access_token_expires_at: '2022-01-01T00:00:00.000Z'
+                access_token_not_required:
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiJ9.eyJjb21tdW5pdHlfaWQiOjEsImNvbW11bml0eV9tZW1iZXJfaWQiOjEsInNzb191c2VyX2lkIjoiMzI3NjBjNzE3NjcxMTI3ODRlZmQ0Mzc5YjBjNmM2NzAiLCJleHAiOjE3MDg2MDc4MTIsImp0aSI6ImQ1ZjcyY2M1LTE3MWUtNDRlMy1hZWRmLTk0YTNlOGVjM2Q2NCJ9.MLhVBGtmScRCZWbAQ1T-g5wAzwMe4ly1hwgKdv2ie94
+                    access_token_expires_at: '2022-01-01T00:00:00.000Z'
+              schema:
+                "$ref": "#/components/schemas/refreshed_access_token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              examples:
+                not_found_error:
+                  value:
+                    success: false
+                    message: Refresh token not found.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                refresh_token_expired_error:
+                  value:
+                    success: false
+                    message: The refresh token is expired. Please generate/get new
+                      auth token.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              examples:
+                access_token_generation_failed:
+                  value:
+                    success: false
+                    message: The access token generation failed. Please contact support.
+                    error_details:
+                      message: JWT::EncodeError
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                forbidden:
+                  value:
+                    success: false
+                    message: Your community isn't eligible for headless API access.
+                      Please upgrade or contact support
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+        required: true
+  "/api/v1/headless/access_token/revoke":
+    post:
+      summary: Revoke an access token
+      tags:
+      - Headless
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              examples:
+                success: {}
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              examples:
+                invalid_access_token_error:
+                  value:
+                    success: false
+                    message: The access token is invalid.
+                    error_details: {}
+                access_token_expired_error:
+                  value:
+                    success: false
+                    message: The access token is expired.
+                    error_details: {}
+                revoked_access_token_error:
+                  value:
+                    success: false
+                    message: The access token not found.
+                    error_details: {}
+                community_not_found_error:
+                  value:
+                    success: false
+                    message: Community associated with the access token not found.
+                    error_details: {}
+                community_member_not_found_error:
+                  value:
+                    success: false
+                    message: Community member associated with the access token not
+                      found.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    success: false
+                    message: Your account could not be authenticated.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                forbidden:
+                  value:
+                    success: false
+                    message: Your community isn't eligible for headless API access.
+                      Please upgrade or contact support
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              examples:
+                missing_parameter:
+                  value:
+                    success: false
+                    message: Oops! Missing parameter. Please try again later.
+                    error_details:
+                      message: 'Missing parameter: access_token'
+                invalid_access_token_type:
+                  value:
+                    success: false
+                    message: Oops! Missing parameter. Please try again later.
+                    error_details:
+                      message: 'Missing parameter: access_token'
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+              required:
+              - access_token
+        required: true
+  "/api/v1/headless/auth_token":
+    post:
+      summary: Create/Get an auth token
+      tags:
+      - Headless
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiJ9.eyJjb21tdW5pdHlfaWQiOjEsImNvbW11bml0eV9tZW1iZXJfaWQiOjEsInNzb191c2VyX2lkIjoiZjdiOThlYjczZjdkMGQ0NGU0ZWE1MjYyN2JiYjVhMzkiLCJleHAiOjE3MDg1NDE1MTAsImp0aSI6ImE1MjM2ZmQzLWY4NGItNDcyYy1iNjI2LTcyYTk3YmYwZTcyOSJ9.-MY06GiyXB41dLAx_F4Eu8R4sRxq6QEjy3uLWc4Z6k8
+                    refresh_token: jaebyVK59l5xxAx1D4pM8H-wYyFA6gMC12RGYZcy44w
+                    access_token_expires_at: '2022-01-01T00:00:00.000Z'
+                    refresh_token_expires_at: '2022-01-01T00:00:00.000Z'
+                    community_member_id: 1
+                    community_id: 1
+              schema:
+                "$ref": "#/components/schemas/headless_auth_token"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    success: false
+                    message: Your account could not be authenticated.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                forbidden:
+                  value:
+                    success: false
+                    message: Your community isn't eligible for headless API access.
+                      Please upgrade or contact support
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                member_not_found:
+                  value:
+                    success: false
+                    message: Community member not found. Please provide a valid SSO
+                      User ID, community member ID, or email.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              examples:
+                unprocessable_entity:
+                  value:
+                    success: false
+                    message: There was an error creating the token. Please contact
+                      support.
+                    error_details:
+                      message: Record invalid
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              oneOf:
+              - required:
+                - sso_user_id
+              - required:
+                - community_member_id
+              - required:
+                - email
+              properties:
+                sso_user_id:
+                  type: string
+                community_member_id:
+                  type: integer
+                email:
+                  type: string
+        required: true
+        description: 'Required: SSO User ID, Community Member ID, or Email address
+          (one of these). The preferred identifier is an SSO User ID. We use a Community
+          Member ID if an SSO User ID is unavailable. We use the Email address if
+          neither the SSO User ID nor the Community Member ID is provided.'
+  "/api/v1/headless/refresh_token/revoke":
+    post:
+      summary: Revoke a refresh token
+      tags:
+      - Headless
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              examples:
+                success: {}
+        '404':
+          description: Not found
+          content:
+            application/json:
+              examples:
+                invalid_refresh_token:
+                  value:
+                    success: false
+                    message: Refresh token not found.
+                    error_details: {}
+                missing_refresh_token:
+                  value:
+                    success: false
+                    message: Oops! Missing parameter. Please try again later.
+                    error_details:
+                      message: 'Missing parameter: refresh_token'
+                invalid_refresh_token_type:
+                  value:
+                    success: false
+                    message: Invalid refresh token.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    success: false
+                    message: Your account could not be authenticated.
+                    error_details: {}
+                refresh_token_expired:
+                  value:
+                    success: false
+                    message: The refresh token is expired. Please generate/get new
+                      auth token.
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                forbidden:
+                  value:
+                    success: false
+                    message: Your community isn't eligible for headless API access.
+                      Please upgrade or contact support
+                    error_details: {}
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              examples:
+                unprocessable_entity:
+                  value:
+                    success: false
+                    message: Failed to revoke the refresh token.
+                    error_details:
+                      message: ActiveRecord::RecordNotDestroyed
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+        required: true
+servers:
+- url: https://{defaultHost}
+  description: Production server
+  variables:
+    defaultHost:
+      default: app.circle.so

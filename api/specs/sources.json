@@ -1,0 +1,16 @@
+{
+  "specs": [
+    {
+      "name": "admin-v2",
+      "url": "https://api-headless.circle.so/api/admin/v2/swagger.yaml"
+    },
+    {
+      "name": "headless-client-v1",
+      "url": "https://api-headless.circle.so/api/headless_client/v1/swagger.yaml"
+    },
+    {
+      "name": "headless-auth-v1",
+      "url": "https://api-headless.circle.so/api/headless_auth/swagger.yaml"
+    }
+  ]
+}

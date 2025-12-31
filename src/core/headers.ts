@@ -1,0 +1,11 @@
+export const HEADER_ACCEPT = "accept";
+export const HEADER_AUTHORIZATION = "authorization";
+export const HEADER_CONTENT_TYPE = "content-type";
+export const HEADER_COOKIE = "cookie";
+export const HEADER_CORRELATION_ID = "x-correlation-id";
+export const HEADER_HOST = "host";
+export const HEADER_REQUEST_ID = "x-request-id";
+export const HEADER_RETRY_AFTER = "retry-after";
+export const HEADER_SET_COOKIE = "set-cookie";
+export const HEADER_USER_AGENT = "user-agent";
+export const HEADER_API_KEY = "x-api-key";
