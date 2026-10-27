@@ -26,7 +26,7 @@ export type QueryParams<Path extends AuthPath, Method extends AuthMethod> = Oper
   AuthPaths,
   Path,
   Method
-> extends { parameters: { query: infer Params } }
+> extends { parameters: { query?: infer Params } }
   ? Params
   : undefined;
 

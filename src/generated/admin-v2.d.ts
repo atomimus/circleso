@@ -363,6 +363,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/access_groups/{access_group_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Replace access-group content. Submit complete desired lists; omitted lists are cleared, invalid/foreign IDs are ignored, and all-filtered nonblank input clears content. Both lists omitted/empty returns 422. Member propagation is asynchronous.
+         * @description Replaces all spaces and space groups assigned to an access group. Submit the complete desired lists; an omitted list is treated as empty, removing existing associations of that type. IDs outside this community or invalid IDs are silently discarded. If at least one submitted list is nonblank but all IDs are filtered out, both lists become empty and existing content is cleared. If both lists are omitted or empty, the request fails with 422. Member access propagation is asynchronous; a successful response does not mean every member's access has finished updating.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    access_group_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Complete replacement list of space-group IDs. Omit this list or pass an empty list to remove all current space-group assignments. Invalid and foreign IDs are silently ignored. */
+                        space_group_ids?: number[];
+                        /** @description Complete replacement list of space IDs. Omit this list or pass an empty list to remove all current space assignments. Invalid and foreign IDs are silently ignored. */
+                        space_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Access group content replaced */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["access_group_content"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Access group not found in this community */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description No content was provided */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/admin/v2/access_groups/{id}": {
         parameters: {
             query?: never;
@@ -737,6 +823,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/chat_room_message_imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Chat Room Message
+         * @description Imports a historical message into a chat space on behalf of the specified user.
+         *     The user is automatically added as a space member and chat room participant if not already present.
+         *     The sent_at field is required and must be a past timestamp — this endpoint is intended exclusively
+         *     for importing historical messages. Notifications are never sent for imported messages.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Chat room message import params */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description UUID of the target chat room (from a chat space)
+                         * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                         */
+                        chat_room_uuid: string;
+                        /**
+                         * @description ID of the parent message when creating a thread reply
+                         * @example null
+                         */
+                        parent_message_id?: number | null;
+                        /**
+                         * @description TipTap rich text body, wrapped as `{ body: <tiptap_doc> }`
+                         * @example {
+                         *       "body": {
+                         *         "type": "doc",
+                         *         "content": [
+                         *           {
+                         *             "type": "paragraph",
+                         *             "content": [
+                         *               {
+                         *                 "type": "text",
+                         *                 "text": "Hello!"
+                         *               }
+                         *             ]
+                         *           }
+                         *         ]
+                         *       }
+                         *     }
+                         */
+                        rich_text_body: Record<string, never>;
+                        /**
+                         * Format: date-time
+                         * @description Timestamp for the imported message. Required and must not be in the future.
+                         * @example 2024-01-01T12:00:00Z
+                         */
+                        sent_at: string;
+                        /**
+                         * @description Email of the community member who is the message sender
+                         * @example member@example.com
+                         */
+                        user_email: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Chat room message imported successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid params */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v2/comments": {
         parameters: {
             query?: never;
@@ -1003,11 +1205,13 @@ export interface paths {
                             digests_hide_stats?: boolean;
                             is_private?: boolean;
                             /** @enum {string} */
-                            locale?: "en" | "pt" | "es" | "fr" | "it";
+                            locale?: "en" | "pt" | "pt-PT" | "es" | "fr" | "it";
                             locked_post_cta_body?: string;
                             locked_post_cta_button_text?: string;
                             locked_post_cta_button_url?: string;
                             locked_post_cta_heading?: string;
+                            /** @description signed_id of the logo returned from the direct upload endpoint */
+                            logo?: string;
                             name?: string;
                             prefs?: {
                                 brand_color?: {
@@ -1030,7 +1234,6 @@ export interface paths {
                             allow_members_to_go_live?: boolean;
                             allow_moderator_csv_download?: boolean;
                             allow_profile_search_indexing?: boolean;
-                            browser_notifications_enabled?: boolean;
                             community_activity_notifications_email_enabled?: boolean;
                             community_activity_notifications_in_app_enabled?: boolean;
                             deactivate_account_enabled?: boolean;
@@ -1095,6 +1298,461 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/community_leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a non-member contact (lead). To add a full community member instead, use create_community_member.
+         * @description Creates a non-member contact (also called a lead) in the community from an email address.
+         *
+         *     A non-member contact appears in the community's audience and can be reached by email marketing,
+         *     but has no login and no access to the community. To add someone as a full member with access,
+         *     use the create_community_member endpoint instead.
+         *
+         *     The email must not already belong to a member or to an existing non-member contact in this
+         *     community - both cases return a 422.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Non-member contact attributes */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Email address of the contact. Must not already belong to a member or an existing non-member contact in this community.
+                         * @example jo@example.com
+                         */
+                        email: string;
+                        /**
+                         * @description IDs of existing member tags to apply to the new contact. Use the member_tags endpoints to look these up.
+                         * @example [
+                         *       1
+                         *     ]
+                         */
+                        member_tag_ids?: number[];
+                        /**
+                         * @description Display name of the contact.
+                         * @example Jo Bloggs
+                         */
+                        name?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Non-member contact created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_lead"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Non-member contact could not be created */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_leads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a non-member contact (lead). To delete a full community member instead, use destroy_community_member.
+         * @description Deletes a non-member contact (also called a lead) from the community's audience.
+         *
+         *     This is a soft delete: the contact is removed from the audience and no longer appears in
+         *     listings, but is retained and is restored automatically if the same contact is re-added.
+         *     It only removes non-member contacts: pass the numeric id of a contact returned by the
+         *     community_leads or contacts endpoints. An id that belongs to a full community member (or to
+         *     a contact in another community) returns a 404 and deletes nothing - to remove a member with
+         *     community access, use destroy_community_member instead.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Numeric id of the non-member contact to delete */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Non-member contact deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Non-member contact not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Community Member Charges List
+         * @description Searches community member charges for a community
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Minimum charge amount (in currency subunits) */
+                    amount_gte?: number;
+                    /** @description Maximum charge amount (in currency subunits) */
+                    amount_lte?: number;
+                    /** @description Filter by billing info business name (partial match) */
+                    billing_info_business_name?: string;
+                    /** @description Filter by community member ID */
+                    community_member_id?: number;
+                    /** @description Filter by community member public UID */
+                    community_member_public_uid?: string;
+                    /** @description Only include charges created on/after this date (ISO8601) */
+                    created_at_gte?: string;
+                    /** @description Only include charges created on/before this date (ISO8601) */
+                    created_at_lte?: string;
+                    /** @description Comma-separated list of currency codes */
+                    currency?: string;
+                    /** @description Sort direction. Defaults to desc. */
+                    direction?: "asc" | "desc";
+                    /** @description Filter by exact invoice processor ID */
+                    invoice_processor_id?: string;
+                    /** @description Filter by community member email (partial match) */
+                    member_email?: string;
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Comma-separated list of paywall IDs */
+                    paywall_ids?: string;
+                    /** @description Comma-separated list of paywall price types (e.g. subscription,onetime,installments) */
+                    paywall_price_type?: string;
+                    /** @description Records per page (max 100) */
+                    per_page?: number;
+                    /** @description Comma-separated list of platforms (web, app_store, play_store) */
+                    platform?: string;
+                    /** @description Filter by exact processor (charge) ID */
+                    processor_id?: string;
+                    /** @description Free-text search */
+                    query?: string;
+                    /** @description Sort field. Defaults to created_at. */
+                    sort?: "amount" | "charge_term" | "community_member_name" | "paywall_name" | "platform" | "display_status" | "created_at";
+                    /** @description Comma-separated list of statuses (e.g. paid,refunded,partial_refunded) */
+                    status?: string;
+                    /** @description Filter by exact subscription processor ID */
+                    subscription_processor_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retrieves a list of community member charges for a community */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_charges_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_charges/{id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refund Community Member Charge
+         * @description Refunds a community member charge, in full or in part
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Community Member Charge ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Amount to refund (in currency subunits). Omit for a full refund. */
+                        amount?: number;
+                        /** @description Refund reason. Required, 255 characters max. */
+                        reason_details: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Charge refunded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_charge"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Refund not allowed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_charges/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Community Member Charges
+         * @description Creates a background task that exports community member charges matching the given filters to a CSV, emailed to the requesting admin
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Minimum charge amount (in currency subunits) */
+                    amount_gte?: number;
+                    /** @description Maximum charge amount (in currency subunits) */
+                    amount_lte?: number;
+                    /** @description Filter by billing info business name (partial match) */
+                    billing_info_business_name?: string;
+                    /** @description Filter by community member ID */
+                    community_member_id?: number;
+                    /** @description Filter by community member public UID */
+                    community_member_public_uid?: string;
+                    /** @description Only include charges created on/after this date (ISO8601) */
+                    created_at_gte?: string;
+                    /** @description Only include charges created on/before this date (ISO8601) */
+                    created_at_lte?: string;
+                    /** @description Comma-separated list of currency codes */
+                    currency?: string;
+                    /** @description Comma-separated list of CSV columns to include */
+                    fields?: string;
+                    /** @description Filter by exact invoice processor ID */
+                    invoice_processor_id?: string;
+                    /** @description Filter by community member email (partial match) */
+                    member_email?: string;
+                    /** @description Comma-separated list of paywall IDs */
+                    paywall_ids?: string;
+                    /** @description Comma-separated list of paywall price types (e.g. subscription,onetime,installments) */
+                    paywall_price_type?: string;
+                    /** @description Comma-separated list of platforms (web, app_store, play_store) */
+                    platform?: string;
+                    /** @description Filter by exact processor (charge) ID */
+                    processor_id?: string;
+                    /** @description Comma-separated list of statuses (e.g. paid,refunded,partial_refunded) */
+                    status?: string;
+                    /** @description Filter by exact subscription processor ID */
+                    subscription_processor_id?: string;
+                    /** @description Timezone used to render dates in the CSV (defaults to Etc/UTC) */
+                    timezone?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Export task created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_charge_export"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v2/community_member_spaces": {
         parameters: {
             query?: never;
@@ -1141,6 +1799,376 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/community_member_subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Community Member Subscriptions List
+         * @description Searches community member subscriptions for a community
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by billing info business name (partial match) */
+                    billing_info_business_name?: string;
+                    /** @description Filter by paywall price billing interval (e.g. month, year) */
+                    billing_interval?: string;
+                    /** @description Filter by community member ID */
+                    community_member_id?: number;
+                    /** @description Filter by community member public UID */
+                    community_member_public_uid?: string;
+                    /** @description Comma-separated list of currency codes */
+                    currency?: string;
+                    /** @description Sort direction (asc or desc). Defaults to desc */
+                    direction?: string;
+                    /** @description Filter by community member email (partial match) */
+                    member_email?: string;
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Comma-separated list of paywall IDs */
+                    paywall_ids?: string;
+                    /** @description Comma-separated list of paywall price types (e.g. subscription,onetime,installments) */
+                    paywall_price_type?: string;
+                    /** @description Records per page (max 100) */
+                    per_page?: number;
+                    /** @description Comma-separated list of platforms (web, app_store, play_store) */
+                    platform?: string;
+                    /** @description Free-text search */
+                    query?: string;
+                    /** @description Filter by whether the subscription is scheduled to cancel */
+                    scheduled_to_cancel?: boolean;
+                    /** @description Sort field (one of: charges_quantity, subscription_term, renews_on, community_member_name, paywall_name, platform, status, created_at). Defaults to created_at */
+                    sort?: string;
+                    /** @description Only include subscriptions started on/after this date (ISO8601) */
+                    start_date_gte?: string;
+                    /** @description Only include subscriptions started on/before this date (ISO8601) */
+                    start_date_lte?: string;
+                    /** @description Comma-separated list of statuses (e.g. active,trial,canceled) */
+                    status?: string;
+                    /** @description Filter by exact subscription processor ID */
+                    subscription_processor_id?: string;
+                    /** @description Minimum total amount paid (in currency subunits) */
+                    total_amount_paid_gte?: number;
+                    /** @description Maximum total amount paid (in currency subunits) */
+                    total_amount_paid_lte?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retrieves a list of community member subscriptions for a community */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_subscriptions_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_subscriptions/{id}/billing_date": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a billing date or extend a genuine trial; change_billing_date requires billing_date and extend_trial requires days_to_extend (the opposite field is ignored); ineligible selected operations return 401 before input validation
+         * @description Change the billing date or extend a genuine trial. Selected operation eligibility is checked before mobile and input validation. Unused fields are ignored. Dates are parsed as calendar dates; use YYYY-MM-DD as the canonical example.
+         */
+        patch: operations["change_billing_date_or_extend_trial_community_member_subscription"];
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_subscriptions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Community Member Subscription
+         * @description Cancels a community member subscription, immediately or at the end of the current billing period
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Community Member Subscription ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Cancellation timing: 'now' or 'at_period_end'. */
+                        ends_at: string;
+                        /** @description Optional refund type when canceling immediately: 'prorated' or 'full'. */
+                        refund_type?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Subscription canceled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_subscription"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Cancellation not allowed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_subscriptions/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume Community Member Subscription
+         * @description Resumes a community member subscription that is scheduled to cancel at the end of the current billing period
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Community Member Subscription ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription resumed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_subscription"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Resume not allowed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/community_member_subscriptions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Community Member Subscriptions
+         * @description Creates a background task that exports community member subscriptions matching the given filters to a CSV, emailed to the requesting admin
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Filter by billing info business name (partial match) */
+                    billing_info_business_name?: string;
+                    /** @description Filter by paywall price billing interval (e.g. month, year) */
+                    billing_interval?: string;
+                    /** @description Filter by community member ID */
+                    community_member_id?: number;
+                    /** @description Filter by community member public UID */
+                    community_member_public_uid?: string;
+                    /** @description Comma-separated list of currency codes */
+                    currency?: string;
+                    /** @description Comma-separated list of CSV columns to include */
+                    fields?: string;
+                    /** @description Filter by community member email (partial match) */
+                    member_email?: string;
+                    /** @description Comma-separated list of paywall IDs */
+                    paywall_ids?: string;
+                    /** @description Comma-separated list of paywall price types (e.g. subscription,onetime,installments) */
+                    paywall_price_type?: string;
+                    /** @description Comma-separated list of platforms (web, app_store, play_store) */
+                    platform?: string;
+                    /** @description Filter by whether the subscription is scheduled to cancel */
+                    scheduled_to_cancel?: boolean;
+                    /** @description Only include subscriptions started on/after this date (ISO8601) */
+                    start_date_gte?: string;
+                    /** @description Only include subscriptions started on/before this date (ISO8601) */
+                    start_date_lte?: string;
+                    /** @description Comma-separated list of statuses (e.g. active,trial,canceled) */
+                    status?: string;
+                    /** @description Filter by exact subscription processor ID */
+                    subscription_processor_id?: string;
+                    /** @description Timezone used to render dates in the CSV (defaults to Etc/UTC) */
+                    timezone?: string;
+                    /** @description Minimum total amount paid (in currency subunits) */
+                    total_amount_paid_gte?: number;
+                    /** @description Maximum total amount paid (in currency subunits) */
+                    total_amount_paid_lte?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Export task created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["community_member_subscription_export"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v2/community_members": {
         parameters: {
             query?: never;
@@ -1152,12 +2180,19 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Filter by Member Tag IDs (OR logic, comma-separated) */
+                    member_tag_ids?: number[];
                     /** @description Page number */
                     page?: number;
                     /** @description Number of records per page */
                     per_page?: number;
-                    /** @description Filter by status, default is active */
-                    status?: "all" | "inactive";
+                    /**
+                     * @description Filter by member status. Defaults to `active`.
+                     *     - `active`: members who have completed profile setup (`profile_confirmed_at` is set).
+                     *     - `inactive`: invited members who have not yet completed profile setup. This is the same set shown in the admin UI under Audience → Manage → Invited.
+                     *     - `all`: both of the above.
+                     */
+                    status?: "active" | "all" | "inactive";
                 };
                 header?: never;
                 path?: never;
@@ -1186,7 +2221,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create/Invite a community member */
+        /**
+         * Create/Invite a community member
+         * @description Creates a community member with the given email. Avatar requires using the direct_upload flow first (upload to presigned URL, then use signed_id and url). Removing a member from the community does not delete their Circle account, so creating the same email again re-adds the existing account.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1209,6 +2247,7 @@ export interface paths {
                         is_flagged?: boolean;
                         member_tag_ids?: number[];
                         name?: string;
+                        /** @description Password for a new Circle account. Must be at least 6 characters and include 1 uppercase letter, 1 number, and 1 symbol such as !, $, @, or *. An underscore (_) does not count as a symbol, and spaces are not allowed. If the email already belongs to a Circle account, this value does not change the existing password and is not validated: the member is still added and the response is 201. */
                         password?: string;
                         preferences?: {
                             messaging_enabled_by_admin?: boolean;
@@ -1392,6 +2431,11 @@ export interface paths {
                         };
                         headline?: string;
                         is_flagged?: boolean;
+                        /**
+                         * Format: date_time
+                         * @description Effective "member since" / joined date. Cannot be in the future.
+                         */
+                        member_since?: string;
                         member_tag_ids?: number[];
                         name?: string;
                         preferences?: {
@@ -1665,7 +2709,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Community member found */
+                /** @description Invited (unconfirmed) community member is returned */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1683,7 +2727,7 @@ export interface paths {
                         "application/json": components["schemas"]["error"];
                     };
                 };
-                /** @description Community member not found */
+                /** @description Email matches a CommunityLead but not a CommunityMember */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -2029,6 +3073,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/contacts/{contact_id}/contact_notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Contact Notes
+         * @description Lists the notes admins have added to a contact, newest first.
+         */
+        get: operations["list_contact_notes"];
+        put?: never;
+        /**
+         * Create Contact Note
+         * @description Adds an internal note to a contact in the community. Use list_contact_notes to read existing notes.
+         */
+        post: operations["create_contact_note"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v2/course_lesson_progress": {
         parameters: {
             query?: never;
@@ -2179,7 +3247,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a course lesson */
+        /**
+         * Create a course lesson
+         * @description Creates a lesson in a course section. section_id is required. Use rich_text_body instead of body_html for rich text content.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -2193,6 +3264,8 @@ export interface paths {
                     "application/json": {
                         /** @example <p>Lesson body</p> */
                         body_html?: string;
+                        /** @description signed_id of the lesson featured media file returned from the direct upload endpoint */
+                        featured_media?: string;
                         /** @example true */
                         is_comments_enabled?: boolean;
                         /** @example true */
@@ -2201,10 +3274,23 @@ export interface paths {
                         is_featured_media_enabled?: boolean;
                         /** @example New lesson */
                         name: string;
+                        rich_text_body?: {
+                            body?: {
+                                content: {
+                                    attrs?: Record<string, never>;
+                                    marks?: Record<string, never>[];
+                                    text?: string | null;
+                                    type?: string;
+                                }[];
+                                type: string;
+                            };
+                        };
                         /** @example 1 */
                         section_id: number;
                         /** @enum {string} */
                         status?: "draft" | "published";
+                        /** @description signed_id of the lesson thumbnail image returned from the direct upload endpoint */
+                        thumbnail?: string;
                     };
                 };
             };
@@ -2378,7 +3464,10 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update a course lesson */
+        /**
+         * Update a course lesson
+         * @description Updates a course lesson. Use rich_text_body instead of body_html for rich text content.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -2395,6 +3484,8 @@ export interface paths {
                     "application/json": {
                         /** @example <p>Updated lesson body</p> */
                         body_html?: string;
+                        /** @description signed_id of the lesson featured media file returned from the direct upload endpoint */
+                        featured_media?: string;
                         /** @example true */
                         is_comments_enabled?: boolean;
                         /** @example true */
@@ -2403,11 +3494,24 @@ export interface paths {
                         is_featured_media_enabled?: boolean;
                         /** @example Updated lesson */
                         name?: string;
+                        rich_text_body?: {
+                            body?: {
+                                content: {
+                                    attrs?: Record<string, never>;
+                                    marks?: Record<string, never>[];
+                                    text?: string | null;
+                                    type?: string;
+                                }[];
+                                type: string;
+                            };
+                        };
                         /**
                          * @example published
                          * @enum {string}
                          */
                         status?: "draft" | "published";
+                        /** @description signed_id of the lesson thumbnail image returned from the direct upload endpoint */
+                        thumbnail?: string;
                     };
                 };
             };
@@ -2459,6 +3563,108 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/admin/v2/course_lessons/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reorder course lessons
+         * @description Reorders a course's sections and lessons, and moves lessons between sections. The new_order array must contain every course section in its final order, with every lesson listed under its destination section in its final order.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Final course content order */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description All course sections and lessons in their final order */
+                        new_order: {
+                            /**
+                             * @example [
+                             *       3,
+                             *       1,
+                             *       2
+                             *     ]
+                             */
+                            lesson_ids: number[];
+                            /** @example 2 */
+                            section_id: number;
+                        }[];
+                        /**
+                         * @description ID of the course space
+                         * @example 1
+                         */
+                        space_id: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Course lessons reordered successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Course space not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid course order */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/v2/course_sections": {
@@ -2777,7 +3983,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Direct Upload */
+        /**
+         * Create Direct Upload
+         * @description Creates a presigned URL for file upload. Upload the file via PUT to the returned direct_upload.url with the provided headers. The checksum is a base64-encoded MD5 hash of the file content.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3209,7 +4418,7 @@ export interface paths {
         put?: never;
         /**
          * Create Event
-         * @description Create Event
+         * @description Creates an event in an event-type space. space_id must be provided both at the top level and inside the event object.
          */
         post: {
             parameters: {
@@ -3244,6 +4453,10 @@ export interface paths {
                                 hide_attendees?: boolean;
                                 hide_location_from_non_attendees?: boolean;
                                 host?: string;
+                                /**
+                                 * @description A stringified Google Places API result. JSON-serialize the Places API response object before sending. Stored as-is in the database.
+                                 * @example {"formatted_address":"345 Spear St, San Francisco, CA 94105","geometry":{"location":{"lat":37.7900161,"lng":-122.3900146}},"name":"Google San Francisco - 345 Spear St","place_id":"ChIJ32vwFWSAhYAR8wx7vbWoSPA","url":"https://maps.google.com/?cid=17314274265947376883","website":"https://www.google.com/about/careers/locations/san-francisco/","html_attributions":[]}
+                                 */
                                 in_person_location?: string;
                                 live_stream_room_setting_attributes?: {
                                     /**
@@ -3435,6 +4648,10 @@ export interface paths {
                                 hide_attendees?: boolean;
                                 hide_location_from_non_attendees?: boolean;
                                 host?: string;
+                                /**
+                                 * @description A stringified Google Places API result. JSON-serialize the Places API response object before sending. Stored as-is in the database.
+                                 * @example {"formatted_address":"345 Spear St, San Francisco, CA 94105","geometry":{"location":{"lat":37.7900161,"lng":-122.3900146}},"name":"Google San Francisco - 345 Spear St","place_id":"ChIJ32vwFWSAhYAR8wx7vbWoSPA","url":"https://maps.google.com/?cid=17314274265947376883","website":"https://www.google.com/about/careers/locations/san-francisco/","html_attributions":[]}
+                                 */
                                 in_person_location?: string;
                                 live_stream_room_setting_attributes?: {
                                     /**
@@ -3597,6 +4814,426 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/filter_kit_configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the filters currently shown on the member directory or a member space
+         * @description Returns the resolved runtime filter configuration members currently see, including defaults and saved customizations.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Surface to inspect. Use members for the community directory or member_space for a specific members space. */
+                    context: "members" | "member_space";
+                    /** @description Members space ID. Required when context is member_space. */
+                    space_id?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Filter configuration retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FilterResponse"];
+                    };
+                };
+                /** @description Invalid filter configuration context */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/filter_kit_controls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List member directory and member space filter controls
+         * @description Lists a community's saved filter customisations, including whether each filter is enabled and the member directory, member space, or profile field it applies to. Results are ordered by sort key.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only enabled or disabled controls */
+                    enabled?: boolean;
+                    /** @description Only controls for this filter key */
+                    key?: "contact_search" | "near_me" | "online" | "recently_joined" | "location" | "tags" | "profile_field" | "spaces" | "space_groups" | "global";
+                    /** @description Only member-directory controls that are not scoped to a space */
+                    member_directory_only?: boolean;
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Number of records per page (max 100) */
+                    per_page?: number;
+                    /** @description Only controls for this profile field */
+                    profile_field_id?: number;
+                    /** @description Only controls for this member space */
+                    space_id?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Filter controls listed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["filter_kit_controls_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a member filter control
+         * @description Creates one saved filter customisation for the member directory or a member space. Use this to
+         *     hide a default filter, or use key "profile_field" with profile_field_id to show a profile field
+         *     as a filter. Omit space_id for the member directory.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Filter control attributes */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Whether to show the filter */
+                        enabled: boolean;
+                        /**
+                         * @description Filter to control; profile_field requires profile_field_id
+                         * @enum {string}
+                         */
+                        key: "contact_search" | "near_me" | "online" | "recently_joined" | "location" | "tags" | "profile_field" | "spaces" | "space_groups" | "global";
+                        /** @description Profile field ID; allowed only when key is profile_field */
+                        profile_field_id?: number;
+                        /** @description Optional ordering position; lower values sort first */
+                        sort_key?: number;
+                        /** @description Member space ID; omit for the member directory */
+                        space_id?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Filter control created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["filter_kit_control"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Filter control parameters are invalid */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/filter_kit_controls/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a filter control
+         * @description Retrieves a single member directory or member space filter customisation by ID.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Filter control ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Filter control retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["filter_kit_control"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Filter control not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Delete a filter control
+         * @description Deletes one member filter kit control
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description ID of the filter control to delete */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Filter control deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Filter control not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Update a member directory or member space filter control
+         * @description Updates an existing member directory or member space filter customisation.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Filter control ID. Use list_filter_kit_controls if the ID is unknown. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Filter control fields to update */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Whether the filter is shown. Set false to hide it. */
+                        enabled?: boolean;
+                        /**
+                         * @description Filter to control.
+                         * @enum {string}
+                         */
+                        key?: "contact_search" | "near_me" | "online" | "recently_joined" | "location" | "tags" | "profile_field" | "spaces" | "space_groups" | "global";
+                        /** @description Profile field ID for a profile_field control. */
+                        profile_field_id?: number;
+                        /** @description Ordering position; lower values sort first. */
+                        sort_key?: number;
+                        /** @description Member space ID to move this control to. */
+                        space_id?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Filter control updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["filter_kit_control"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Filter control not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid filter control fields */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/admin/v2/flagged_contents": {
         parameters: {
             query?: never;
@@ -3671,10 +5308,10 @@ export interface paths {
                         flagged_content: {
                             content_id: number;
                             /** @enum {string} */
-                            content_type: "post" | "comment";
+                            content_type: "post" | "comment" | "connect/connection" | "chat_room_message";
                             reported_reason_body: string;
                             /** @enum {string} */
-                            reported_reason_type: "harassment" | "spam" | "incorrect_location" | "against_guidelines" | "other";
+                            reported_reason_type: "child_safety" | "harassment" | "spam" | "incorrect_location" | "against_guidelines" | "other";
                         };
                     };
                 };
@@ -3779,6 +5416,131 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/forms/{form_id}/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List form submissions */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Number of records per page */
+                    per_page?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Form ID */
+                    form_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List submissions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["form_submission_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a form submission */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Form ID */
+                    form_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["form_submission_create_request"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["form_submission_create_response"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Form not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable Entity - invalid email */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -4177,7 +5939,82 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create invitation link
+         * @description Creates an active invitation link.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Invitation link attributes */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Access group IDs to attach. Presence, including an empty array, selects access-group mode */
+                        access_group_ids?: number[];
+                        /** @description Member tag IDs to apply when the link is used */
+                        member_tag_ids?: number[];
+                        /** @description Name for the invitation link */
+                        name: string;
+                        /** @description Optional paywall configuration */
+                        paywall?: {
+                            /** @description Optional coupon code for the paywall trial */
+                            paywall_coupon_code?: string;
+                            /** @description Paywall ID; requires paywall_price_id and paywall_trial_days */
+                            paywall_id?: number;
+                            /** @description Eligible recurring paywall price ID */
+                            paywall_price_id?: number;
+                            /** @description Free trial length in days */
+                            paywall_trial_days?: number;
+                        } | null;
+                        /** @description ID of the space to open after signup */
+                        redirect_space_id?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Invitation link created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["invitation_link"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invitation link parameters are invalid */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -4192,7 +6029,103 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /**
+         * Update invitation link
+         * @description Updates an invitation link.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Invitation link ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Invitation link attributes to update */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Access group IDs to attach; fully replaces the current set (empty array detaches all) */
+                        access_group_ids?: number[];
+                        /** @description Member tag IDs to apply when the link is used */
+                        member_tag_ids?: number[];
+                        /** @description Name for the invitation link */
+                        name?: string;
+                        /** @description Paywall configuration. Set to null to remove the existing paywall configuration */
+                        paywall?: {
+                            /** @description Optional coupon code for the paywall trial */
+                            paywall_coupon_code?: string;
+                            /** @description Paywall ID; requires paywall_price_id and paywall_trial_days */
+                            paywall_id?: number;
+                            /** @description Eligible recurring paywall price ID */
+                            paywall_price_id?: number;
+                            /** @description Free trial length in days */
+                            paywall_trial_days?: number;
+                        } | null;
+                        /** @description ID of the space to open after signup. Set to null to remove the existing redirect */
+                        redirect_space_id?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Invitation link updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["invitation_link"];
+                    };
+                };
+                /** @description Invitation link foreign key parameter is invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invitation link not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invitation link parameters are invalid */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete invitation link
@@ -4338,6 +6271,208 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/admin/v2/live/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Live Rooms
+         * @description Returns a paginated list of live rooms for the community.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Number of records per page */
+                    per_page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Returns a list of live rooms */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["live_room_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/live/rooms/{room_id}/transcripts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Live Room Transcripts
+         * @description Returns the raw VTT transcripts for a given live room. Transcripts are sourced from the recording blob's media transcript via a polymorphic association.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Live Room ID */
+                    room_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Returns the transcripts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            transcripts: string[];
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Live room not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/locations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search locations
+         * @description Resolves a free-text location query into geocoded candidates via Mapbox. Read-only lookup used to resolve a place before setting a location profile field or filtering contacts by geo_location.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Free-text location query (e.g. 'San Francisco, CA' or 'Berlin'). */
+                    query: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Returns matching location candidates */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["location_search_results"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Missing or blank location query */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/v2/member_tags": {
@@ -4727,10 +6862,12 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        chat_room_uuid?: string;
+                        parent_message_id?: number;
                         rich_text_body?: components["schemas"]["rich_text_body"];
                         user_email?: string;
                         user_emails?: string[];
-                    } & (unknown | unknown);
+                    } & (unknown | unknown | unknown);
                 };
             };
             responses: {
@@ -4745,6 +6882,15 @@ export interface paths {
                 };
                 /** @description Unauthorized */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4820,6 +6966,1332 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/payment_method_setting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieves the community's payment method preferences
+         * @description Returns the enabled/disabled state and Stripe capability status for every supported payment method (Apple Pay, Google Pay, card, Klarna, Afterpay/Clearpay, Affirm, Bancontact, iDEAL, Pix, SEPA Debit, Link) for the community's connected Stripe account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Payment method preferences retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["payment_method_preferences_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description The payment method preferences could not be resolved */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliate_payouts/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Paywall Affiliate Payouts
+         * @description Creates a background task that exports processing affiliate payouts to a CSV, optionally scoped to specific community members
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Optional payout scope */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Community member IDs to scope the export to (max 20 per request). Omit to export all processing payouts.
+                         * @example [
+                         *       1,
+                         *       2
+                         *     ]
+                         */
+                        community_member_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Export task created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_affiliate_payout_export"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliate_payouts/mark_paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Paywall Affiliate Payouts Paid
+         * @description Moves processing affiliate payouts to paid, optionally scoped to specific community members
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Optional payout scope */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Community member IDs to scope the mark-paid to (max 20 per request). Omit to mark all processing payouts as paid.
+                         * @example [
+                         *       1,
+                         *       2
+                         *     ]
+                         */
+                        community_member_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Payouts marked as paid */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example 2 */
+                            expected: number;
+                            /** @example 2 */
+                            processed: number;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliate_payouts/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Paywall Affiliate Payouts
+         * @description Moves due affiliate payouts to processing, optionally scoped to specific community members
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Optional payout scope */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Community member IDs to scope the start to (max 20 per request). Omit to start all due payouts.
+                         * @example [
+                         *       1,
+                         *       2
+                         *     ]
+                         */
+                        community_member_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Payouts moved to processing */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example 2 */
+                            processing: number;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unprocessable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Paywall Affiliates List
+         * @description Searches affiliates for a community
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filters */
+                    filters?: {
+                        /** @description ID of an affiliate campaign; returns only affiliates in that campaign */
+                        campaign_id?: number;
+                        /** @description Case-insensitive partial match on the affiliate's code */
+                        code?: string;
+                        /** @description Partial match on the affiliate's name, or exact match on their email */
+                        name_or_email?: string;
+                        /**
+                         * @description Affiliate status: inactive, invited, enrolled or disabled
+                         * @enum {string}
+                         */
+                        status?: "inactive" | "invited" | "enrolled" | "disabled";
+                    };
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Records per page (max 100) */
+                    per_page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retrieves a list of affiliates for a community */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_affiliates_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Paywall Affiliate
+         * @description Updates an affiliate's status
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Affiliate ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Affiliate status params */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description New affiliate status. Invited or enrolled affiliates can only be set to disabled; a disabled affiliate can only be set back to enrolled if previously enrolled, otherwise to invited if previously invited. Any other value returns 422
+                         * @example disabled
+                         * @enum {string}
+                         */
+                        status?: "invited" | "enrolled" | "disabled";
+                    };
+                };
+            };
+            responses: {
+                /** @description Affiliate updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_affiliate"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Affiliate not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Illegal status transition */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_affiliates/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite Paywall Affiliates
+         * @description Invites existing community members to the affiliate program
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Invite params */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Community member IDs to invite (max 20 per request). Must belong to the current community. */
+                        existing_member_ids: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Invites sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Grouped by outcome (invited, then reinvited, then already_active, then failed) -- not the order of the input existing_member_ids. */
+                            results?: {
+                                community_member_id?: number;
+                                error?: string;
+                                /** @enum {string} */
+                                status?: "invited" | "reinvited" | "already_active" | "failed";
+                            }[];
+                            summary?: {
+                                already_active?: number;
+                                failed?: number;
+                                invited?: number;
+                                reinvited?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Affiliates feature disabled */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_coupons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Deletes a paywall coupon
+         * @description Deletes a paywall coupon. Removes any Stripe-side coupon and invalidates offers that reference it.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall coupon ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paywall coupon deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message?: string;
+                            success?: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall coupon not found (nonexistent or already deleted) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Stripe outage prevents the coupon from being deleted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Subscription Group
+         * @description Creates a new subscription group (paywall group) for the community. Paywalls with subscription prices can be added to a subscription group to allow members to upgrade/downgrade between them.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Subscription group params */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description ID of the currency the group's paywalls are priced in
+                         * @example 1
+                         */
+                        currency_id: number;
+                        /**
+                         * @description Name of the subscription group
+                         * @example Premium Memberships
+                         */
+                        name: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Subscription group created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_group"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid subscription group params */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywall_groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Subscription Group
+         * @description Updates a subscription group's name. The currency can only be changed while the group has no paywalls attached to it.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Subscription group ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Subscription group params */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description ID of the currency the group's paywalls are priced in
+                         * @example 1
+                         */
+                        currency_id?: number;
+                        /**
+                         * @description New name of the subscription group
+                         * @example Premium Memberships
+                         */
+                        name?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Subscription group updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_group"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Subscription group not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid subscription group params */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Deletes a paywall
+         * @description Permanently deletes a paywall. Fails if the paywall has real transactions -- archive it instead.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paywall deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall not found (nonexistent, already deleted, or belongs to another community) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall cannot be deleted (has real transactions) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Archives a paywall
+         * @description Archives a paywall (sets it inactive). Only an already-published (active) paywall
+         *     can be archived -- a draft paywall must be published or deleted instead, and an
+         *     already-archived paywall returns an error.
+         *
+         *     Warning: archiving a paywall irreversibly discards every kept upsell offer where
+         *     this paywall is either the host or the target, along with each discarded offer's
+         *     prices and customization attachments. Unarchiving the paywall later does not
+         *     restore these offers.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paywall archived successfully, discarding kept upsell offers where the paywall is host or target */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall not found (nonexistent, already deleted, or belongs to another community) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall cannot be archived (invalid current state) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Publishes a paywall
+         * @description Publishes a draft or archived paywall, making it active. Fails if the paywall is already active.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paywall published successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall not found (nonexistent, already deleted, or belongs to another community) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall cannot be published (already active) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/{id}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Unarchives a paywall
+         * @description Unarchives a paywall, republishing it (sets it back to active). Only an already-archived
+         *     (inactive) paywall can be unarchived. This does not restore upsell offers discarded by
+         *     a prior archive -- that offer discard is irreversible.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paywall unarchived successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            success: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall not found (nonexistent, already deleted, or belongs to another community) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall cannot be unarchived (not currently archived) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/{paywall_id}/member_access_syncs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Syncs a legacy paywall's member access
+         * @description Schedules a legacy (non-access-group-enabled) paywall's member access to be
+         *     recomputed and re-granted for every subscriber. This is genuinely asynchronous:
+         *     the response returns a scheduled PaywallJob resource before the underlying worker
+         *     runs, let alone before member access changes materialize -- do not poll this
+         *     endpoint expecting an inline completed result. Access-group-enabled paywalls
+         *     already propagate access changes on every edit and reject this action with a 422.
+         *
+         *     A repeat call for the same paywall within the ~5-minute dedup window (or while
+         *     the scheduled worker is still running) returns 201 with the same PaywallJob
+         *     rather than creating a new one -- the id is not a signal that a fresh sync
+         *     was scheduled.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paywall ID */
+                    paywall_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Member access sync scheduled */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywall_member_access_sync"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall not found (nonexistent or belongs to another community) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Paywall already propagates member access via access groups */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/paywalls/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Paywalls
+         * @description Searches paywalls for a community
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma-separated list of currency codes */
+                    currency?: string;
+                    /** @description Sort direction (asc or desc). Defaults to desc. Only takes effect when sort is also given -- direction alone is ignored */
+                    direction?: string;
+                    /** @description Comma-separated list of paywall IDs to exclude */
+                    exclude_paywall_id?: string;
+                    /** @description Comma-separated list of subscription group IDs to exclude */
+                    exclude_subscription_group_id?: string;
+                    /** @description Filter by paywall name or display name (partial match) */
+                    name?: string;
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Comma-separated list of paywall IDs to include */
+                    paywall_id?: string;
+                    /** @description Records per page (max 100) */
+                    per_page?: number;
+                    /** @description Sort field (one of: title, status, created_at). Defaults to created_at */
+                    sort?: string;
+                    /** @description Comma-separated list of statuses (e.g. draft,active,inactive) */
+                    status?: string;
+                    /** @description Comma-separated list of subscription group IDs to include */
+                    subscription_group_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retrieves a list of paywalls for a community */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["paywalls_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v2/posts": {
         parameters: {
             query?: never;
@@ -4869,7 +8341,7 @@ export interface paths {
         put?: never;
         /**
          * Create Basic Post
-         * @description Create Basic Post
+         * @description Creates a basic post in a basic-type space. Use tiptap_body instead of body_html for rich text content.
          */
         post: {
             parameters: {
@@ -5298,8 +8770,337 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create Profile Field
+         * @description Creates a new custom profile field for the community.
+         *
+         *     Every part of the field is stated explicitly: `pages_attributes` lists the pages the field
+         *     appears on and whether it is visible on each, `choices_attributes` lists the options for a
+         *     select or checkbox field in the order given by `sort_key`, and `number_options_attributes`
+         *     configures a number field. Nothing is derived — what you send is what is stored.
+         *
+         *     To hide a field everywhere, send every page with `visible: false`. To change an existing
+         *     field use the update endpoint; to take one out of use without deleting it use archive.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Profile field attributes */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        profile_field: {
+                            /** @description Whether the field may be left empty. Defaults to false */
+                            allow_null?: boolean;
+                            /** @description Options for a select or checkbox field. Required for those types, must be absent otherwise */
+                            choices_attributes?: {
+                                /** @description Position of the option, ascending */
+                                sort_key?: number;
+                                /** @description Option label */
+                                value: string;
+                            }[];
+                            /** @description Help text shown to members */
+                            description?: string;
+                            /**
+                             * @description Type of field to create
+                             * @enum {string}
+                             */
+                            field_type: "text" | "select" | "checkbox" | "textarea" | "link" | "number";
+                            /** @description Unique identifier for the field within the community. Lowercase letters, numbers and underscores only */
+                            key: string;
+                            /**
+                             * @description Field label shown to members
+                             * @example Department
+                             */
+                            label: string;
+                            /** @description Formatting for a number field. Required for that type, must be absent otherwise */
+                            number_options_attributes?: {
+                                /** @description Number of decimal places */
+                                decimal?: number;
+                                /**
+                                 * @description How the number is formatted
+                                 * @enum {string}
+                                 */
+                                format: "number" | "percentage" | "custom" | "unformatted";
+                                /**
+                                 * @description Which side of the number the custom text sits on
+                                 * @enum {string}
+                                 */
+                                position?: "left" | "right";
+                                /** @description Custom text shown alongside the number. Required when format is custom */
+                                text?: string;
+                            };
+                            /** @description The pages the field appears on. Send all four to state visibility explicitly */
+                            pages_attributes: {
+                                /**
+                                 * @description Page the field appears on
+                                 * @enum {string}
+                                 */
+                                name: "signup" | "edit_profile" | "profile_view" | "community_view";
+                                /** @description Whether the field is visible on this page */
+                                visible: boolean;
+                            }[];
+                            /** @description Placeholder text. Only meaningful for text, textarea and link fields */
+                            placeholder?: string;
+                            /** @description Whether members must fill the field in. Defaults to false */
+                            required?: boolean;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Profile field created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["profile_field"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid profile field params */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/profile_fields/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Profile Field
+         * @description Updates an existing custom profile field. Only the attributes sent are changed; anything
+         *     omitted is left as it is.
+         *
+         *     Nested records are addressed by `id`: send `pages_attributes` with a page id to change its
+         *     visibility, and `choices_attributes` with a choice id to rename or reorder that option.
+         *     Omit the id to add a new choice, or send `_destroy: true` to remove one — removing a choice
+         *     also removes every member's selection of it.
+         *
+         *     `field_type` cannot be changed once the field exists. To take a field out of use without
+         *     deleting it, use the archive endpoint.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Profile field ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Profile field attributes to change */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        profile_field: {
+                            /** @description Whether the field may be left empty */
+                            allow_null?: boolean;
+                            /** @description Option changes for a select or checkbox field. Omit id to add an option, send _destroy to remove one */
+                            choices_attributes?: {
+                                /** @description Set to true to delete this choice and every member's selection of it */
+                                _destroy?: boolean;
+                                /** @description Id of an existing choice. Omit to add a new one */
+                                id?: number;
+                                /** @description Position of the option, ascending */
+                                sort_key?: number;
+                                /** @description Option label */
+                                value?: string;
+                            }[];
+                            /** @description Help text shown to members */
+                            description?: string;
+                            /** @description Unique identifier for the field within the community. Cannot be changed on a platform field */
+                            key?: string;
+                            /**
+                             * @description Field label shown to members
+                             * @example Department
+                             */
+                            label?: string;
+                            /** @description Formatting changes for a number field */
+                            number_options_attributes?: {
+                                /** @description Number of decimal places */
+                                decimal?: number;
+                                /**
+                                 * @description How the number is formatted
+                                 * @enum {string}
+                                 */
+                                format?: "number" | "percentage" | "custom" | "unformatted";
+                                /** @description Id of the number options belonging to this profile field */
+                                id?: number;
+                                /**
+                                 * @description Which side of the number the custom text sits on
+                                 * @enum {string}
+                                 */
+                                position?: "left" | "right";
+                                /** @description Custom text shown alongside the number. Required when format is custom */
+                                text?: string;
+                            };
+                            /** @description Visibility changes, addressed by page id */
+                            pages_attributes?: {
+                                /** @description Id of a page belonging to this profile field */
+                                id: number;
+                                /** @description Whether the field is visible on this page */
+                                visible: boolean;
+                            }[];
+                            /** @description Placeholder text. Only meaningful for text, textarea and link fields */
+                            placeholder?: string;
+                            /** @description Whether members must fill the field in */
+                            required?: boolean;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Profile field updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["profile_field"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Profile field not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Invalid profile field params */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Delete Profile Field
+         * @description Permanently deletes an archived custom profile field.
+         *
+         *     The field must be archived first — deleting an active field returns a 404 telling you to
+         *     archive it. Archiving is reversible; this is not.
+         *
+         *     Deletion cascades: the field's pages, choices and number options go with it, along with
+         *     every member's stored value for the field. There is no undo and no confirmation step.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Archived profile field ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Profile field deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message?: string;
+                            success?: boolean;
+                        };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Profile field not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -5459,6 +9260,168 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/settings/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Connect settings
+         * @description Returns the current community's Connect settings — the admin settings that control member-to-member interactions. No parameters; always reads the authenticated community's live settings.
+         *
+         *     Three sections:
+         *     - connect: enabled, recommendations, exclude_admins_from_recommendations, exclude_moderators_from_recommendations
+         *     - member_directory: public, sort (alphabetical/oldest/latest), view (list/cards)
+         *     - messaging: enabled, member_to_member_messaging_enabled, group_messaging_enabled, voice_messages_enabled, require_connection_before_messaging
+         *
+         *     Use this to answer questions like "Is messaging enabled?", "Is the member directory public?", or "Are voice messages enabled?" — fetch live rather than answering from memory.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Connect settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["connect_settings"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Connect settings
+         * @description Updates the current community's Connect settings — the admin settings that control member-to-member interactions. Every field is optional; only the fields you send are changed, the rest are left untouched (partial update).
+         *
+         *     Params are grouped into three nested objects:
+         *     - connect: enabled, recommendations (only effective when connect.enabled is true), exclude_admins_from_recommendations, exclude_moderators_from_recommendations
+         *     - member_directory: public, sort (alphabetical/oldest/latest), view (list/cards)
+         *     - messaging: enabled (master toggle), member_to_member_messaging_enabled, group_messaging_enabled, voice_messages_enabled, require_connection_before_messaging
+         *
+         *     Use this to change settings — e.g. "Enable Connect", "Make the member directory public", "Sort the member directory alphabetically", or "Turn off group messaging". To read the current settings without changing them, use get_setting_connect instead.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        connect?: {
+                            /** @description Whether the Connect feature is enabled for the community */
+                            enabled?: boolean;
+                            /** @description Whether admins are excluded from connection recommendations */
+                            exclude_admins_from_recommendations?: boolean;
+                            /** @description Whether moderators are excluded from connection recommendations */
+                            exclude_moderators_from_recommendations?: boolean;
+                            /** @description Whether member-to-member connection recommendations are enabled. Only effective when connect.enabled is true. */
+                            recommendations?: boolean;
+                        };
+                        member_directory?: {
+                            /** @description Whether the member directory is publicly visible */
+                            public?: boolean;
+                            /**
+                             * @description Default sort order for the member directory
+                             * @enum {string}
+                             */
+                            sort?: "alphabetical" | "oldest" | "latest";
+                            /**
+                             * @description Default view layout for the member directory
+                             * @enum {string}
+                             */
+                            view?: "list" | "cards";
+                        };
+                        messaging?: {
+                            /** @description Whether messaging is enabled for the community (master toggle) */
+                            enabled?: boolean;
+                            /** @description Whether members can create group chats */
+                            group_messaging_enabled?: boolean;
+                            /** @description Whether members can direct message one another */
+                            member_to_member_messaging_enabled?: boolean;
+                            /** @description Whether members must be connected before they can message each other */
+                            require_connection_before_messaging?: boolean;
+                            /** @description Whether voice messages are enabled in chats */
+                            voice_messages_enabled?: boolean;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Connect settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["connect_settings"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Validation error (invalid member_directory.sort or member_directory.view) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/admin/v2/space_group_member": {
@@ -6256,7 +10219,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create Space */
+        /**
+         * Create Space
+         * @description Creates a space. space_type defaults to "basic" if not provided. Use course_setting for course-type spaces. Access levels are controlled via is_private and is_hidden_from_non_members.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -6278,7 +10244,7 @@ export interface paths {
                              * @example lesson
                              * @enum {string}
                              */
-                            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "session" | "topic" | "tutorial" | "workshop";
+                            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "practice" | "session" | "topic" | "tutorial" | "workshop";
                             /**
                              * @example section
                              * @enum {string}
@@ -6286,6 +10252,8 @@ export interface paths {
                             custom_section_label?: "chapter" | "level" | "module" | "part" | "path" | "phase" | "section" | "stage" | "track" | "unit" | "week";
                             /** @example true */
                             enforce_lessons_order?: boolean;
+                            /** @example true */
+                            lesson_thumbnails_visible?: boolean;
                             /** @example true */
                             new_comment_notification_enabled?: boolean;
                         };
@@ -6370,15 +10338,6 @@ export interface paths {
                         is_hidden_from_non_members?: boolean;
                         is_post_disabled?: boolean;
                         is_private?: boolean;
-                        /** @description Array of lock screen block configurations */
-                        lock_screen_blocks?: {
-                            /** @description Block data configuration */
-                            data?: Record<string, never>;
-                            /** @description Whether the block is hidden */
-                            hidden?: boolean;
-                            /** @description Block type */
-                            type?: string;
-                        }[];
                         locked_button_label?: string;
                         locked_button_url?: string;
                         locked_page_description?: string;
@@ -6525,10 +10484,15 @@ export interface paths {
                         /** @description Course space configuration */
                         course_setting_attributes?: {
                             /**
+                             * @example structured
+                             * @enum {string}
+                             */
+                            course_type?: "self_paced" | "scheduled" | "structured";
+                            /**
                              * @example lesson
                              * @enum {string}
                              */
-                            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "session" | "topic" | "tutorial" | "workshop";
+                            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "practice" | "session" | "topic" | "tutorial" | "workshop";
                             /**
                              * @example section
                              * @enum {string}
@@ -6536,6 +10500,8 @@ export interface paths {
                             custom_section_label?: "chapter" | "level" | "module" | "part" | "path" | "phase" | "section" | "stage" | "track" | "unit" | "week";
                             /** @example true */
                             enforce_lessons_order?: boolean;
+                            /** @example true */
+                            lesson_thumbnails_visible?: boolean;
                             /** @example true */
                             new_comment_notification_enabled?: boolean;
                         };
@@ -6616,19 +10582,12 @@ export interface paths {
                         /** @description Hide right sidebar in space */
                         hide_right_sidebar?: boolean;
                         hide_sorting?: boolean;
+                        /** @description Only valid for course spaces; set to false to publish a course */
+                        is_draft?: boolean;
                         is_hidden?: boolean;
                         is_hidden_from_non_members?: boolean;
                         is_post_disabled?: boolean;
                         is_private?: boolean;
-                        /** @description Array of lock screen block configurations */
-                        lock_screen_blocks?: {
-                            /** @description Block data configuration */
-                            data?: Record<string, never>;
-                            /** @description Whether the block is hidden */
-                            hidden?: boolean;
-                            /** @description Block type */
-                            type?: string;
-                        }[];
                         locked_button_label?: string;
                         locked_button_url?: string;
                         locked_page_description?: string;
@@ -6680,6 +10639,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["space"];
+                    };
+                };
+                /** @description Invalid draft state change */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
                     };
                 };
                 /** @description Not Found */
@@ -6929,7 +10897,65 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Image Posts
+         * @description List Image Posts
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Number of records per page */
+                    per_page?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Image space ID */
+                    space_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List Image Posts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["image_posts_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Image space not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Create Image Post
@@ -7027,7 +11053,62 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Show Image Post
+         * @description Show Image Post
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Image post ID */
+                    id: number;
+                    /** @description Image space ID */
+                    space_id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Show Image Post */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["image_post"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Image Post not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         /**
@@ -7172,6 +11253,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Filter by Member Tag IDs (OR logic, comma-separated) */
+                    member_tag_ids?: number[];
                     /** @description Page number */
                     page?: number;
                     /** @description Number of records per page */
@@ -7342,6 +11425,139 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/tax_setting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get tax settings
+         * @description Returns the community's Stripe Tax settings, refreshed from a live Stripe read.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tax settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["tax_setting"];
+                    };
+                };
+                /** @description Live Stripe Tax resolve fails */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        /**
+         * Update tax settings
+         * @description Updates the community's Stripe Tax platform status and/or default tax behavior.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        tax_setting?: {
+                            /**
+                             * @description Default tax behavior saved to the connected Stripe account's tax settings: inclusive (prices include tax), exclusive (tax is added on top of prices) or inferred_by_currency
+                             * @enum {string}
+                             */
+                            default_tax_behavior?: "exclusive" | "inclusive" | "inferred_by_currency";
+                            /**
+                             * @description Whether Circle collects tax on the community's payments. Tax is collected only when this is enabled and Stripe Tax is also active on the connected Stripe account
+                             * @enum {string}
+                             */
+                            platform_status?: "enabled" | "disabled";
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Stale disabled cache with live-enabled Stripe Tax succeeds */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["tax_setting"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Validation error (invalid platform_status, invalid default_tax_behavior, or processor disabled) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -7671,6 +11887,398 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v2/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a community's automations/workflows
+         * @description Lists the community's automations/workflows, newest first, paginated. Each record is a lean
+         *     summary (id, name, status, type); it omits the trigger/actions graph and any URL - fetch a
+         *     single workflow to get the full graph. Filters are optional and combine with AND.
+         *
+         *     `status` semantics (note the omit-vs-all difference):
+         *     - omit -> all workflows, INCLUDING archived
+         *     - `all` -> all workflows EXCEPT archived
+         *     - `archived` -> only archived workflows
+         *     - `draft` / `active` / `inactive` -> only workflows with that status
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number (min 1) */
+                    page?: number;
+                    /** @description Records per page (max 100) */
+                    per_page?: number;
+                    /** @description Filter by workflow name (substring match). */
+                    query?: string;
+                    /** @description Filter by status. Omit to include archived; use `all` to exclude archived; use `archived` for only archived. */
+                    status?: "draft" | "active" | "inactive" | "archived" | "all";
+                    /** @description Filter by type: dynamic (Automation), bulk_action (Bulk action), scheduled (Scheduled). */
+                    workflow_type?: "dynamic" | "bulk_action" | "scheduled";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retrieves a paginated list of the community's workflows */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["workflows_list"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/workflows/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Workflow
+         * @description Gets a single workflow by its UUID, including its trigger and all action steps in execution order. Each action carries a 1-indexed `list_position` for placement decisions; the raw `position` can have gaps.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID of the workflow */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Returns the workflow with its trigger and ordered actions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["workflow_detail"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/workflows/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Activate an automation (dynamic) workflow so it starts running automatically
+         * @description Activates an automation (dynamic) workflow, setting its status to active so it starts
+         *     running automatically. Only automation workflows can be activated: run a bulk action
+         *     workflow immediately with run_workflow_now, and start a scheduled workflow from the
+         *     workflow editor. Activation is immediate and enforces plan limits and eligibility
+         *     (a valid trigger and at least one action); it is not gated behind a confirmation step.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID of the workflow to activate */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Workflow activated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["workflow"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow could not be activated */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/workflows/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Deactivate an automation (dynamic) workflow so it stops running automatically
+         * @description Deactivates an active automation (dynamic) workflow, setting its status to inactive so it
+         *     stops running automatically. Only automation workflows can be deactivated — bulk action and
+         *     scheduled workflows cannot. The workflow must currently be active. Deactivation is immediate
+         *     and is not gated behind a confirmation step.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID of the workflow to deactivate */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Workflow deactivated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["workflow"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow could not be deactivated */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v2/workflows/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duplicate a workflow
+         * @description Duplicate (clone) an existing workflow. The copy is created in draft status and
+         *     includes all of the original's triggers, actions and schedule configuration.
+         *     No workflow run is triggered by the duplication. Returns the new workflow together
+         *     with a URL to open it in Settings.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /**
+                     * Format: uuid
+                     * @description UUID of the workflow to duplicate
+                     */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Workflow duplicated successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["workflow"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Community is not eligible for admin API v2 access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Workflow in another community */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+                /** @description Refuses to duplicate a fork while branch authoring is off */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7703,6 +12311,10 @@ export interface components {
             page_count?: number;
             per_page?: number;
             records?: components["schemas"]["access_group_community_member"][];
+        };
+        access_group_content: {
+            space_group_ids: number[];
+            space_ids: number[];
         };
         access_groups: {
             count?: number;
@@ -7742,7 +12354,7 @@ export interface components {
             avatar_url?: string | null;
             bio?: string | null;
             email?: string;
-            headline?: string;
+            headline?: string | null;
             highlighted_name?: string | null;
             id?: number;
             location?: string | null;
@@ -7807,6 +12419,122 @@ export interface components {
         ai_summary: {
             content?: string;
             overview?: string | null;
+        };
+        ArrayFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Array input type identifier
+             * @enum {string}
+             */
+            input_type: "array";
+            payload: {
+                /** @description Additional parameters (flexible object) */
+                additional_params?: {
+                    [key: string]: unknown;
+                } | null;
+                /** @description Available filter types for array filters */
+                filter_types: components["schemas"]["ArrayFilterTypes"][];
+                /**
+                 * @description Mode of the array filter
+                 * @enum {string}
+                 */
+                mode: "inline" | "popover";
+                /** @description Available array options */
+                options: components["schemas"]["ArrayOption"][];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "array";
+        };
+        /**
+         * @description Available array filter types
+         * @enum {string}
+         */
+        ArrayFilterTypes: "is" | "is_not" | "not_exist" | "exist";
+        ArrayOption: {
+            /** @description The group the option should be shown in, can be null */
+            group?: string | null;
+            /** @description Display text for the option */
+            text: string;
+            /** @description Option value */
+            value: string | number;
+        };
+        AsyncSearchFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Async search input type identifier
+             * @constant
+             */
+            input_type: "async_search";
+            payload: {
+                /** @description Available filter types for array filters */
+                filter_types: components["schemas"]["ArrayFilterTypes"][];
+                /**
+                 * @description Mode of the array filter
+                 * @enum {string}
+                 */
+                mode: "inline" | "popover";
+                /**
+                 * Format: uri
+                 * @description URL to fetch the async search options
+                 */
+                url: string;
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "async_search";
+        };
+        BaseFilterInputType: {
+            /** @description Whether multiple selections are allowed */
+            allow_multiple: boolean;
+            /** @description Whether admins can customize this filter */
+            customizable?: boolean;
+            /** @description Whether the filter is currently enabled (customize contexts only) */
+            enabled?: boolean;
+            /** @description The group this filter belongs to. Filters are ordered by group first, then within a group by the admin's saved order */
+            filter_group: components["schemas"]["FilterGroups"];
+            /** @description The persisted or default FilterKit::Control for this filter (customize contexts only) */
+            filter_kit_control?: components["schemas"]["FilterKitControl"] | null;
+            /** @description Icon identifier for the filter */
+            icon: string | null;
+            /** @description Unique identifier for the filter */
+            key: string;
+            /** @description Display label for the filter */
+            label: string;
+            /** @description Whether the filter is pinned */
+            pinned: boolean;
+            /**
+             * @description Type of the filter
+             * @enum {string}
+             */
+            type: "standard" | "search";
+            /** @description Whether the filter is visible by default */
+            visible_by_default: boolean;
+        };
+        /**
+         * BaseSearchParams
+         * @description Search params the client must send with every request for this surface
+         */
+        BaseSearchParams: {
+            /** @description Whether members without a name are excluded */
+            exclude_empty_name?: boolean;
+            /** @description Filters that are always applied on this surface */
+            filters?: components["schemas"]["BaseSearchParamsFilter"][];
+            /** @description Order clause, keyed by sortable field */
+            order?: {
+                [key: string]: unknown;
+            };
+            /** @description Member status to scope the search to */
+            status: string;
+        };
+        BaseSearchParamsFilter: {
+            id: string;
+            key: string;
+            value: string | boolean;
         };
         basic_post: {
             body?: {
@@ -7885,6 +12613,21 @@ export interface components {
             message?: string;
             post?: components["schemas"]["basic_post"];
         };
+        BooleanFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Boolean input type identifier
+             * @enum {string}
+             */
+            input_type: "boolean";
+            /** @description No payload required for boolean filters */
+            payload: Record<string, never> | null;
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "boolean";
+        };
         chat_preferences: {
             /** @description Enable or disable group messaging for the community */
             group_messaging_enabled?: boolean;
@@ -7897,6 +12640,8 @@ export interface components {
             voice_messages_enabled?: boolean;
         };
         comment: {
+            /** @enum {string} */
+            author_type?: "CommunityMember" | "CommunityAiAgent";
             body?: {
                 body?: string;
                 /** Format: date_time */
@@ -7954,7 +12699,6 @@ export interface components {
                 allow_members_to_go_live?: boolean;
                 allow_moderator_csv_download?: boolean;
                 allow_profile_search_indexing?: boolean;
-                browser_notifications_enabled?: boolean;
                 community_activity_notifications_email_enabled?: boolean;
                 community_activity_notifications_in_app_enabled?: boolean;
                 /** Format: date_time */
@@ -8017,9 +12761,29 @@ export interface components {
             weekly_digest_enabled?: boolean;
             white_label?: boolean;
         };
+        community_lead: {
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example jo@example.com */
+            email?: string | null;
+            /** @example 1 */
+            id?: number;
+            member_tags?: components["schemas"]["member_tag"][];
+            /** @example Jo Bloggs */
+            name?: string;
+            /** @example a1b2c3d4e5f6 */
+            public_uid?: string | null;
+            /** @example Xk3Jq9 */
+            sqid?: string;
+            /** @example CommunityLead */
+            type?: string;
+        };
         community_member: {
-            /** Format: date_time */
-            accepted_invitation?: string | null;
+            /** @description Timestamp the member accepted their invitation or terms, formatted as `"YYYY-MM-DD HH:MM:SS UTC"`. Empty string for members who have not yet accepted (e.g. invited members). Note: not ISO-8601; do not parse as a strict date-time. */
+            accepted_invitation?: string;
             active?: boolean;
             activity_score?: {
                 activity_score?: string | null;
@@ -8055,6 +12819,9 @@ export interface components {
             last_name?: string | null;
             /** Format: date_time */
             last_seen_at?: string | null;
+            /** Format: date_time */
+            member_since?: string | null;
+            member_since_overridden?: boolean;
             member_tags?: {
                 id?: number;
                 name?: string;
@@ -8117,6 +12884,91 @@ export interface components {
             updated_at?: string;
             user_id?: number;
         };
+        community_member_charge: {
+            /** @example 1000 */
+            amount?: number;
+            /** @example 0 */
+            amount_refunded?: number;
+            /** @example 1000 */
+            amount_to_refund?: number;
+            /** @example jane@example.com */
+            community_member_email?: string | null;
+            /** @example 1 */
+            community_member_id?: number | null;
+            /** @example Jane Doe */
+            community_member_name?: string | null;
+            /** @example abc123 */
+            community_member_public_uid?: string | null;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example usd */
+            currency?: string | null;
+            /** @example paid */
+            display_status_raw?: string;
+            /** @example 1 */
+            id?: number;
+            /** @example in_abc123 */
+            invoice_processor_id?: string | null;
+            /** @example card */
+            payment_method_type?: string | null;
+            /** @example SAVE20 */
+            paywall_coupon_code?: string | null;
+            /** @example 1 */
+            paywall_id?: number | null;
+            /** @example Premium Membership */
+            paywall_name?: string | null;
+            /** @example 1 */
+            paywall_price_id?: number | null;
+            /** @example month */
+            paywall_price_interval?: string | null;
+            /** @example subscription */
+            paywall_price_type?: string | null;
+            /** @example web */
+            platform?: string;
+            /** @example pi_abc123 */
+            processor_id?: string | null;
+            /** @example true */
+            refundable?: boolean;
+            /** @example paid */
+            status?: string;
+            /** @example sub_abc123 */
+            subscription_processor_id?: string | null;
+        };
+        community_member_charge_export: {
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example [] */
+            fields?: string[];
+            /**
+             * @example {
+             *       "email": "jane@example.com"
+             *     }
+             */
+            filters?: Record<string, never>;
+            /** @example 1 */
+            id?: number;
+            /** @example CommunityMemberCharge */
+            relation?: string;
+        };
+        community_member_charges_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["community_member_charge"][];
+        };
         community_member_created: {
             community_member?: components["schemas"]["community_member"];
             message?: string;
@@ -8128,6 +12980,100 @@ export interface components {
             page_count?: number;
             per_page?: number;
             records?: components["schemas"]["community_member"][];
+        };
+        community_member_subscription: {
+            /** @example 3 */
+            charges_quantity?: number;
+            /** @example jane@example.com */
+            community_member_email?: string | null;
+            /** @example 1 */
+            community_member_id?: number | null;
+            /** @example Jane Doe */
+            community_member_name?: string | null;
+            /** @example abc123 */
+            community_member_public_uid?: string | null;
+            /** @example false */
+            completed_installment?: boolean;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example usd */
+            currency?: string | null;
+            /**
+             * Format: date_time
+             * @example 2021-03-01T00:00:00Z
+             */
+            ends_at?: string | null;
+            /** @example 1 */
+            id?: number;
+            /** @example SAVE20 */
+            paywall_coupon_code?: string | null;
+            /** @example 1 */
+            paywall_id?: number | null;
+            /** @example Premium Membership */
+            paywall_name?: string | null;
+            /** @example 1 */
+            paywall_price_id?: number | null;
+            /** @example month */
+            paywall_price_interval?: string | null;
+            /** @example subscription */
+            paywall_price_type?: string | null;
+            /** @example web */
+            platform?: string;
+            /** @example sub_abc123 */
+            processor_id?: string | null;
+            /** @example false */
+            refundable?: boolean;
+            /** @example true */
+            renewing?: boolean;
+            /**
+             * Format: date_time
+             * @example 2021-02-01T00:00:00Z
+             */
+            renews_at?: string | null;
+            /** @example active */
+            status?: string;
+            /** @example 3000 */
+            total_amount_paid?: number;
+            /**
+             * Format: date_time
+             * @example 2021-01-15T00:00:00Z
+             */
+            trial_ends_at?: string | null;
+        };
+        community_member_subscription_export: {
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example [] */
+            fields?: string[];
+            /**
+             * @example {
+             *       "email": "jane@example.com"
+             *     }
+             */
+            filters?: Record<string, never>;
+            /** @example 1 */
+            id?: number;
+            /** @example CommunityMemberSubscription */
+            relation?: string;
+        };
+        community_member_subscriptions_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["community_member_subscription"][];
         };
         community_segment: {
             audience_count?: number;
@@ -8162,6 +13108,86 @@ export interface components {
             per_page?: number;
             records?: components["schemas"]["community_segment"][];
         };
+        /** @description These are the allowed configurations */
+        Configuration: components["schemas"]["StringFilterTypeConfiguration"] | components["schemas"]["BooleanFilterTypeConfiguration"] | components["schemas"]["RadioFilterTypeConfiguration"] | components["schemas"]["ArrayFilterTypeConfiguration"] | components["schemas"]["NearMeFilterTypeConfiguration"] | components["schemas"]["PresetFilterTypeConfiguration"] | components["schemas"]["LocationFilterTypeConfiguration"] | components["schemas"]["SearchFilterTypeConfiguration"] | components["schemas"]["NumberFilterTypeConfiguration"] | components["schemas"]["AsyncSearchFilterTypeConfiguration"] | components["schemas"]["DaysAgoFilterTypeConfiguration"] | components["schemas"]["NumberRangeFilterTypeConfiguration"];
+        connect_settings: {
+            connect: {
+                /** @example true */
+                enabled: boolean;
+                /** @example false */
+                exclude_admins_from_recommendations: boolean;
+                /** @example false */
+                exclude_moderators_from_recommendations: boolean;
+                /** @example true */
+                recommendations: boolean;
+            };
+            member_directory: {
+                /** @example true */
+                public: boolean;
+                /**
+                 * @example alphabetical
+                 * @enum {string|null}
+                 */
+                sort: "alphabetical" | "oldest" | "latest" | null;
+                /**
+                 * @example list
+                 * @enum {string|null}
+                 */
+                view: "list" | "cards" | null;
+            };
+            messaging: {
+                /** @example true */
+                enabled: boolean;
+                /** @example true */
+                group_messaging_enabled: boolean;
+                /** @example true */
+                member_to_member_messaging_enabled: boolean;
+                /** @example false */
+                require_connection_before_messaging: boolean;
+                /** @example false */
+                voice_messages_enabled: boolean;
+            };
+        };
+        contact_note: {
+            /** @example 1 */
+            author_id?: number;
+            /** @example 1 */
+            community_id?: number;
+            /** @example 1 */
+            contact_id?: number;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example 1 */
+            id?: number;
+            policies?: {
+                /** @example true */
+                can_destroy?: boolean;
+                /** @example true */
+                can_edit?: boolean;
+            };
+            tiptap_body?: Record<string, never> | null;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            updated_at?: string;
+        };
+        contact_notes_list: {
+            /** @example 12 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 5 */
+            page_count?: number;
+            /** @example 5 */
+            per_page?: number;
+            records?: components["schemas"]["contact_note"][];
+        };
         contact_search_rules_schema: {
             /** @enum {string} */
             rule_type: "all_contacts" | "all_members" | "custom_filters" | "selected_members";
@@ -8185,6 +13211,7 @@ export interface components {
              * @example 2021-01-01T00:00:00Z
              */
             created_at?: string;
+            featured_media?: Record<string, never> | null;
             /** @example 1 */
             id?: number;
             /** @example true */
@@ -8204,6 +13231,7 @@ export interface components {
              * @enum {string}
              */
             status?: "published" | "draft";
+            thumbnail?: Record<string, never> | null;
             /**
              * Format: date_time
              * @example 2021-01-01T00:00:00Z
@@ -8259,12 +13287,35 @@ export interface components {
             /** @enum {string} */
             course_type?: "self_paced" | "scheduled" | "structured";
             /** @enum {string|null} */
-            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "session" | "topic" | "tutorial" | "workshop" | null;
+            custom_lesson_label?: "activity" | "assignment" | "challenge" | "class" | "day" | "exercise" | "lecture" | "lesson" | "practice" | "session" | "topic" | "tutorial" | "workshop" | null;
             /** @enum {string|null} */
             custom_section_label?: "chapter" | "level" | "module" | "part" | "path" | "phase" | "section" | "stage" | "track" | "unit" | "week" | null;
             enforce_lessons_order?: boolean;
+            lesson_thumbnails_visible?: boolean;
             new_comment_notification_enabled?: boolean;
         } | null;
+        DaysAgoFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Days ago input type identifier
+             * @enum {string}
+             */
+            input_type: "days_ago";
+            payload: {
+                /** @description Available filter types for days ago filters */
+                filter_types: components["schemas"]["DaysAgoFilterTypes"][];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "days_ago";
+        };
+        /**
+         * @description Available days ago filter types
+         * @enum {string}
+         */
+        DaysAgoFilterTypes: "lt" | "eq" | "gt";
         direct_upload_response: {
             attachable_sgid?: string;
             byte_size?: number;
@@ -8337,6 +13388,13 @@ export interface components {
             member_avatar_url?: string | null;
             member_email?: string;
             member_name?: string;
+            meta_tag_attributes?: {
+                meta_description?: string | null;
+                meta_title?: string | null;
+                opengraph_description?: string | null;
+                opengraph_image?: string | null;
+                opengraph_title?: string | null;
+            } | null;
             name?: string;
             /** @example false */
             rsvp_disabled?: boolean;
@@ -8364,7 +13422,7 @@ export interface components {
         event_attendee: {
             event_id?: number;
             event_name?: string;
-            headline?: string;
+            headline?: string | null;
             id?: number;
             member_avatar_url?: string | null;
             member_email?: string;
@@ -8387,6 +13445,76 @@ export interface components {
             page_count?: number;
             per_page?: number;
             records?: components["schemas"]["event"][];
+        };
+        filter_kit_control: {
+            community_id?: number | null;
+            created_at?: string | null;
+            enabled: boolean;
+            filter_type: string;
+            id?: number | null;
+            key: string;
+            profile_field?: {
+                id?: number;
+                key?: string;
+                label?: string;
+            } | null;
+            profile_field_id?: number | null;
+            sort_key?: number | null;
+            space?: {
+                id?: number;
+                name?: string;
+            } | null;
+            space_id?: number | null;
+            updated_at?: string | null;
+        };
+        filter_kit_controls_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["filter_kit_control"][];
+        };
+        /**
+         * @description Groups scope ordering — filters are only sorted relative to others in the same group. Returned in a fixed order: global, presets, profile
+         * @enum {string}
+         */
+        FilterGroups: "global" | "presets" | "profile";
+        FilterKitControl: {
+            community_id?: number | null;
+            created_at?: string | null;
+            enabled: boolean;
+            filter_type: string;
+            id?: number | null;
+            key: string;
+            profile_field?: {
+                id?: number;
+                key?: string;
+                label?: string;
+            } | null;
+            profile_field_id?: number | null;
+            sort_key?: number | null;
+            space?: {
+                id?: number;
+                name?: string;
+            } | null;
+            space_id?: number | null;
+            updated_at?: string | null;
+        };
+        /**
+         * FilterResponse
+         * @description This is the root object
+         */
+        FilterResponse: {
+            base_search_params?: components["schemas"]["BaseSearchParams"];
+            /** @description Whether member filtering is enabled for this surface */
+            enabled?: boolean;
+            filter_configurations: components["schemas"]["Configuration"][];
         };
         flagged_content: {
             action_by_email?: string | null;
@@ -8425,7 +13553,6 @@ export interface components {
         form: {
             /** @enum {string} */
             after_submission_action?: "thank_you_page" | "redirect";
-            background_color?: string | null;
             /** @enum {string} */
             embed_display_format?: "inline" | "popup";
             embed_styles?: {
@@ -8440,8 +13567,6 @@ export interface components {
             } | null;
             id?: number;
             name?: string;
-            /** @enum {string} */
-            orientation?: "horizontal" | "vertical";
             popup_delay?: number;
             popup_frequency?: number;
             redirect_url?: string | null;
@@ -8458,7 +13583,6 @@ export interface components {
             /** @enum {string} */
             status?: "draft" | "published";
             submissions_count?: number;
-            text_color?: string | null;
             thank_you_page_body?: string | null;
             thank_you_page_title?: string | null;
             uid?: string;
@@ -8468,7 +13592,8 @@ export interface components {
         form_element: {
             /** @description Element-specific attributes. Structure varies by element type. */
             attributes?: Record<string, never>;
-            children?: components["schemas"]["form_element"][];
+            /** @description Child elements nested within this element. Each child follows the same structure as a form_element and can be nested recursively. */
+            children?: Record<string, never>[];
             id?: number | null;
             parent_element_id?: number | null;
             position?: number;
@@ -8483,10 +13608,41 @@ export interface components {
             per_page?: number;
             records?: components["schemas"]["form"][];
         };
+        form_submission: {
+            /** Format: date_time */
+            created_at?: string;
+            fields?: components["schemas"]["form_submission_field"][];
+            id?: number;
+        };
+        form_submission_create_request: {
+            elements: {
+                id: number;
+                value?: string | null;
+                value_json?: string[];
+            }[];
+            /** @description Email of the contact on behalf of which the submission is being created */
+            submission_on_behalf_of?: string | null;
+        };
+        form_submission_create_response: {
+            success?: boolean;
+        };
+        form_submission_field: {
+            field_id?: number;
+            hidden?: boolean;
+            label?: string;
+            value?: (string | string[]) | null;
+        };
+        form_submission_list: {
+            count?: number;
+            has_next_page?: boolean;
+            page?: number;
+            page_count?: number;
+            per_page?: number;
+            records?: components["schemas"]["form_submission"][];
+        };
         form_update_request: {
             /** @enum {string} */
             after_submission_action?: "thank_you_page" | "redirect";
-            background_color?: string | null;
             elements?: components["schemas"]["form_element"][];
             /** @enum {string} */
             embed_display_format?: "inline" | "popup";
@@ -8501,8 +13657,6 @@ export interface components {
                 };
             } | null;
             name?: string;
-            /** @enum {string} */
-            orientation?: "horizontal" | "vertical";
             popup_delay?: number;
             popup_frequency?: number;
             redirect_url?: string | null;
@@ -8518,7 +13672,6 @@ export interface components {
             } | null;
             /** @enum {string} */
             status?: "draft" | "published";
-            text_color?: string | null;
             thank_you_page_body?: string | null;
             thank_you_page_title?: string | null;
         };
@@ -8541,13 +13694,31 @@ export interface components {
             message?: string;
             post?: components["schemas"]["image_post"];
         };
+        image_posts_list: {
+            count?: number;
+            has_next_page?: boolean;
+            page?: number;
+            page_count?: number;
+            per_page?: number;
+            records?: components["schemas"]["image_post"][];
+        };
         invitation_link: {
+            access_group_ids?: number[];
             active?: boolean;
             /** Format: date_time */
             created_at?: string;
             id?: number;
+            member_tag_ids?: string[];
             members_joined_count?: number;
             name?: string;
+            paywall?: {
+                paywall_coupon_code?: string;
+                paywall_id?: string;
+                paywall_price_id?: string;
+                trial_days?: number;
+            } | null;
+            /** Format: uri */
+            redemption_url?: string;
             redirect_space_id?: number | null;
             /** Format: date_time */
             updated_at?: string;
@@ -8574,6 +13745,86 @@ export interface components {
             public_uid: string;
             total_points: number;
         };
+        live_room: {
+            /** Format: date-time */
+            closed_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            id: number;
+            /** Format: date-time */
+            live_at?: string | null;
+            name: string;
+            recording_enabled: boolean;
+            room_type: string;
+            slug: string;
+            status: string;
+        };
+        live_room_list: {
+            count?: number;
+            has_next_page?: boolean;
+            page?: number;
+            page_count?: number;
+            per_page?: number;
+            records?: components["schemas"]["live_room"][];
+        };
+        location_result: {
+            /**
+             * @description Mapbox place type (e.g. place, region, country). Needed to build a geo_location contact filter.
+             * @example place
+             */
+            feature_type?: string | null;
+            /** @example Bristol, England, United Kingdom */
+            full_address?: string | null;
+            /**
+             * @description Short place name. May equal full_address when Mapbox omits the short name.
+             * @example Bristol
+             */
+            name?: string | null;
+            /**
+             * @description Geocoder that produced this result.
+             * @example mapbox_v6
+             */
+            source: string;
+            /**
+             * @description Opaque Mapbox location id. To build a geo_location contact filter, map this result to { source, id: source_id, name, feature_type }.
+             * @example dXJuOm1ieHBsYzpHMGhQ
+             */
+            source_id?: string | null;
+        };
+        location_search_results: {
+            results?: components["schemas"]["location_result"][];
+        };
+        LocationFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Location input type identifier
+             * @enum {string}
+             */
+            input_type: "location";
+            payload: {
+                location_search_options: components["schemas"]["LocationSearchOptions"];
+                /**
+                 * @description Render mode for the location filter. If inlined, the location search options will be displayed inline. If popover, the location search options will be displayed in a popover.
+                 * @enum {string}
+                 */
+                mode?: "inline" | "popover";
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "location";
+        };
+        LocationSearchOptions: {
+            /** @description Location search key */
+            key: string;
+            source: components["schemas"]["LocationSources"];
+        };
+        /**
+         * @description Available location data sources
+         * @enum {string}
+         */
+        LocationSources: "mapbox_v6";
         member_tag: {
             /** @example #000000 */
             color?: string;
@@ -8627,6 +13878,101 @@ export interface components {
             per_page?: number;
             records?: components["schemas"]["member_tag"][];
         };
+        NearMeCommunityMemberProfileField: {
+            /** @description Profile field identifier */
+            id: number;
+            /** @description Profile field text */
+            text: string;
+        };
+        NearMeFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Near me input type identifier
+             * @enum {string}
+             */
+            input_type: "near_me";
+            payload: {
+                /** @description Community member profile field */
+                community_member_profile_field: components["schemas"]["NearMeCommunityMemberProfileField"] | null;
+                location_search_options: components["schemas"]["LocationSearchOptions"];
+                /** @description Near me location filter values */
+                near_me_location_filter_values: components["schemas"]["NearMeLocationFilterValues"] | null;
+                /** @description Whether to require more precise location from user */
+                require_user_to_provide_more_precise_location: boolean;
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "near_me";
+        };
+        NearMeLocationFilterValues: {
+            /** @description Location identifier */
+            id: string;
+            /** @description Location name */
+            name: string;
+            source: components["schemas"]["LocationSources"];
+        };
+        NumberFilterOptions: {
+            decimal: number | null;
+            /** @enum {string} */
+            format: "number" | "percentage" | "custom" | "unformatted";
+            id: number;
+            /** @enum {string|null} */
+            position: "left" | "right" | null;
+            text: string | null;
+        };
+        NumberFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Number input type identifier
+             * @enum {string}
+             */
+            input_type: "number";
+            payload: {
+                /** @description Additional parameters for the filter */
+                additional_params?: Record<string, never> | null;
+                /** @description Available filter types for number filters */
+                filter_types: components["schemas"]["NumberFilterTypes"][];
+                number_options?: components["schemas"]["NumberFilterOptions"];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "number";
+        };
+        /**
+         * @description Available number filter types
+         * @enum {string}
+         */
+        NumberFilterTypes: "is" | "is_not";
+        NumberRangeFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Number range input type identifier
+             * @enum {string}
+             */
+            input_type: "number_range";
+            payload: {
+                /** @description Available filter types for number range filters */
+                filter_types: components["schemas"]["NumberRangeFilterTypes"][];
+                /** @description Maximum value for the number range */
+                max?: number | null;
+                /** @description Minimum value for the number range */
+                min?: number | null;
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "number_range";
+        };
+        /**
+         * @description Available number range filter types
+         * @enum {string}
+         */
+        NumberRangeFilterTypes: "lt" | "gt" | "between";
         page_profile_fields: {
             allow_null?: boolean;
             choices?: {
@@ -8649,6 +13995,192 @@ export interface components {
             platform_field?: boolean;
             required?: boolean;
         }[];
+        payment_method_preference: {
+            /** @example false */
+            can_request_capability: boolean;
+            /** @example apple_pay_payments */
+            capability_id?: string | null;
+            /** @example active */
+            capability_status?: string | null;
+            /** @example true */
+            is_capability_active: boolean;
+            /** @example true */
+            is_capability_available: boolean;
+            /** @example false */
+            is_capability_pending: boolean;
+            /** @example true */
+            is_enabled: boolean;
+            /** @example true */
+            mutable: boolean;
+            /**
+             * @example active
+             * @enum {string}
+             */
+            normalized_state: "pending_verification" | "active" | "disabled" | "unavailable";
+            /** @example apple_pay */
+            payment_method: string;
+            /** @example true */
+            value: boolean;
+        };
+        payment_method_preferences_list: components["schemas"]["payment_method_preference"][];
+        paywall: {
+            /** @example false */
+            access_groups_enabled?: boolean;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example usd */
+            currency?: string | null;
+            /** @example Premium Membership */
+            display_name?: string;
+            /** @example 1 */
+            id?: number;
+            /** @example Premium Membership */
+            name?: string | null;
+            /** @example 1 */
+            paywall_group_id?: number | null;
+            prices?: {
+                /**
+                 * @description The price's total amount, in cents. For installments-type prices, this is the price's full amount field, not a per-installment amount.
+                 * @example 1000
+                 */
+                amount_in_cents?: number;
+                /** @example $10.00/month */
+                display_name?: string;
+                /** @example 1 */
+                id?: number;
+                /**
+                 * @description Billing interval. Pairs with interval_count (e.g. interval: "monthly", interval_count: 3 is quarterly).
+                 * @example monthly
+                 * @enum {string|null}
+                 */
+                interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
+                /** @example 1 */
+                interval_count?: number | null;
+                /** @example Monthly */
+                name?: string | null;
+                /**
+                 * @example subscription
+                 * @enum {string}
+                 */
+                price_type?: "subscription" | "onetime" | "installments";
+                /** @example true */
+                recurring?: boolean;
+                /**
+                 * @example active
+                 * @enum {string}
+                 */
+                status?: "draft" | "active" | "inactive";
+                /** @example 0 */
+                upfront_payment_amount_in_cents?: number;
+            }[];
+            /**
+             * @example active
+             * @enum {string}
+             */
+            status?: "draft" | "active" | "inactive";
+            /** @example Premium Memberships */
+            subscription_group?: string | null;
+        };
+        paywall_affiliate: {
+            /** @example abc123 */
+            code?: string;
+            community_member?: {
+                /** @example jane@example.com */
+                email?: string;
+                /** @example 1 */
+                id?: number;
+                /** @example Jane Doe */
+                name?: string;
+            };
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            enrolled_at?: string | null;
+            /** @example 1 */
+            id?: number;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            invited_at?: string | null;
+            /** @example enrolled */
+            status?: string;
+        };
+        paywall_affiliate_payout_export: {
+            /** @example [] */
+            community_member_ids?: number[];
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example 1 */
+            id?: number;
+            /** @example Paywalls::Affiliates::Payout */
+            relation?: string;
+        };
+        paywall_affiliates_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["paywall_affiliate"][];
+        };
+        paywall_group: {
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at?: string;
+            /** @example 1 */
+            currency_id?: number;
+            /** @example 1 */
+            id?: number;
+            /** @example Premium Memberships */
+            name?: string;
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            updated_at?: string;
+        };
+        paywall_member_access_sync: {
+            /**
+             * Format: date_time
+             * @example 2021-01-01T00:00:00Z
+             */
+            created_at: string;
+            /** @example 1 */
+            id: number;
+            /**
+             * @example pending
+             * @enum {string}
+             */
+            status: "pending" | "processing" | "completed" | "partial_success" | "failed";
+        };
+        paywalls_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["paywall"][];
+        };
         posts_list: {
             count?: number;
             has_next_page?: boolean;
@@ -8656,6 +14188,25 @@ export interface components {
             page_count?: number;
             per_page?: number;
             records?: components["schemas"]["basic_post"][];
+        };
+        PresetFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Preset input type identifier
+             * @enum {string}
+             */
+            input_type: "preset";
+            payload: {
+                /** @description Preset parameters (flexible object) */
+                preset_params: {
+                    [key: string]: unknown;
+                };
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "preset";
         };
         profile_field: {
             allow_null: boolean;
@@ -8694,6 +14245,29 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        RadioFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Radio input type identifier
+             * @enum {string}
+             */
+            input_type: "radio";
+            payload: {
+                /** @description Available radio button options */
+                options: components["schemas"]["RadioOption"][];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "radio";
+        };
+        RadioOption: {
+            /** @description Option key */
+            key: string;
+            /** @description Option value */
+            value: string | number;
+        };
         rich_text_body: {
             attachments?: unknown[];
             body?: {
@@ -8728,6 +14302,21 @@ export interface components {
             polls?: unknown[];
             sgids_to_object_map?: Record<string, never>;
         } | null;
+        SearchFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description Search input type identifier
+             * @enum {string}
+             */
+            input_type: "search";
+            /** @description No payload required for search filters */
+            payload: Record<string, never> | null;
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "search";
+        };
         shared_community_member: {
             avatar_url?: string | null;
             headline?: string;
@@ -8760,6 +14349,7 @@ export interface components {
                 custom_lesson_label?: string | null;
                 custom_section_label?: string | null;
                 enforce_lessons_order?: boolean;
+                lesson_thumbnails_visible?: boolean;
                 new_comment_notification_enabled?: boolean;
             } | null;
             /** @enum {string} */
@@ -8810,6 +14400,7 @@ export interface components {
             hide_sorting?: boolean | null;
             host?: string | null;
             id?: number;
+            is_draft?: boolean;
             is_hidden?: boolean | null;
             is_hidden_from_non_members?: boolean | null;
             is_post_disabled?: boolean | null;
@@ -8895,7 +14486,7 @@ export interface components {
                 community_id?: number;
                 email?: string;
                 first_name?: string;
-                headline?: string;
+                headline?: string | null;
                 last_name?: string;
                 name?: string;
                 profile_url?: string;
@@ -8935,7 +14526,7 @@ export interface components {
                 community_id?: number;
                 email?: string;
                 first_name?: string;
-                headline?: string;
+                headline?: string | null;
                 last_name?: string;
                 name?: string;
                 profile_url?: string;
@@ -8972,6 +14563,30 @@ export interface components {
             per_page?: number;
             records?: components["schemas"]["space"][];
         };
+        StringFilterTypeConfiguration: components["schemas"]["BaseFilterInputType"] & {
+            /**
+             * @description String input type identifier
+             * @enum {string}
+             */
+            input_type: "string";
+            payload: {
+                /** @description Additional parameters for the filter */
+                additional_params?: Record<string, never> | null;
+                /** @description Available filter types for string filters */
+                filter_types: components["schemas"]["StringFilterTypes"][];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            input_type: "string";
+        };
+        /**
+         * @description Available string filter types
+         * @enum {string}
+         */
+        StringFilterTypes: "contains" | "does_not_contain" | "is" | "is_not" | "not_exist" | "exist";
         tagged_member: {
             community_member_id?: number;
             contact_id?: number;
@@ -8995,6 +14610,11 @@ export interface components {
             page_count?: number;
             per_page?: number;
             records?: components["schemas"]["tagged_member"][];
+        };
+        tax_setting: {
+            default_tax_behavior: string | null;
+            platform_status: string;
+            processor_status: string;
         };
         topic: {
             /** @description Only admins and moderators can select this topic */
@@ -9020,6 +14640,136 @@ export interface components {
             per_page?: number;
             records?: components["schemas"]["topic"][];
         };
+        workflow: {
+            /** @example null */
+            community_segment_id?: number | null;
+            /**
+             * Format: uuid
+             * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
+             */
+            id: string;
+            /** @example Welcome new members */
+            name: string;
+            /** @example 42 */
+            runs_count: number;
+            /**
+             * @example active
+             * @enum {string}
+             */
+            status: "draft" | "active" | "inactive" | "archived";
+            /** @example Automation */
+            type_label: string;
+            /** @example https://community.circle.so/settings/workflows/view/a1b2c3d4-e5f6-7890-abcd-ef1234567890 */
+            url: string;
+            /**
+             * @example dynamic
+             * @enum {string}
+             */
+            workflow_type: "dynamic" | "bulk_action" | "scheduled";
+        };
+        workflow_detail: {
+            actions: {
+                /** @example add_tag_to_community_member */
+                action_type: string;
+                api_params: Record<string, never> | null;
+                /** @example null */
+                community_segment_id: number | null;
+                /**
+                 * Format: uuid
+                 * @example 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
+                 */
+                id: string;
+                /** @example 1 */
+                list_position: number;
+                /** @example 3 */
+                position: number;
+                /**
+                 * Format: uuid
+                 * @example 9f2c1b7a-8d3e-4a2f-9c1b-7a8d3e4a2f9c
+                 */
+                workflow_id: string;
+            }[];
+            /** @example null */
+            community_segment_id: number | null;
+            /**
+             * Format: uuid
+             * @example 9f2c1b7a-8d3e-4a2f-9c1b-7a8d3e4a2f9c
+             */
+            id: string;
+            /** @example Welcome new members */
+            name: string;
+            /** @example 12 */
+            runs_count: number;
+            /** @example active */
+            status: string;
+            trigger: {
+                /** @example null */
+                ai_filter_prompt?: string | null;
+                /** @example null */
+                community_segment_id?: number | null;
+                config?: Record<string, never> | null;
+                /** @example member */
+                contact_type?: string;
+                /**
+                 * Format: uuid
+                 * @example 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+                 */
+                id?: string;
+                /** @example null */
+                resource_id?: number | null;
+                /** @example null */
+                resource_type?: string | null;
+                /** @example member_joined_community */
+                trigger_type?: string;
+                /**
+                 * Format: uuid
+                 * @example 9f2c1b7a-8d3e-4a2f-9c1b-7a8d3e4a2f9c
+                 */
+                workflow_id?: string;
+            } | null;
+            /** @example Automations */
+            type_label: string;
+            /** @example dynamic */
+            workflow_type: string;
+        };
+        workflow_summary: {
+            /** @example null */
+            community_segment_id?: number | null;
+            /**
+             * Format: uuid
+             * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
+             */
+            id: string;
+            /** @example Welcome new members */
+            name: string | null;
+            /** @example 42 */
+            runs_count: number;
+            /**
+             * @description Workflow status
+             * @example active
+             */
+            status: string;
+            /** @example Automation */
+            type_label: string;
+            /**
+             * @example dynamic
+             * @enum {string}
+             */
+            workflow_type: "dynamic" | "bulk_action" | "scheduled";
+        };
+        workflows_list: {
+            /** @example 100 */
+            count?: number;
+            /** @example true */
+            has_next_page?: boolean;
+            /** @example 1 */
+            page?: number;
+            /** @example 10 */
+            page_count?: number;
+            /** @example 10 */
+            per_page?: number;
+            records?: components["schemas"]["workflow_summary"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -9028,4 +14778,200 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    change_billing_date_or_extend_trial_community_member_subscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Community Member Subscription ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Required for change_billing_date; ignored for extend_trial. Parsed as a calendar date. Use YYYY-MM-DD as the canonical example. */
+                    billing_date?: string;
+                    /** @description Required for extend_trial; ignored for change_billing_date. Must be a positive integer. */
+                    days_to_extend?: number;
+                    /**
+                     * @description Billing operation to perform.
+                     * @enum {string}
+                     */
+                    operation: "change_billing_date" | "extend_trial";
+                };
+            };
+        };
+        responses: {
+            /** @description Billing date updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["community_member_subscription"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Community is not eligible for admin API v2 access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Subscription is missing or belongs to another community */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid supported input, missing trial anchor, mobile-platform rejection, or billing date service failure */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    list_contact_notes: {
+        parameters: {
+            query?: {
+                /** @description Page number */
+                page?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Contact ID or sqid */
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Retrieves the paginated list of notes for a contact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["contact_notes_list"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Community is not eligible for admin API v2 access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    create_contact_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Contact ID or sqid */
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Contact note attributes */
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Rich text note in Tiptap document format */
+                    tiptap_body: {
+                        body: Record<string, never>;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Contact note created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["contact_note"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Community is not eligible for admin API v2 access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid contact note body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["error"];
+                };
+            };
+        };
+    };
+}

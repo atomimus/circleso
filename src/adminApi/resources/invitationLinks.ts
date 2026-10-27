@@ -1,5 +1,5 @@
 import type { AdminRequester } from "../request";
-import type { RequestOptions } from "../types";
+import type { RequestOptions, RequestOptionsWithBody } from "../types";
 
 export function createInvitationLinksResource(request: AdminRequester) {
   return {
@@ -10,6 +10,27 @@ export function createInvitationLinksResource(request: AdminRequester) {
      */
     list: (options?: RequestOptions<"/api/admin/v2/invitation_links", "get">) =>
       request.get("/api/admin/v2/invitation_links", options),
+    /**
+     * Create an invitation link.
+     * @param options Body fields (flat) plus request metadata.
+     * @returns Created invitation link response.
+     */
+    create: (options: RequestOptionsWithBody<"/api/admin/v2/invitation_links", "post">) =>
+      request.post("/api/admin/v2/invitation_links", options),
+    /**
+     * Update an invitation link.
+     * @param id Invitation link ID.
+     * @param options Body fields (flat) plus request metadata.
+     * @returns Updated invitation link response.
+     */
+    update: (
+      id: number,
+      options: RequestOptionsWithBody<"/api/admin/v2/invitation_links/{id}", "put">,
+    ) =>
+      request.put("/api/admin/v2/invitation_links/{id}", {
+        ...options,
+        path: { id },
+      }),
     /**
      * Delete an invitation link.
      * @param id Invitation link ID.

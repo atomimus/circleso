@@ -56,6 +56,25 @@ export function createAccessGroupsResource(request: AdminRequester) {
         ...options,
         path: { id },
       }),
+    content: {
+      /**
+       * Replace the spaces and space groups assigned to an access group.
+       * @param accessGroupId Access group ID.
+       * @param options Body fields (flat) plus request metadata. Omitted lists remove assignments.
+       * @returns Access group content response.
+       */
+      update: (
+        accessGroupId: number,
+        options: RequestOptionsWithBody<
+          "/api/admin/v2/access_groups/{access_group_id}/content",
+          "patch"
+        >,
+      ) =>
+        request.patch("/api/admin/v2/access_groups/{access_group_id}/content", {
+          ...options,
+          path: { access_group_id: accessGroupId },
+        }),
+    },
     members: {
       /**
        * List access group members.

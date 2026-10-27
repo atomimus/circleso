@@ -11,6 +11,45 @@ components:
       description: Use Access token from /api/v1/headless/auth_token Authorization
         header in the format "Bearer ACCESS_TOKEN"
   schemas:
+    reaction_summary:
+      type: object
+      required:
+      - current_user_reaction_type
+      - counts
+      description: Stable reaction state. Uses legacy Like semantics when reactions
+        are disabled for the community.
+      properties:
+        current_user_reaction_type:
+          type: string
+          nullable: true
+        counts:
+          type: object
+          required:
+          - like
+          - celebrate
+          - love
+          - support
+          - insightful
+          - funny
+          properties:
+            like:
+              type: integer
+              minimum: 0
+            celebrate:
+              type: integer
+              minimum: 0
+            love:
+              type: integer
+              minimum: 0
+            support:
+              type: integer
+              minimum: 0
+            insightful:
+              type: integer
+              minimum: 0
+            funny:
+              type: integer
+              minimum: 0
     error:
       type: object
       properties:
@@ -152,6 +191,7 @@ components:
           type: string
         headline:
           type: string
+          nullable: true
         last_name:
           type: string
         name:
@@ -522,12 +562,24 @@ components:
           nullable: true
         email:
           type: string
+    reaction_member:
+      allOf:
+      - "$ref": "#/components/schemas/basic_community_member"
+      - type: object
+        required:
+        - reaction_type
+        properties:
+          reaction_type:
+            type: string
+            description: Reaction selected by the member.
     public_profile:
       type: object
       properties:
         id:
           type: integer
           minimum: 1
+        is_deleted:
+          type: boolean
         headline:
           type: string
         bio:
@@ -849,6 +901,8 @@ components:
                 type: integer
     basic_post:
       type: object
+      required:
+      - reaction_summary
       properties:
         post_type:
           type: string
@@ -887,6 +941,8 @@ components:
           type: boolean
         is_liked:
           type: boolean
+        reaction_summary:
+          "$ref": "#/components/schemas/reaction_summary"
         is_truncation_disabled:
           type: boolean
         bookmark_id:
@@ -1047,6 +1103,8 @@ components:
             "$ref": "#/components/schemas/post"
     comment:
       type: object
+      required:
+      - reaction_summary
       properties:
         id:
           type: integer
@@ -1056,6 +1114,8 @@ components:
           type: integer
         user_likes_count:
           type: integer
+        reaction_summary:
+          "$ref": "#/components/schemas/reaction_summary"
         created_at:
           type: string
           format: date-time
@@ -1073,17 +1133,17 @@ components:
           nullable: true
         community_member_id:
           type: integer
-        editor:
-          type: string
-          enum:
-          - trix
-          - tiptap
         topic_id:
           type: integer
         space_id:
           type: integer
         post_name:
           type: string
+        editor:
+          type: string
+          enum:
+          - trix
+          - tiptap
         body:
           type: object
           properties:
@@ -1535,7 +1595,7 @@ components:
         records:
           type: array
           items:
-            "$ref": "#/components/schemas/shared_community_member"
+            "$ref": "#/components/schemas/reaction_member"
     section:
       type: object
       properties:
@@ -1566,6 +1626,9 @@ components:
                 type: boolean
               featured_media_duration:
                 type: integer
+                nullable: true
+              thumbnail_url:
+                type: string
                 nullable: true
               dripped_at:
                 type: string
@@ -1660,6 +1723,9 @@ components:
           "$ref": "#/components/schemas/rich_text_body"
         featured_media_duration:
           type: integer
+        thumbnail_url:
+          type: string
+          nullable: true
         section_id:
           type: integer
         dripped_at:
@@ -1886,6 +1952,12 @@ components:
             type: object
             additionalProperties:
               type: boolean
+        can_report:
+          type: boolean
+        can_review:
+          type: boolean
+        in_review:
+          type: boolean
     chat_thread:
       type: object
       properties:
@@ -2712,11 +2784,15 @@ components:
               type: integer
             emoji:
               type: string
+            unicode:
+              type: string
+              description: Unicode codepoint sequence (e.g. 2764-fe0f)
           required:
           - reactionable_type
           - reactionable_id
           - community_member_id
           - emoji
+          - unicode
     chat_room_participant:
       type: object
       properties:
@@ -2793,12 +2869,28 @@ components:
         count:
           type: integer
           minimum: 0
-        sort:
-          type: string
+        meta:
+          type: object
+          properties:
+            events_directory_layout:
+              type: string
+              enum:
+              - list
+              - thumbnail
+              description: Layout to use for the Events Directory. Thumbnail when
+                the community's public events view is thumbnail; list otherwise. Clients
+                should fall back to list for unknown values.
+            sort:
+              type: string
+          required:
+          - events_directory_layout
+          - sort
         records:
           type: array
           items:
             "$ref": "#/components/schemas/event_post"
+      required:
+      - meta
     unread_chat_rooms:
       type: object
       properties:
@@ -3079,6 +3171,8 @@ components:
             profile_fields_feature_flag_enabled:
               type: boolean
             voice_messages_enabled:
+              type: boolean
+            voice_messages_in_posts_enabled:
               type: boolean
             chat_reactions_enabled:
               type: boolean
@@ -3688,6 +3782,17 @@ paths:
                     success: false
                     message: The access token not found.
                     error_details: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                chat_room_participant_not_found_error:
+                  value:
+                    success: false
+                    message: Oops! Missing record. Please try again later.
+                    error_details:
+                      message: 'Missing record: chat room participant'
       requestBody:
         content:
           application/json:
@@ -3840,6 +3945,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 2
                       parent_message_id:
                       edited_at:
@@ -3929,6 +4037,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 3
                       parent_message_id:
                       edited_at:
@@ -4018,6 +4129,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 4
                       parent_message_id:
                       edited_at:
@@ -4107,6 +4221,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 5
                       parent_message_id:
                       edited_at:
@@ -4196,6 +4313,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 6
                       parent_message_id:
                       edited_at:
@@ -4285,6 +4405,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 7
                       parent_message_id:
                       edited_at:
@@ -4374,6 +4497,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 8
                       parent_message_id:
                       edited_at:
@@ -4463,6 +4589,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 9
                       parent_message_id:
                       edited_at:
@@ -4552,6 +4681,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 10
                       parent_message_id:
                       edited_at:
@@ -4641,6 +4773,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 11
                       parent_message_id:
                       edited_at:
@@ -4730,6 +4865,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 12
                       parent_message_id:
                       edited_at:
@@ -4819,6 +4957,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 13
                       parent_message_id:
                       edited_at:
@@ -4908,6 +5049,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 14
                       parent_message_id:
                       edited_at:
@@ -4997,6 +5141,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 15
                       parent_message_id:
                       edited_at:
@@ -5086,6 +5233,9 @@ paths:
                       chat_thread_id:
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     meta: {}
               schema:
                 "$ref": "#/components/schemas/chat_room_messages"
@@ -5306,6 +5456,9 @@ paths:
                     chat_thread_id:
                     reactions: []
                     embedded_chat_message_access: []
+                    can_report: false
+                    can_review: false
+                    in_review: false
               schema:
                 "$ref": "#/components/schemas/chat_room_message"
         '401':
@@ -5622,6 +5775,29 @@ paths:
                         muted: false
                         archived: true
                         can_send_message: false
+                      last_message:
+                        id: 1
+                        parent_message_id:
+                        edited_at:
+                        created_at: '2024-05-23T11:18:54.171Z'
+                        chat_room_uuid: 65f3668c-46fe-4f62-9b31-6a3fa1d4e883
+                        chat_room_participant_id: 2
+                        body: Hi
+                        bookmark_id:
+                        rich_text_body:
+                        sent_at: '2024-05-23T11:18:54.171Z'
+                        sender:
+                          id: 2
+                          name: Denis Hilll
+                          community_member_id: 2
+                          user_public_uid: f3344caa
+                          avatar_url:
+                        chat_thread_id:
+                        reactions: []
+                        embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       first_unread_message_id:
               schema:
                 "$ref": "#/components/schemas/chat_room"
@@ -5851,6 +6027,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       first_unread_message_id:
         '401':
           description: Unauthorized
@@ -6121,6 +6300,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 7
                       uuid: dd556b52-4e5e-419e-976c-ba79c30d0fc5
                       identifier: group_chat-1-12-13-14
@@ -6297,6 +6479,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 6
                       uuid: 467f8c6f-e0dc-4c5e-b9fe-cd1b06ff937c
                       identifier: group_chat-1-9-10-11
@@ -6471,6 +6656,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 5
                       uuid: 6fe55bee-f030-412b-9d73-3840d2d111c7
                       identifier: group_chat-1-6-7-8
@@ -6645,6 +6833,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 4
                       uuid: 6f204d88-39c2-419e-9185-f107c75e2e53
                       identifier: direct-1-5
@@ -6781,6 +6972,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 3
                       uuid: 4be9a178-76fb-431b-b571-652d30b8a4bb
                       identifier: direct-1-4
@@ -6916,6 +7110,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 2
                       uuid: 3f443362-455a-48da-9b9b-0de6a69be97c
                       identifier: direct-1-3
@@ -7052,6 +7249,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     - id: 1
                       uuid: c6af233e-2ada-4bc5-b16a-c4f9df76c149
                       identifier: direct-1-2
@@ -7188,6 +7388,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                     meta: {}
               schema:
                 "$ref": "#/components/schemas/chat_rooms"
@@ -7348,6 +7551,7 @@ paths:
                         archived: false
                         can_send_message: true
                         status: offline
+                        is_blocked_by_current_community_member: false
                       current_participant:
                         id: 1
                         name: Ben Hilll III
@@ -7454,6 +7658,9 @@ paths:
                         chat_thread_id:
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       first_unread_message_id: 1
               schema:
                 "$ref": "#/components/schemas/chat_room"
@@ -7623,6 +7830,9 @@ paths:
                         chat_thread_id: 2
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       replies:
                       - id: 6
                         parent_message_id: 5
@@ -7709,6 +7919,9 @@ paths:
                         chat_thread_id: 2
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       - id: 7
                         parent_message_id: 5
                         edited_at:
@@ -7794,6 +8007,9 @@ paths:
                         chat_thread_id: 2
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       - id: 8
                         parent_message_id: 5
                         edited_at:
@@ -7879,6 +8095,9 @@ paths:
                         chat_thread_id: 2
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       chat_room:
                         kind: group_chat
                         name: Carita Lehner
@@ -7916,6 +8135,9 @@ paths:
                         chat_thread_id: 1
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       replies:
                       - id: 2
                         parent_message_id: 1
@@ -8002,6 +8224,9 @@ paths:
                         chat_thread_id: 1
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       - id: 3
                         parent_message_id: 1
                         edited_at:
@@ -8087,6 +8312,9 @@ paths:
                         chat_thread_id: 1
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       - id: 4
                         parent_message_id: 1
                         edited_at:
@@ -8172,6 +8400,9 @@ paths:
                         chat_thread_id: 1
                         reactions: []
                         embedded_chat_message_access: []
+                        can_report: false
+                        can_review: false
+                        in_review: false
                       chat_room:
                         kind: group_chat
                         name: Carita Lehner
@@ -8274,6 +8505,9 @@ paths:
                       chat_thread_id: 1
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     replies:
                     - id: 2
                       parent_message_id: 1
@@ -8360,6 +8594,9 @@ paths:
                       chat_thread_id: 1
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 3
                       parent_message_id: 1
                       edited_at:
@@ -8445,6 +8682,9 @@ paths:
                       chat_thread_id: 1
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     - id: 4
                       parent_message_id: 1
                       edited_at:
@@ -8530,6 +8770,9 @@ paths:
                       chat_thread_id: 1
                       reactions: []
                       embedded_chat_message_access: []
+                      can_report: false
+                      can_review: false
+                      in_review: false
                     chat_room:
                       kind: group_chat
                       name: Sophia Streich
@@ -9538,7 +9781,9 @@ paths:
                     per_page: 10
                     has_next_page: false
                     count: 4
-                    sort: latest
+                    meta:
+                      events_directory_layout: list
+                      sort: latest
                     records:
                     - id: 2
                       name: Distinctio ad eos cum.
@@ -10968,6 +11213,12 @@ paths:
                     success: false
                     message: The access token not found.
                     error_details: {}
+                community_host_mismatch_error:
+                  value:
+                    success: false
+                    message: The access token can only create a session on its
+                      own community's domain.
+                    error_details: {}
     delete:
       summary: Destroy cookies
       tags:
@@ -11348,6 +11599,7 @@ paths:
                       group_mentions: []
                       polls: []
                     featured_media_duration: 1
+                    thumbnail_url:
                     section_id: 1
                     dripped_at:
                     progress:
@@ -11583,6 +11835,7 @@ paths:
                       name: Lesson 1
                       is_featured_media_enabled: true
                       featured_media_duration:
+                      thumbnail_url:
                       dripped_at:
                       progress:
                         status: incomplete
@@ -11591,6 +11844,7 @@ paths:
                       name: Lesson 2
                       is_featured_media_enabled: true
                       featured_media_duration:
+                      thumbnail_url:
                       dripped_at:
                       progress:
                         status: incomplete
@@ -11599,6 +11853,7 @@ paths:
                       name: Lesson 3 (Video)
                       is_featured_media_enabled: true
                       featured_media_duration: 1
+                      thumbnail_url:
                       dripped_at:
                       progress:
                         status: incomplete
@@ -11614,6 +11869,7 @@ paths:
                       name: Lesson 4
                       is_featured_media_enabled: false
                       featured_media_duration:
+                      thumbnail_url:
                       dripped_at:
                       progress:
                         status: incomplete
@@ -11629,6 +11885,7 @@ paths:
                       name: Lesson 5
                       is_featured_media_enabled: true
                       featured_media_duration:
+                      thumbnail_url:
                       dripped_at:
                       progress:
                         status: incomplete
@@ -12198,9 +12455,12 @@ paths:
                       enum:
                       - Post
                       - Comment
+                      - Connect::Connection
+                      - ChatRoomMessage
                     reported_reason_type:
                       type: string
                       enum:
+                      - child_safety
                       - harassment
                       - spam
                       - incorrect_location
@@ -14110,8 +14370,139 @@ paths:
                         id: 2
                         community_id: 1
                         space_id: 1
+                success_without_page_param:
+                  value:
+                    page: 1
+                    per_page: 20
+                    has_next_page: false
+                    count: 1
+                    page_count: 1
+                    records:
+                    - id: 1
+                      created_at: '2024-02-26T10:44:19.849Z'
+                      read_at:
+                      action: add
+                      notifiable_id: 2
+                      space_title: delectus
+                      display_action: posted
+                      space_id: 1
+                      notification_text_structure:
+                      - actor_name
+                      - display_action
+                      - notifiable_title
+                      actor_name: Cary Toy
+                      notifiable_title: Et impedit enim et.
+                      actor_image:
+                      second_actor_image:
+                      second_actor_name:
+                      notifiable_type: Post
+                      action_web_url: http://hoppe.circledev.net:31337/c/distinctio/walker-mraz
+                      notifiable:
+                        id: 2
+                        community_id: 1
+                        space_id: 1
+                success_without_per_page_param:
+                  value:
+                    page: 1
+                    per_page: 20
+                    has_next_page: false
+                    count: 1
+                    page_count: 1
+                    records:
+                    - id: 1
+                      created_at: '2024-02-26T10:44:19.849Z'
+                      read_at:
+                      action: add
+                      notifiable_id: 2
+                      space_title: delectus
+                      display_action: posted
+                      space_id: 1
+                      notification_text_structure:
+                      - actor_name
+                      - display_action
+                      - notifiable_title
+                      actor_name: Cary Toy
+                      notifiable_title: Et impedit enim et.
+                      actor_image:
+                      second_actor_image:
+                      second_actor_name:
+                      notifiable_type: Post
+                      action_web_url: http://hoppe.circledev.net:31337/c/distinctio/walker-mraz
+                      notifiable:
+                        id: 2
+                        community_id: 1
+                        space_id: 1
+                success_without_pagination_params:
+                  value:
+                    page: 1
+                    per_page: 20
+                    has_next_page: false
+                    count: 1
+                    page_count: 1
+                    records:
+                    - id: 1
+                      created_at: '2024-02-26T10:44:19.849Z'
+                      read_at:
+                      action: add
+                      notifiable_id: 2
+                      space_title: delectus
+                      display_action: posted
+                      space_id: 1
+                      notification_text_structure:
+                      - actor_name
+                      - display_action
+                      - notifiable_title
+                      actor_name: Cary Toy
+                      notifiable_title: Et impedit enim et.
+                      actor_image:
+                      second_actor_image:
+                      second_actor_name:
+                      notifiable_type: Post
+                      action_web_url: http://hoppe.circledev.net:31337/c/distinctio/walker-mraz
+                      notifiable:
+                        id: 2
+                        community_id: 1
+                        space_id: 1
               schema:
                 "$ref": "#/components/schemas/notifications"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                invalid_page_zero:
+                  value:
+                    success: false
+                    message: Invalid page parameter. Page must be a positive integer.
+                    error_details: {}
+                invalid_page_negative:
+                  value:
+                    success: false
+                    message: Invalid page parameter. Page must be a positive integer.
+                    error_details: {}
+                invalid_page_non_numeric:
+                  value:
+                    success: false
+                    message: Invalid page parameter. Page must be a positive integer.
+                    error_details: {}
+                invalid_per_page_zero:
+                  value:
+                    success: false
+                    message: Invalid per_page parameter. Per page must be a positive
+                      integer.
+                    error_details: {}
+                invalid_per_page_negative:
+                  value:
+                    success: false
+                    message: Invalid per_page parameter. Per page must be a positive
+                      integer.
+                    error_details: {}
+                invalid_per_page_non_numeric:
+                  value:
+                    success: false
+                    message: Invalid per_page parameter. Per page must be a positive
+                      integer.
+                    error_details: {}
         '401':
           description: Unauthorized
           content:
@@ -14319,6 +14710,8 @@ paths:
                     new_notifications_count: 1
                     new_mentions_count: 0
                     new_inbox_count: 1
+                    new_content_count: 0
+                    new_moderation_count: 0
               schema:
                 "$ref": "#/components/schemas/new_notifications_count"
         '401':
@@ -16140,6 +16533,8 @@ paths:
       summary: Create a reaction on a chat room message
       tags:
       - Chat Room
+      description: Create a reaction. Pass a legacy emoji shortcode, or a unicode
+        codepoint. Sending both is rejected.
       security:
       - bearerAuth: []
       parameters: []
@@ -16158,8 +16553,31 @@ paths:
                       reactionable_id: 1
                       community_member_id: 1
                       emoji: heart
+                      unicode: 2764-fe0f
               schema:
                 "$ref": "#/components/schemas/create_reaction_response"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                unsupported_emoji:
+                  value:
+                    success: false
+                    message: Reaction can not be created
+                    error_details:
+                    - Emoji is not included in the list
+                unicode_not_supported:
+                  value:
+                    success: false
+                    message: Reaction can not be created
+                    error_details:
+                    - Emoji is not included in the list
+                emoji_and_unicode_conflict:
+                  value:
+                    success: false
+                    message: Either an emoji or a unicode can be sent, not both
+                    error_details: {}
         '401':
           description: Unauthorized
           content:
@@ -16211,13 +16629,20 @@ paths:
                   type: integer
                 emoji:
                   type: string
+                  description: Legacy shortcode (thumbsup, heart, tada, joy, open_mouth,
+                    cry, pray).
+                unicode:
+                  type: string
+                  description: Unicode codepoint sequence (e.g. 1f923). Emoji up
+                    to version 15.1 are supported.
               required:
               - chat_room_message
-              - emoji
     delete:
       summary: Remove a reaction from a chat room message
       tags:
       - Chat Room
+      description: Remove a reaction. Identify it by emoji shortcode, or by unicode.
+        Sending both is rejected.
       security:
       - bearerAuth: []
       parameters: []
@@ -16228,6 +16653,16 @@ paths:
             application/json:
               examples:
                 success: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                emoji_and_unicode_conflict:
+                  value:
+                    success: false
+                    message: Either an emoji or a unicode can be sent, not both
+                    error_details: {}
         '404':
           description: Reaction not found
           content:
@@ -16290,9 +16725,14 @@ paths:
                   type: integer
                 emoji:
                   type: string
+                  description: Legacy shortcode of the reaction to remove. Required
+                    unless unicode is sent.
+                unicode:
+                  type: string
+                  description: Unicode codepoint sequence of the reaction to remove
+                    (e.g. 1f923).
               required:
               - chat_room_message
-              - emoji
   "/api/headless/v1/spaces/{space_id}/events/{event_id}/recurring_events":
     get:
       summary: List recurring events
@@ -17278,8 +17718,6 @@ paths:
                 search_text:
                   type: string
                 exclude_empty_name:
-                  type: boolean
-                exclude_empty_profiles:
                   type: boolean
                 order:
                   type: string
@@ -18781,6 +19219,60 @@ paths:
                     success: false
                     message: The access token not found.
                     error_details: {}
+        '400':
+          description: Invalid reaction type
+          content:
+            application/json:
+              examples:
+                invalid_reaction:
+                  value:
+                    success: false
+                    message: Comment cannot be liked
+                    error_details:
+                      reaction_type:
+                      - is not included in the list
+              schema:
+                type: object
+                required:
+                - success
+                - message
+                - error_details
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                    - false
+                  message:
+                    type: string
+                  error_details:
+                    type: object
+                    required:
+                    - reaction_type
+                    properties:
+                      reaction_type:
+                        type: array
+                        items:
+                          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reaction_type:
+                  type: string
+                  nullable: true
+                  default: like
+                  enum:
+                    - like
+                    - celebrate
+                    - love
+                    - support
+                    - insightful
+                    - funny
+                    - ''
+                  description: Reaction to create or replace.
+                    Omitted, null, or blank values default to like.
     delete:
       summary: Destroy a user like for a comment
       tags:
@@ -18881,6 +19373,19 @@ paths:
           type: integer
         required: false
         description: Number of records per page
+      - name: reaction_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - like
+          - celebrate
+          - love
+          - support
+          - insightful
+          - funny
+        required: false
+        description: Filter members by reaction type
       responses:
         '200':
           description: OK
@@ -19026,6 +19531,60 @@ paths:
                     success: false
                     message: The access token not found.
                     error_details: {}
+        '400':
+          description: Invalid reaction type
+          content:
+            application/json:
+              examples:
+                invalid_reaction:
+                  value:
+                    success: false
+                    message: Post cannot be liked
+                    error_details:
+                      reaction_type:
+                      - is not included in the list
+              schema:
+                type: object
+                required:
+                - success
+                - message
+                - error_details
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                    - false
+                  message:
+                    type: string
+                  error_details:
+                    type: object
+                    required:
+                    - reaction_type
+                    properties:
+                      reaction_type:
+                        type: array
+                        items:
+                          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reaction_type:
+                  type: string
+                  nullable: true
+                  default: like
+                  enum:
+                    - like
+                    - celebrate
+                    - love
+                    - support
+                    - insightful
+                    - funny
+                    - ''
+                  description: Reaction to create or replace.
+                    Omitted, null, or blank values default to like.
     delete:
       summary: Destroy a user like for a post
       tags:
@@ -19122,6 +19681,19 @@ paths:
           type: integer
         required: false
         description: Number of records per page
+      - name: reaction_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - like
+          - celebrate
+          - love
+          - support
+          - insightful
+          - funny
+        required: false
+        description: Filter members by reaction type
       responses:
         '200':
           description: OK

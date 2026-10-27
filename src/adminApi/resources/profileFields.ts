@@ -1,5 +1,5 @@
 import type { AdminRequester } from "../request";
-import type { RequestOptions } from "../types";
+import type { RequestOptions, RequestOptionsWithBody } from "../types";
 
 export function createProfileFieldsResource(request: AdminRequester) {
   return {
@@ -10,6 +10,38 @@ export function createProfileFieldsResource(request: AdminRequester) {
      */
     list: (options?: RequestOptions<"/api/admin/v2/profile_fields", "get">) =>
       request.get("/api/admin/v2/profile_fields", options),
+    /**
+     * Create a profile field.
+     * @param options Body fields (flat) plus request metadata.
+     * @returns Created profile field response.
+     */
+    create: (options: RequestOptionsWithBody<"/api/admin/v2/profile_fields", "post">) =>
+      request.post("/api/admin/v2/profile_fields", options),
+    /**
+     * Update a profile field.
+     * @param id Profile field ID.
+     * @param options Body fields (flat) plus request metadata.
+     * @returns Updated profile field response.
+     */
+    update: (
+      id: number,
+      options: RequestOptionsWithBody<"/api/admin/v2/profile_fields/{id}", "put">,
+    ) =>
+      request.put("/api/admin/v2/profile_fields/{id}", {
+        ...options,
+        path: { id },
+      }),
+    /**
+     * Delete an archived profile field.
+     * @param id Profile field ID.
+     * @param options Request metadata.
+     * @returns Delete response.
+     */
+    delete: (id: number, options?: RequestOptions<"/api/admin/v2/profile_fields/{id}", "delete">) =>
+      request.delete("/api/admin/v2/profile_fields/{id}", {
+        ...options,
+        path: { id },
+      }),
     /**
      * Archive a profile field.
      * @param id Profile field ID.

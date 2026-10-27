@@ -43,6 +43,36 @@ export function createFormsResource(request: AdminRequester) {
         ...options,
         path: { id },
       }),
+    submissions: {
+      /**
+       * List form submissions.
+       * @param formId Form ID.
+       * @param options Query params (flat) plus request metadata.
+       * @returns Form submission list response.
+       */
+      list: (
+        formId: number,
+        options?: RequestOptions<"/api/admin/v2/forms/{form_id}/submissions", "get">,
+      ) =>
+        request.get("/api/admin/v2/forms/{form_id}/submissions", {
+          ...options,
+          path: { form_id: formId },
+        }),
+      /**
+       * Create a form submission.
+       * @param formId Form ID.
+       * @param options Body fields (flat) plus request metadata.
+       * @returns Created form submission response.
+       */
+      create: (
+        formId: number,
+        options: RequestOptionsWithBody<"/api/admin/v2/forms/{form_id}/submissions", "post">,
+      ) =>
+        request.post("/api/admin/v2/forms/{form_id}/submissions", {
+          ...options,
+          path: { form_id: formId },
+        }),
+    },
     /**
      * Duplicate a form.
      * @param id Form ID.

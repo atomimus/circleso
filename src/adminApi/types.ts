@@ -26,7 +26,7 @@ export type QueryParams<Path extends AdminPath, Method extends AdminMethod> = Op
   AdminPaths,
   Path,
   Method
-> extends { parameters: { query: infer Params } }
+> extends { parameters: { query?: infer Params } }
   ? Params
   : undefined;
 
@@ -75,5 +75,9 @@ export type RequestConfig<Path extends AdminPath, Method extends AdminMethod> = 
   | "put"
   | "patch"
   ? RequestOptionsWithBody<Path, Method>
-  : RequestOptions<Path, Method>) &
+  : Method extends "delete"
+    ? RequestBody<Path, Method> extends undefined
+      ? RequestOptions<Path, Method>
+      : RequestOptionsWithBody<Path, Method>
+    : RequestOptions<Path, Method>) &
   PathOption<Path, Method>;

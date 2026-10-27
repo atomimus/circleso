@@ -1,6 +1,12 @@
 # circleso
 
-Type-safe TypeScript SDK for Circle. Ships ESM-first with CJS fallback and runs on Node 18+.
+Type-safe TypeScript SDK for Circle. Ships ESM-first with CJS fallback.
+
+The published package is **0.3.0**. This checkout contains an unreleased API refresh and the
+[v1 release plan](https://github.com/atomimus/circleso/blob/main/docs/v1-release/README.md).
+The [v1 contract](https://github.com/atomimus/circleso/blob/main/docs/v1-release/CONTRACT.md)
+defines the intended guarantees and supported runtimes; known gaps are recorded in the
+[baseline audit](https://github.com/atomimus/circleso/blob/main/docs/v1-release/AUDIT.md).
 
 ## Features
 
@@ -12,7 +18,9 @@ Type-safe TypeScript SDK for Circle. Ships ESM-first with CJS fallback and runs 
 
 ## Requirements
 
-- Node 18+
+- The 0.3.0 package declares Node 18+, but Node 18 and 20 are end of life. Use a maintained Node LTS.
+- The v1 support target is Node 22 and 24 (latest maintained patches), with Node 24 recommended,
+  and TypeScript 5.9.3 or newer. Runtime, packaging and browser qualification are still pending.
 - Admin API usage must run on a server runtime (see browser caveats below)
 
 ## Installation
@@ -46,7 +54,7 @@ if (!adminToken || !headlessToken || !refreshToken) {
 }
 
 const sdk = new CircleSo({
-  communityHost: process.env.CIRCLE_COMMUNITY_HOST,
+  communityHost: process.env.CIRCLE_COMMUNITY_HOST ?? "app.circle.so",
   admin: { token: adminToken },
   headless: {
     accessToken: headlessToken,
@@ -74,7 +82,7 @@ if (!adminToken) {
 
 const admin = createAdmin({
   token: adminToken,
-  communityHost: process.env.CIRCLE_COMMUNITY_HOST,
+  communityHost: process.env.CIRCLE_COMMUNITY_HOST ?? "app.circle.so",
 });
 
 const data = await admin.accessGroups.list({
@@ -112,6 +120,8 @@ console.log(data?.records ?? []);
 Optional auto-refresh when tokens expire:
 
 ```ts
+import { createHeadless } from "circleso/headless";
+
 const headlessToken = process.env.CIRCLE_HEADLESS_TOKEN;
 const refreshToken = process.env.CIRCLE_HEADLESS_REFRESH_TOKEN;
 if (!headlessToken || !refreshToken) {
@@ -219,7 +229,7 @@ if (!adminToken) {
 
 const admin = createAdmin({
   token: adminToken,
-  communityHost: process.env.CIRCLE_COMMUNITY_HOST,
+  communityHost: process.env.CIRCLE_COMMUNITY_HOST ?? "app.circle.so",
 });
 
 const pages = paginateOffset({
@@ -230,7 +240,7 @@ const pages = paginateOffset({
       page,
       per_page: perPage,
     });
-    return data ?? { records: [], has_next_page: false };
+    return { ...data, records: data?.records ?? [] };
   },
 });
 
@@ -297,12 +307,40 @@ Required environment variables:
 
 ## Update API specs
 
+The checked-in specs were synced on October 27, 2026 from Circle's official
+[Admin V2](https://api-headless.circle.so/api/admin/v2/swagger.yaml),
+[Headless Member V1](https://api-headless.circle.so/api/headless_client/v1/swagger.yaml), and
+[Headless Auth](https://api-headless.circle.so/api/headless_auth/swagger.yaml) specs.
+
+Existing resources include the latest endpoints for access group content, course lesson ordering,
+form submissions, image post retrieval, invitation link creation and updates, and profile field
+creation, updates, and deletion. Post and comment reactions use the existing `likes` methods:
+
+```ts
+import { createHeadless } from "circleso/headless";
+
+const headless = createHeadless({ accessToken: process.env.CIRCLE_HEADLESS_TOKEN ?? "" });
+
+await headless.posts.likes.create("123", { reaction_type: "celebrate" });
+await headless.comments.likes.list(456, { reaction_type: "insightful" });
+await headless.chatRooms.reactions.delete({ chat_room_message: 789, unicode: "1f923" });
+```
+
+See [CHANGELOG.md](./CHANGELOG.md) for the updated contracts and migration notes.
+
 Run the sync and generation scripts together:
 
 ```bash
 npm run spec:sync && npm run gen:types
 ```
 
+Circle's current Admin spec references an undefined `admin_v2_chat_room_message` response schema.
+Generation applies a targeted override in `scripts/spec-overrides.ts` so that response is `unknown`.
+The downloaded spec stays intact, and the override stops applying when Circle defines the schema.
+
 ## License
 
 MIT. See `LICENSE`.
+
+For development and review conventions, see
+[CONTRIBUTING.md](https://github.com/atomimus/circleso/blob/main/CONTRIBUTING.md).

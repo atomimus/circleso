@@ -301,7 +301,7 @@ paths:
           content:
             application/json:
               examples:
-                unprocessable_entity:
+                unprocessable_content:
                   value:
                     success: false
                     message: There was an error creating the token. Please contact
@@ -408,7 +408,7 @@ paths:
           content:
             application/json:
               examples:
-                unprocessable_entity:
+                unprocessable_content:
                   value:
                     success: false
                     message: Failed to revoke the refresh token.

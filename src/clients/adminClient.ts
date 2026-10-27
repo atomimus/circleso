@@ -2,6 +2,7 @@ import { DEFAULT_COMMUNITY_HOST } from "../core/constants";
 import { CircleConfigError } from "../core/errors";
 import type { RetryConfig } from "../core/http";
 import { createAdminAuthMiddleware } from "../core/middleware/adminAuth";
+import { createAdminQueryMiddleware } from "../core/middleware/adminQuery";
 import type { LoggerHooks } from "../core/middleware/logger";
 import type { paths as AdminPaths } from "../generated/admin-v2";
 import { createOpenApiClient, type DualClient } from "./shared";
@@ -26,7 +27,10 @@ export function createAdminClient(config: AdminClientConfig): AdminClient {
   const communityHost = config.communityHost ?? DEFAULT_COMMUNITY_HOST;
 
   const baseUrl = config.baseUrl ?? `https://${communityHost}`;
-  const middleware = [createAdminAuthMiddleware({ token: config.token, host: communityHost })];
+  const middleware = [
+    createAdminAuthMiddleware({ token: config.token, host: communityHost }),
+    createAdminQueryMiddleware(),
+  ];
 
   const runtimeConfig = {
     baseUrl,

@@ -1,7 +1,7 @@
-import { spawn } from "node:child_process";
-import { access, mkdir, readFile, rename, unlink } from "node:fs/promises";
-import { createRequire } from "node:module";
+import { access, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import openapiTS, { astToString, COMMENT_HEADER } from "openapi-typescript";
+import { applySpecOverrides } from "./spec-overrides";
 
 type SpecDefinition = {
   input: string;
@@ -24,7 +24,6 @@ const SPECS: SpecDefinition[] = [
 ];
 
 const ROOT = process.cwd();
-const require = createRequire(import.meta.url);
 
 async function run() {
   const outDir = path.resolve(ROOT, "src", "generated");
@@ -38,20 +37,26 @@ async function run() {
     });
 
     const tempPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
-    await runOpenApiTypescript(inputPath, tempPath);
+    try {
+      await runOpenApiTypescript(inputPath, tempPath);
 
-    const contents = await readFile(tempPath, "utf8");
-    if (!exportsPaths(contents)) {
+      const contents = await readFile(tempPath, "utf8");
+      if (!exportsPaths(contents)) {
+        throw new Error(
+          `Generated file missing exported paths: ${path.relative(ROOT, outputPath)}`,
+        );
+      }
+
+      await replaceFile(tempPath, outputPath);
+
+      const bytes = Buffer.byteLength(contents, "utf8");
+      console.log(
+        `${bytes} bytes ${path.relative(ROOT, outputPath)} ${path.relative(ROOT, inputPath)}`,
+      );
+    } catch (error) {
       await safeUnlink(tempPath);
-      throw new Error(`Generated file missing exported paths: ${path.relative(ROOT, outputPath)}`);
+      throw error;
     }
-
-    await replaceFile(tempPath, outputPath);
-
-    const bytes = Buffer.byteLength(contents, "utf8");
-    console.log(
-      `${bytes} bytes ${path.relative(ROOT, outputPath)} ${path.relative(ROOT, inputPath)}`,
-    );
   }
 }
 
@@ -60,21 +65,9 @@ function exportsPaths(contents: string) {
 }
 
 async function runOpenApiTypescript(inputPath: string, outputPath: string) {
-  const pkgPath = require.resolve("openapi-typescript/package.json");
-  const cliPath = path.resolve(path.dirname(pkgPath), "bin", "cli.js");
-  const args = [cliPath, inputPath, "-o", outputPath, "--alphabetize"];
-
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, args, { stdio: "inherit" });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(`openapi-typescript exited with code ${code}`));
-    });
-  });
+  const source = applySpecOverrides(await readFile(inputPath, "utf8"));
+  const ast = await openapiTS(source, { alphabetize: true });
+  await writeFile(outputPath, `${COMMENT_HEADER}${astToString(ast)}`, "utf8");
 }
 
 async function replaceFile(tempPath: string, outputPath: string) {

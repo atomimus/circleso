@@ -240,7 +240,7 @@ function getErrorData(error: unknown) {
   if ("data" in error) {
     return (error as { data?: unknown }).data;
   }
-  return undefined;
+  return error;
 }
 
 async function safeReadText(response: Response) {

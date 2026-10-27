@@ -26,7 +26,7 @@ export type QueryParams<Path extends HeadlessPath, Method extends HeadlessMethod
   HeadlessPaths,
   Path,
   Method
-> extends { parameters: { query: infer Params } }
+> extends { parameters: { query?: infer Params } }
   ? Params
   : undefined;
 
@@ -75,5 +75,9 @@ export type RequestConfig<
   Method extends HeadlessMethod,
 > = (Method extends "post" | "put" | "patch"
   ? RequestOptionsWithBody<Path, Method>
-  : RequestOptions<Path, Method>) &
+  : Method extends "delete"
+    ? RequestBody<Path, Method> extends undefined
+      ? RequestOptions<Path, Method>
+      : RequestOptionsWithBody<Path, Method>
+    : RequestOptions<Path, Method>) &
   PathOption<Path, Method>;

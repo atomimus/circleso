@@ -17,7 +17,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "get">,
   ) => {
-    const init = buildInit<Path, "get">(options, "get");
+    const init = buildInit<Path, "get">(options, "get", path);
     const result = await client.GET(path, init);
     return handleResult(result, "GET", path);
   };
@@ -26,7 +26,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "post">,
   ) => {
-    const init = buildInit<Path, "post">(options, "post");
+    const init = buildInit<Path, "post">(options, "post", path);
     const result = await client.POST(path, init);
     return handleResult(result, "POST", path);
   };
@@ -35,7 +35,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "put">,
   ) => {
-    const init = buildInit<Path, "put">(options, "put");
+    const init = buildInit<Path, "put">(options, "put", path);
     const result = await client.PUT(path, init);
     return handleResult(result, "PUT", path);
   };
@@ -44,7 +44,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "patch">,
   ) => {
-    const init = buildInit<Path, "patch">(options, "patch");
+    const init = buildInit<Path, "patch">(options, "patch", path);
     const result = await client.PATCH(path, init);
     return handleResult(result, "PATCH", path);
   };
@@ -53,7 +53,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
     path: Path,
     options?: RequestConfig<Path, "delete">,
   ) => {
-    const init = buildInit<Path, "delete">(options, "delete");
+    const init = buildInit<Path, "delete">(options, "delete", path);
     const result = await client.DELETE(path, init);
     return handleResult(result, "DELETE", path);
   };
@@ -81,6 +81,7 @@ function buildInit<
 >(
   options: RequestConfig<Path, Method> | undefined,
   method: Method,
+  path: Path,
 ): FetchOptions<HeadlessPaths[Path][Method]> {
   type Init = {
     body?: RequestBody<Path, Method>;
@@ -92,7 +93,7 @@ function buildInit<
     };
   };
   const init: Init = {};
-  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(method));
+  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(path, method));
 
   if (normalized.body !== undefined) {
     init.body = normalized.body;
@@ -119,8 +120,13 @@ function buildInit<
   return init as FetchOptions<HeadlessPaths[Path][Method]>;
 }
 
-function isBodyMethod(method: HeadlessMethod) {
-  return method === "post" || method === "put" || method === "patch";
+function isBodyMethod(path: string, method: HeadlessMethod) {
+  return (
+    method === "post" ||
+    method === "put" ||
+    method === "patch" ||
+    (method === "delete" && path === "/api/headless/v1/reactions")
+  );
 }
 
 function normalizeOptions<
@@ -243,7 +249,7 @@ function getErrorData(error: unknown) {
   if ("data" in error) {
     return (error as { data?: unknown }).data;
   }
-  return undefined;
+  return error;
 }
 
 async function safeReadText(response: Response) {

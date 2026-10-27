@@ -23,7 +23,7 @@ export function createAdminRequester(client: AdminClient) {
     path: Path,
     options?: RequestConfig<Path, "get">,
   ) => {
-    const init = buildInit<Path, "get">(options, "get");
+    const init = buildInit<Path, "get">(options, "get", path);
     const result = await client.GET(path, init);
     return handleResult(result, "GET", path);
   };
@@ -32,7 +32,7 @@ export function createAdminRequester(client: AdminClient) {
     path: Path,
     options?: RequestConfig<Path, "post">,
   ) => {
-    const init = buildInit<Path, "post">(options, "post");
+    const init = buildInit<Path, "post">(options, "post", path);
     const result = await client.POST(path, init);
     return handleResult(result, "POST", path);
   };
@@ -41,7 +41,7 @@ export function createAdminRequester(client: AdminClient) {
     path: Path,
     options?: RequestConfig<Path, "put">,
   ) => {
-    const init = buildInit<Path, "put">(options, "put");
+    const init = buildInit<Path, "put">(options, "put", path);
     const result = await client.PUT(path, init);
     return handleResult(result, "PUT", path);
   };
@@ -50,7 +50,7 @@ export function createAdminRequester(client: AdminClient) {
     path: Path,
     options?: RequestConfig<Path, "patch">,
   ) => {
-    const init = buildInit<Path, "patch">(options, "patch");
+    const init = buildInit<Path, "patch">(options, "patch", path);
     const result = await client.PATCH(path, init);
     return handleResult(result, "PATCH", path);
   };
@@ -59,7 +59,7 @@ export function createAdminRequester(client: AdminClient) {
     path: Path,
     options?: RequestConfig<Path, "delete">,
   ) => {
-    const init = buildInit<Path, "delete">(options, "delete");
+    const init = buildInit<Path, "delete">(options, "delete", path);
     const result = await client.DELETE(path, init);
     return handleResult(result, "DELETE", path);
   };
@@ -78,6 +78,7 @@ export type AdminRequester = ReturnType<typeof createAdminRequester>;
 function buildInit<Path extends PathsWithMethod<AdminPaths, Method>, Method extends AdminMethod>(
   options: RequestConfig<Path, Method> | undefined,
   method: Method,
+  path: Path,
 ): FetchOptions<AdminPaths[Path][Method]> {
   type Init = {
     body?: RequestBody<Path, Method>;
@@ -89,7 +90,7 @@ function buildInit<Path extends PathsWithMethod<AdminPaths, Method>, Method exte
     };
   };
   const init: Init = {};
-  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(method));
+  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(path, method));
 
   if (normalized.body !== undefined) {
     init.body = normalized.body;
@@ -116,8 +117,13 @@ function buildInit<Path extends PathsWithMethod<AdminPaths, Method>, Method exte
   return init as FetchOptions<AdminPaths[Path][Method]>;
 }
 
-function isBodyMethod(method: AdminMethod) {
-  return method === "post" || method === "put" || method === "patch";
+function isBodyMethod(path: string, method: AdminMethod) {
+  return (
+    method === "post" ||
+    method === "put" ||
+    method === "patch" ||
+    (method === "delete" && path === "/api/admin/v2/event_attendees")
+  );
 }
 
 function normalizeOptions<
@@ -240,7 +246,7 @@ function getErrorData(error: unknown) {
   if ("data" in error) {
     return (error as { data?: unknown }).data;
   }
-  return undefined;
+  return error;
 }
 
 async function safeReadText(response: Response) {

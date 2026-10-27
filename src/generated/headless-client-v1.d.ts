@@ -637,6 +637,8 @@ export interface paths {
                     page?: number;
                     /** @description Number of records per page */
                     per_page?: number;
+                    /** @description Filter members by reaction type */
+                    reaction_type?: "like" | "celebrate" | "love" | "support" | "insightful" | "funny";
                 };
                 header?: never;
                 path: {
@@ -679,7 +681,18 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Reaction to create or replace. Omitted, null, or blank values default to like.
+                         * @default like
+                         * @enum {string|null}
+                         */
+                        reaction_type?: "like" | "celebrate" | "love" | "support" | "insightful" | "funny" | "" | null;
+                    };
+                };
+            };
             responses: {
                 /** @description Success */
                 200: {
@@ -690,6 +703,22 @@ export interface paths {
                         "application/json": {
                             message?: string;
                             success?: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid reaction type */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error_details: {
+                                reaction_type: string[];
+                            };
+                            message: string;
+                            /** @enum {boolean} */
+                            success: false;
                         };
                     };
                 };
@@ -1791,10 +1820,10 @@ export interface paths {
                         flagged_content: {
                             flagged_contentable_id: number;
                             /** @enum {string} */
-                            flagged_contentable_type: "Post" | "Comment";
+                            flagged_contentable_type: "Post" | "Comment" | "Connect::Connection" | "ChatRoomMessage";
                             reported_reason_body: string;
                             /** @enum {string} */
-                            reported_reason_type: "harassment" | "spam" | "incorrect_location" | "against_guidelines" | "other";
+                            reported_reason_type: "child_safety" | "harassment" | "spam" | "incorrect_location" | "against_guidelines" | "other";
                         };
                     };
                 };
@@ -2171,6 +2200,15 @@ export interface paths {
                 };
                 /** @description Unauthorized */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Not Found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2815,6 +2853,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["notifications"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
                     };
                 };
                 /** @description Unauthorized */
@@ -3600,6 +3647,8 @@ export interface paths {
                     page?: number;
                     /** @description Number of records per page */
                     per_page?: number;
+                    /** @description Filter members by reaction type */
+                    reaction_type?: "like" | "celebrate" | "love" | "support" | "insightful" | "funny";
                 };
                 header?: never;
                 path: {
@@ -3642,7 +3691,18 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Reaction to create or replace. Omitted, null, or blank values default to like.
+                         * @default like
+                         * @enum {string|null}
+                         */
+                        reaction_type?: "like" | "celebrate" | "love" | "support" | "insightful" | "funny" | "" | null;
+                    };
+                };
+            };
             responses: {
                 /** @description Success */
                 200: {
@@ -3653,6 +3713,22 @@ export interface paths {
                         "application/json": {
                             message?: string;
                             success?: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid reaction type */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error_details: {
+                                reaction_type: string[];
+                            };
+                            message: string;
+                            /** @enum {boolean} */
+                            success: false;
                         };
                     };
                 };
@@ -3961,7 +4037,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a reaction on a chat room message */
+        /**
+         * Create a reaction on a chat room message
+         * @description Create a reaction. Pass a legacy emoji shortcode, or a unicode codepoint. Sending both is rejected.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3973,7 +4052,10 @@ export interface paths {
                 content: {
                     "application/json": {
                         chat_room_message: number;
-                        emoji: string;
+                        /** @description Legacy shortcode (thumbsup, heart, tada, joy, open_mouth, cry, pray). */
+                        emoji?: string;
+                        /** @description Unicode codepoint sequence (e.g. 1f923). Emoji up to version 15.1 are supported. */
+                        unicode?: string;
                     };
                 };
             };
@@ -3987,6 +4069,15 @@ export interface paths {
                         "application/json": components["schemas"]["create_reaction_response"];
                     };
                 };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
                 /** @description Unauthorized */
                 401: {
                     headers: {
@@ -3998,7 +4089,10 @@ export interface paths {
                 };
             };
         };
-        /** Remove a reaction from a chat room message */
+        /**
+         * Remove a reaction from a chat room message
+         * @description Remove a reaction. Identify it by emoji shortcode, or by unicode. Sending both is rejected.
+         */
         delete: {
             parameters: {
                 query?: never;
@@ -4010,13 +4104,25 @@ export interface paths {
                 content: {
                     "application/json": {
                         chat_room_message: number;
-                        emoji: string;
+                        /** @description Legacy shortcode of the reaction to remove. Required unless unicode is sent. */
+                        emoji?: string;
+                        /** @description Unicode codepoint sequence of the reaction to remove (e.g. 1f923). */
+                        unicode?: string;
                     };
                 };
             };
             responses: {
                 /** @description Reaction removed */
                 204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4122,7 +4228,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         exclude_empty_name?: boolean;
-                        exclude_empty_profiles?: boolean;
                         filters?: {
                             /** @enum {string} */
                             filter_type?: "is" | "is_not" | "contains" | "does_not_contain" | "gt" | "lt" | "eq";
@@ -5351,6 +5456,7 @@ export interface components {
             };
             post_follower_id?: number | null;
             post_type?: string;
+            reaction_summary: components["schemas"]["reaction_summary"];
             slug?: string;
             space?: {
                 custom_emoji_dark_url?: string;
@@ -5495,6 +5601,8 @@ export interface components {
         chat_room_message: {
             body?: string;
             bookmark_id?: number | null;
+            can_report?: boolean;
+            can_review?: boolean;
             chat_room_participant_id?: number;
             chat_room_uuid?: string;
             chat_thread_id?: number | null;
@@ -5506,6 +5614,7 @@ export interface components {
                 [key: string]: boolean;
             }[];
             id?: number;
+            in_review?: boolean;
             /** Format: date-time */
             last_reply_at?: string | null;
             parent_message_id?: number | null;
@@ -5636,6 +5745,7 @@ export interface components {
             };
             post_id?: number;
             post_name?: string;
+            reaction_summary: components["schemas"]["reaction_summary"];
             /** Format: date-time */
             removed_at?: string | null;
             replies?: components["schemas"]["comment"][];
@@ -5674,10 +5784,17 @@ export interface components {
         community_events: {
             count?: number;
             has_next_page?: boolean;
+            meta: {
+                /**
+                 * @description Layout to use for the Events Directory. Thumbnail when the community's public events view is thumbnail; list otherwise. Clients should fall back to list for unknown values.
+                 * @enum {string}
+                 */
+                events_directory_layout: "list" | "thumbnail";
+                sort: string;
+            };
             page?: number;
             per_page?: number;
             records?: components["schemas"]["event_post"][];
-            sort?: string;
         };
         community_links: {
             community_id?: number;
@@ -5702,6 +5819,8 @@ export interface components {
                 emoji: string;
                 reactionable_id: number;
                 reactionable_type: string;
+                /** @description Unicode codepoint sequence (e.g. 2764-fe0f) */
+                unicode: string;
             };
             success?: boolean;
         };
@@ -5720,6 +5839,7 @@ export interface components {
                 profile_fields_feature_flag_enabled?: boolean;
                 tiptap_webview_editor_enabled?: boolean;
                 voice_messages_enabled?: boolean;
+                voice_messages_in_posts_enabled?: boolean;
             };
             headline?: string;
             id?: number;
@@ -5911,6 +6031,7 @@ export interface components {
                 name?: string;
                 slug?: string;
             };
+            thumbnail_url?: string | null;
         };
         lesson_file: {
             byte_size?: number;
@@ -6174,6 +6295,7 @@ export interface components {
             } | null;
             headline?: string;
             id?: number;
+            is_deleted?: boolean;
             large_avatar_url?: string | null;
             member_tags?: {
                 color?: string;
@@ -6257,6 +6379,22 @@ export interface components {
                 result?: "passed" | "failed";
                 section_name?: string;
             }[];
+        };
+        reaction_member: components["schemas"]["basic_community_member"] & {
+            /** @description Reaction selected by the member. */
+            reaction_type: string;
+        };
+        /** @description Stable reaction state. Uses legacy Like semantics when reactions are disabled for the community. */
+        reaction_summary: {
+            counts: {
+                celebrate: number;
+                funny: number;
+                insightful: number;
+                like: number;
+                love: number;
+                support: number;
+            };
+            current_user_reaction_type: string | null;
         };
         recurring_event: {
             ends_at?: string;
@@ -6359,7 +6497,7 @@ export interface components {
             avatar_url?: string | null;
             community_member_id?: number;
             first_name?: string;
-            headline?: string;
+            headline?: string | null;
             id?: number;
             is_deleted?: boolean;
             last_name?: string;
@@ -6476,6 +6614,7 @@ export interface components {
                 progress?: {
                     status?: string;
                 };
+                thumbnail_url?: string | null;
             }[];
             name?: string;
             notify_students_enabled?: boolean;
@@ -6606,7 +6745,7 @@ export interface components {
             page?: number;
             page_count?: number;
             per_page?: number;
-            records?: components["schemas"]["shared_community_member"][];
+            records?: components["schemas"]["reaction_member"][];
         };
     };
     responses: never;

@@ -60,6 +60,13 @@ export function createCoursesResource(request: AdminRequester) {
     },
     lessons: {
       /**
+       * Reorder all sections and lessons in a course.
+       * @param options Body fields (flat) plus request metadata.
+       * @returns Reorder response.
+       */
+      reorder: (options: RequestOptionsWithBody<"/api/admin/v2/course_lessons/reorder", "put">) =>
+        request.put("/api/admin/v2/course_lessons/reorder", options),
+      /**
        * List course lessons.
        * @param options Query params (flat) plus request metadata.
        * @returns Course lesson list response.

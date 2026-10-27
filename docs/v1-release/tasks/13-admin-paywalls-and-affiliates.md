@@ -1,0 +1,64 @@
+# Task 13 Add Admin paywall and affiliate resources
+
+Status: planned. This prompt has not been executed.
+
+You are working on the circleso npm TypeScript SDK in D:/Aiville/circleso, repository https://github.com/atomimus/circleso. The goal is a trustworthy v1 release covering Admin V2, Headless Member V1 and Headless Auth. This task belongs to the v1 release track.
+
+Implement only task 13 in this chat after direct user activation or an authorized completion handoff. Once it is fully complete, follow the final next-chat instruction below. Do not implement another task here, start missing prerequisites, spawn subagents or create automations. Read D:/Aiville/circleso/AGENTS.md and D:/Aiville/circleso/docs/v1-release/WORKFLOW.md in full, then README.md, AUDIT.md and TASKS.json in that same planning directory. Their execution rules are part of this prompt.
+
+## Prerequisites and starting state
+
+Required integrated tasks: 12.
+
+Inspect the current branch, status, staged diff and dependency PR/results before editing. Preserve existing work, especially the excluded user-owned examples/admin-get-space-member.js. If a dependency is not integrated or another task is writing this checkout, report the exact unmet condition and stop. Do not automatically perform prerequisite tasks or infer completion from a status label alone.
+
+## Read and research
+
+Read the relevant files/modules first:
+
+- src/adminApi/index.ts
+- src/adminApi/resources
+- src/generated/admin-v2.d.ts
+- api/specs/admin-v2.yaml
+
+Search and read current official documentation for the exact behavior and installed dependency versions. Start with:
+
+- https://api-headless.circle.so/api/admin/v2/swagger.yaml
+- https://api.circle.so/apis/admin-api
+
+Record relevant source links and dates in the task outcome. Never infer an undocumented endpoint, auth rule, response field or idempotency guarantee. Respect the existing module/resource style; keep HTTP behavior in core and global mutations in middleware.
+
+## Work to complete
+
+1. Implement the 15 currently raw-only operations covering paywall search/delete/archive/publish/unarchive/member-access sync, paywall group create/update, coupon deletion, affiliate list/invite/update and payout start/mark-paid/export.
+
+2. Verify current names, IDs, request nesting and success/error responses from the spec, and follow the resource design established by task 12. Preserve raw client access and existing invitation-link behavior.
+
+3. Make documentation explicit about replacement lists, billing/access effects and documented eligibility errors without guessing unsupported payment behavior.
+
+4. Use mocked fetch tests for all destructive or financial operations, with representative typed response and error checks. Do not create live paywalls, invite affiliates, issue payouts or delete coupons.
+
+5. Extend public exports, examples, API reference and operation coverage.
+
+## Acceptance and finish
+
+- All 15 documented operations have typed resource methods with safe shared transport behavior.
+- Compile-time and boundary tests cover meaningful mutation differences and error contracts.
+- No live financial or customer-access mutation occurs during this task.
+- Add meaningful regression/type/contract tests for the change and run the applicable full repository checks from WORKFLOW.md. A skipped or unavailable external check is not a pass.
+- Record a concise outcome in docs/v1-release/results/13.md and update only this task's record. Include dependency revisions, sources, validation evidence and remaining limitations.
+- Do not publish npm, create release tags/releases, move dist-tags or trigger a publishing workflow.
+
+## GitHub checkpoint and completion handoff
+
+Use the accepted base and a scoped branch, normally codex/v1-task-13-admin-paywalls-and-affiliates. Explicitly stage only task-owned files after reviewing the diff and checking for secrets. Commit, push to origin and create/update a passing reviewable PR under WORKFLOW.md. Do not auto-merge, push directly to the default branch, force-push or absorb unrelated work. Attach the PR to the task chat when supported.
+
+Suggested commit subject, only if it matches the actual diff:
+
+```text
+✨ feat(admin): add paywall and affiliate resources
+```
+
+If the outcome is research-only, blocked or materially different, use an accurate Gitmoji + Conventional Commits subject instead. Report the actual commit SHA, branch, PR URL, CI state and exact remaining dependency or human review step. Finish this task before performing the final completion handoff below; pending review, integration or mandatory checks must not be treated as completion.
+
+When task #13 is fully complete under D:/Aiville/circleso/docs/v1-release/WORKFLOW.md, including required checks, pushed commits, review/integration and recorded results, and task #14's prerequisites pass, immediately create and open a new local circleso chat and start task #14 using the full saved prompt at D:/Aiville/circleso/docs/v1-release/tasks/14-admin-workflows-and-filters.md, the workflow and completion evidence. Use the workflow's verified project lookup and create_thread/navigate_to_codex_page procedure, record the handoff chat ID, launch it only once, and do not implement task #14 in this chat.

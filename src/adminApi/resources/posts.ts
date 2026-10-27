@@ -82,6 +82,36 @@ export function createPostsResource(request: AdminRequester) {
     },
     images: {
       /**
+       * List image posts in a space.
+       * @param spaceId Space ID.
+       * @param options Query params (flat) plus request metadata.
+       * @returns Image post list response.
+       */
+      list: (
+        spaceId: number,
+        options?: RequestOptions<"/api/admin/v2/spaces/{space_id}/images/posts", "get">,
+      ) =>
+        request.get("/api/admin/v2/spaces/{space_id}/images/posts", {
+          ...options,
+          path: { space_id: spaceId },
+        }),
+      /**
+       * Get an image post by ID.
+       * @param spaceId Space ID.
+       * @param id Image post ID.
+       * @param options Request metadata.
+       * @returns Image post response.
+       */
+      get: (
+        spaceId: number,
+        id: number,
+        options?: RequestOptions<"/api/admin/v2/spaces/{space_id}/images/posts/{id}", "get">,
+      ) =>
+        request.get("/api/admin/v2/spaces/{space_id}/images/posts/{id}", {
+          ...options,
+          path: { space_id: spaceId, id },
+        }),
+      /**
        * Create a post image in a space.
        * @param spaceId Space ID.
        * @param options Body fields (flat) plus request metadata.

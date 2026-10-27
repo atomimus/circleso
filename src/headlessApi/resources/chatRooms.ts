@@ -190,10 +190,10 @@ export function createChatRoomsResource(request: HeadlessRequester) {
         request.post("/api/headless/v1/reactions", options),
       /**
        * Delete a reaction.
-       * @param options Query params (flat) plus request metadata.
+       * @param options Body fields (flat) plus request metadata.
        * @returns Delete reaction response.
        */
-      delete: (options?: RequestOptions<"/api/headless/v1/reactions", "delete">) =>
+      delete: (options?: RequestOptionsWithBody<"/api/headless/v1/reactions", "delete">) =>
         request.delete("/api/headless/v1/reactions", options),
     },
   };
