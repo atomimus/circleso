@@ -59,7 +59,11 @@ export function releaseInput(env: NodeJS.ProcessEnv, version: string): ReleaseIn
   assert.equal(env.GITHUB_REPOSITORY, repository, "Wrong repository");
   assert.equal(env.GITHUB_REF, "refs/heads/main", "Dispatch on main required");
   assert.equal(env.RUNNER_ENVIRONMENT, "github-hosted", "GitHub-hosted runner required");
-  assert.match(version, /^1\.0\.0(?:-rc\.[1-9]\d*)?$/, "Only v1 stable or numbered RC allowed");
+  assert.match(
+    version,
+    /^1\.0\.(?:0(?:-rc\.[1-9]\d*)?|1)$/,
+    "Only 1.0.0 stable/numbered RC or authorized 1.0.1 allowed",
+  );
   assert.equal(env.RELEASE_VERSION, version, "Version does not match package");
   const sha = env.RELEASE_SOURCE ?? "";
   assert.match(sha, /^[a-f0-9]{40}$/, "Full source SHA required");
@@ -106,6 +110,21 @@ export function checkAvailable(input: ReleaseInput, registry: Registry): void {
   );
   assert.ok(!Object.hasOwn(registry.time ?? {}, input.version), "Version previously used");
   assert.ok(registry["dist-tags"].latest, "Record an existing latest before publishing");
+}
+
+export function checkPublished(
+  input: ReleaseInput,
+  beforeTags: Registry["dist-tags"],
+  version: { version: string; dist: { integrity: string; attestations?: unknown } },
+  tags: Registry["dist-tags"],
+): void {
+  assert.equal(version.version, input.version, "Registry version mismatch");
+  assert.equal(version.dist.integrity, input.integrity, "Registry artifact mismatch");
+  assert.ok(version.dist.attestations, "Registry provenance metadata required");
+  assert.equal(tags[input.distTag], input.version, "Published dist-tag mismatch");
+  for (const [tag, previous] of Object.entries(beforeTags))
+    if (tag !== input.distTag)
+      assert.equal(tags[tag], previous, `Unrelated dist-tag changed: ${tag}`);
 }
 
 type TagObject = { ref?: string; object: { type: string; sha: string } };
@@ -278,19 +297,19 @@ async function publish(): Promise<void> {
       "--fetch-retries=0",
     ),
   );
-  const after = await get<Registry>(`${registryUrl}circleso`);
-  assert.equal(after.versions[input.version]?.dist.integrity, input.integrity);
-  assert.ok(
-    after.versions[input.version]?.dist.attestations,
-    "Registry provenance metadata required",
-  );
-  assert.equal(after["dist-tags"][input.distTag], input.version);
-  if (input.distTag === "next")
-    assert.equal(after["dist-tags"].latest, registry["dist-tags"].latest);
+  // Full package metadata can remain cached after a successful publish. Read the
+  // exact version and tag endpoints without resubmitting the publication command.
+  const [version, tags] = await Promise.all([
+    get<{ version: string; dist: { integrity: string; attestations?: unknown } }>(
+      `${registryUrl}circleso/${input.version}`,
+    ),
+    get<Registry["dist-tags"]>(`${registryUrl}-/package/circleso/dist-tags`),
+  ]);
+  checkPublished(input, registry["dist-tags"], version, tags);
   await save(`${directory}/published.json`, {
     ...input,
-    tags: after["dist-tags"],
-    dist: after.versions[input.version]?.dist,
+    tags,
+    dist: version.dist,
   });
   console.log(
     "Registry digest, provenance metadata and intended dist-tag verified; verify installed attestations separately",

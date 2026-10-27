@@ -68,7 +68,7 @@ Dispatch `publish.yml` on main with these exact inputs:
 
 | Input | Meaning |
 | --- | --- |
-| `version` | package.json version: `1.0.0-rc.N` or `1.0.0` |
+| `version` | package.json version: `1.0.0-rc.N`, `1.0.0` or explicitly authorized `1.0.1` |
 | `source_sha` | Full 40-character SHA, equal to workflow revision and current main |
 | `ci_run` | Successful Offline CI **push** run for that SHA |
 | `integrity` | Tarball `sha512-…` from that run's evidence |
@@ -84,7 +84,10 @@ downloaded tarball with scripts disabled, an explicit registry/tag and provenanc
 directory `prepublishOnly` guard rejects accidental local directory publication instead
 of regenerating hidden outputs. Publication concurrency spans the whole package.
 
-After publication, compare registry integrity and source/provenance, install the registry
+After publication, read the exact-version metadata and dist-tag endpoints; cached full
+package metadata may lag a successful publication. Verify the exact version, integrity,
+provenance metadata, intended tag and preservation of every unrelated existing tag.
+This read-only verification never resubmits publication. Then compare source/provenance, install the registry
 tarball in clean consumers, and run `npm audit signatures` there. Check the intended
 [dist-tag](https://docs.npmjs.com/adding-dist-tags-to-packages/); an RC must preserve the
 previous `latest`. Registry attestation metadata alone is not signature verification.

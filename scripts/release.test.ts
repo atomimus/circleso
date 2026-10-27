@@ -7,6 +7,7 @@ import {
   checkAvailable,
   checkCi,
   checkEvidence,
+  checkPublished,
   checkReleaseTag,
   type Evidence,
   releaseInput,
@@ -87,6 +88,23 @@ it("accepts exact RC/next and stable/latest manual identities", () => {
   ).toBe("latest");
 });
 
+it("accepts the authorized 1.0.1 patch only with its exact latest acknowledgement", () => {
+  const patch = {
+    ...env,
+    RELEASE_VERSION: "1.0.1",
+    RELEASE_DIST_TAG: "latest",
+    RELEASE_ACK: "1.0.1:latest",
+  };
+  expect(releaseInput(patch, "1.0.1")).toEqual({ ...input, version: "1.0.1", distTag: "latest" });
+  for (const change of [
+    { RELEASE_DIST_TAG: "next" },
+    { RELEASE_ACK: "1.0.0:latest" },
+    { RELEASE_ACK: "1.0.1:next" },
+    { RELEASE_VERSION: "1.0.0" },
+  ])
+    expect(() => releaseInput({ ...patch, ...change }, "1.0.1")).toThrow();
+});
+
 it.each([
   ["GITHUB_EVENT_NAME", "push"],
   ["GITHUB_REF", "refs/tags/v1.0.0-rc.1"],
@@ -110,7 +128,11 @@ it.each([
   "1.0.0-rc.0",
   "1.0.0-rc.01",
   "1.0.0-beta.1",
-  "1.0.1",
+  "1.0.2",
+  "1.1.0",
+  "1.0.01",
+  "1.0.1-rc.1",
+  "1.0.1+build",
   "2.0.0",
   "1.0.0+build",
 ])("rejects versions beyond this release scope: %s", (version) => {
@@ -158,6 +180,39 @@ it("rejects existing/previously used versions and missing latest snapshots", () 
     checkAvailable(input, { ...registry, time: { [input.version]: "removed" } }),
   ).toThrow();
   expect(() => checkAvailable(input, { versions: {}, "dist-tags": {} })).toThrow();
+});
+
+it("verifies exact published metadata while preserving every unrelated dist-tag", () => {
+  const patch = { ...input, version: "1.0.1", distTag: "latest" as const };
+  const beforeTags = { latest: "1.0.0", next: "1.0.0-rc.1", custom: "0.3.0" };
+  const version = { version: "1.0.1", dist: { integrity, attestations: { url: "fixture" } } };
+  const tags = { ...beforeTags, latest: "1.0.1" };
+  expect(() => checkPublished(patch, beforeTags, version, tags)).not.toThrow();
+  for (const changed of [
+    { ...version, version: "1.0.0" },
+    { ...version, dist: { ...version.dist, integrity: "substituted" } },
+    { ...version, dist: { integrity } },
+  ])
+    expect(() => checkPublished(patch, beforeTags, changed, tags)).toThrow();
+  for (const changed of [
+    { ...tags, latest: "1.0.0" },
+    { ...tags, next: "1.0.1" },
+    { latest: "1.0.1", next: "1.0.0-rc.1" },
+  ])
+    expect(() => checkPublished(patch, beforeTags, version, changed)).toThrow();
+  // A release candidate must still preserve the pre-existing stable tag.
+  expect(() =>
+    checkPublished(
+      input,
+      beforeTags,
+      { ...version, version: input.version },
+      {
+        ...beforeTags,
+        latest: input.version,
+        next: input.version,
+      },
+    ),
+  ).toThrow();
 });
 
 it("resolves exact lightweight and annotated tags without branch-name fallback", async () => {

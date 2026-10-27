@@ -1,11 +1,11 @@
 # Migrate from 0.3.0 to v1
 
-This guide targets the unreleased v1 source contract. It does not announce a published
-v1 or change an installed 0.3.0 package. The baseline is the actual npm 0.3.0 tarball,
+This guide describes the stable v1 contract, including the 1.0.1 documentation update.
+It does not change an installed 0.3.0 package. The baseline is the actual npm 0.3.0 tarball,
 checked October 27, 2026 (SHA-512 integrity
 `ntpuuyB+NWZDp+kXytv+Dyz2JRjdzX7X76YY59TwmcdZAfk8gvLglzqH9B0r6DPO3ThamHhNryvbMIqtZorSiw==`).
 Its engines are `>=18`; the four public entry paths already existed. Keep a lockfile
-and test the built local tarball until an actual candidate is published.
+and test the upgrade in your application before deployment.
 
 ## Runtime and imports
 

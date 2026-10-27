@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+## 1.0.1 — 2026-10-27
+
+- Package the final v1 documentation and support decisions, preserving the 1.0.0 SDK
+  runtime, public types and dependency graph. Update installation and release wording.
 - Retain Admin V2 support and document the [legacy Admin V1 migration decision](docs/admin-v1.md),
   including endpoint mappings, identity/field gaps and maintenance boundaries. No legacy client is added.
+- Permanently exclude Data API support and remove its public support plans/documentation.
+- Permit the explicitly authorized 1.0.1 patch in the release guard. Verify publication
+  through exact-version registry metadata and dist-tags, preserving unrelated tags and
+  the single OIDC publication command. Keep browser qualification downloads bounded.
 
 ## 1.0.0 — 2026-10-27
 

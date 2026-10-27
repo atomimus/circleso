@@ -1,6 +1,6 @@
 # Support and compatibility
 
-This repository's v1 work is unreleased. Published 0.3.0 retains its historical contract;
+The v1 line supports the three API surfaces listed below. For upgrades from 0.3.0,
 see [migration](docs/migration-v1.md) and the [API reference](docs/api-reference.md).
 No release date, response-time SLA or commercial Circle support is implied.
 
