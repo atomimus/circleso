@@ -5,6 +5,7 @@ import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promi
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { transform } from "esbuild";
 import { documentationFiles, markdownLinks, typescriptBlocks } from "./documentation";
 
 const root = process.cwd();
@@ -325,17 +326,13 @@ try {
   for (const name of ["auth-and-cookies", "documented-workflows"]) {
     const input = path.join(consumer, `example-${name}.mts`);
     const output = path.join(consumer, `example-${name}.mjs`);
-    run(
-      process.execPath,
-      [
-        require.resolve("esbuild/bin/esbuild"),
-        input,
-        "--platform=node",
-        "--format=esm",
-        `--outfile=${output}`,
-      ],
-      consumer,
-    );
+    const transformed = await transform(await readFile(input, "utf8"), {
+      loader: "ts",
+      format: "esm",
+      target: "es2022",
+      sourcefile: input,
+    });
+    await writeFile(output, transformed.code);
     process.stdout.write(run(process.execPath, [output], consumer));
   }
   const evidence = {
