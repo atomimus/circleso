@@ -22,6 +22,30 @@ export async function contracts() {
   const rawMember = createHeadlessClient(memberConfig);
   const rawAuth = createHeadlessAuthClient(authConfig);
   await admin.search.advanced({ query: "fixture" });
+  await admin.communityMemberCharges.list({ sort: "amount", direction: "asc" });
+  const chargeExport = await admin.communityMemberCharges.export({ fields: "amount,processor_id" });
+  const refunded = await admin.communityMemberCharges.refund(1, { reason_details: "Synthetic refund", amount: 100 });
+  await admin.communityMemberSubscriptions.list({ scheduled_to_cancel: false });
+  await admin.communityMemberSubscriptions.export({ status: "active,trial" });
+  await admin.communityMemberSubscriptions.cancel(2, { ends_at: "at_period_end" });
+  await admin.communityMemberSubscriptions.resume(2);
+  const changed = await admin.communityMemberSubscriptions.changeBillingDate(2, { operation: "extend_trial", days_to_extend: 7 });
+  const email: string | null | undefined = refunded?.community_member_email;
+  const trialEnd: string | null | undefined = changed?.trial_ends_at;
+  const exportId: number | undefined = chargeExport?.id;
+  void [email, trialEnd, exportId];
+  // @ts-expect-error required refund reason must remain required
+  await admin.communityMemberCharges.refund(1, {});
+  // @ts-expect-error subscription ID is numeric
+  await admin.communityMemberSubscriptions.resume("subscription");
+  // @ts-expect-error required cancellation timing must remain required
+  await admin.communityMemberSubscriptions.cancel(2, {});
+  // @ts-expect-error billing operation is required
+  await admin.communityMemberSubscriptions.changeBillingDate(2, {});
+  // @ts-expect-error billing operation is an enum
+  await admin.communityMemberSubscriptions.changeBillingDate(2, { operation: "refund" });
+  // @ts-expect-error financial responses must not become any
+  refunded?.invented_response_field;
   await member.bookmarks.list({ page: 1 });
   await auth.authToken.create({ email: "fixture@example.test" });
   await auth.accessToken.refresh({ refresh_token: "fixture" });

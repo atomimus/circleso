@@ -107,6 +107,64 @@ console.log(data?.records ?? []);
 
 Need the low-level OpenAPI client? Use `admin.raw` or `createAdminClient`.
 
+#### Charges and subscriptions
+
+`admin.communityMemberCharges` exposes `list`, `export` and `refund`.
+`admin.communityMemberSubscriptions` exposes `list`, `export`, `cancel`, `resume` and
+`changeBillingDate`. IDs are numeric Circle charge/subscription IDs. Options keep the
+schema's field names flat, including `page`/`per_page` for lists and comma-separated
+filter strings such as `status` and `paywall_ids`.
+
+```ts
+import { createAdmin } from "circleso/admin";
+
+const admin = createAdmin({ token: process.env.CIRCLE_ADMIN_TOKEN! });
+const charges = await admin.communityMemberCharges.list({ page: 1, per_page: 25 });
+const exportTask = await admin.communityMemberSubscriptions.export({
+  status: "active,trial",
+  scheduled_to_cancel: false,
+  fields: "processor_id,status",
+  timezone: "Etc/UTC",
+});
+
+// Mutations below use illustrative IDs; invoke only for an intended financial change.
+await admin.communityMemberCharges.refund(123, {
+  reason_details: "Requested by the member",
+  amount: 500,
+});
+await admin.communityMemberSubscriptions.cancel(456, { ends_at: "at_period_end" });
+await admin.communityMemberSubscriptions.resume(456);
+await admin.communityMemberSubscriptions.changeBillingDate(456, {
+  operation: "change_billing_date",
+  billing_date: "2026-11-15",
+});
+await admin.communityMemberSubscriptions.changeBillingDate(789, {
+  operation: "extend_trial",
+  days_to_extend: 7,
+});
+void [charges, exportTask];
+```
+
+Exports queue CSV delivery by email to the requesting admin and return JSON task metadata.
+Their POST filters go in the query string. Refund amounts use currency subunits; omit
+`amount` for a full refund and supply `reason_details` (maximum 255 characters).
+Cancellation accepts `ends_at: "now"` or `"at_period_end"`; an immediate cancellation
+can include `refund_type: "prorated"` or `"full"`. Resume applies to subscriptions
+scheduled to cancel at period end.
+
+Billing changes and genuine trial extensions share one PATCH operation. Circle requires
+`billing_date` for `change_billing_date`, or a positive integer `days_to_extend` for
+`extend_trial`, and ignores the other field. The generated schema requires `operation`
+but does not express these conditional requirements; Circle validates them and checks
+eligibility first (an ineligible operation can return 401 before input validation).
+The SDK preserves that server behavior and its contextual errors. These POST/PATCH
+operations retain the shared defaults that do not automatically retry unsafe methods;
+Circle documents no idempotency guarantee here. Response types follow the official
+schema, including optional/nullable fields.
+
+Contracts checked October 27, 2026 against the
+[official Admin V2 specification](https://api-headless.circle.so/api/admin/v2/swagger.yaml).
+
 ### Headless API (Bearer)
 
 ```ts

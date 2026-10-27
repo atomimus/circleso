@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add typed Admin `communityMemberCharges` list/export/refund and
+  `communityMemberSubscriptions` list/export/cancel/resume/changeBillingDate resources,
+  including trial extensions through the billing-date operation. Preserve query-only
+  export filters, official response schemas and safe POST/PATCH retry defaults.
+
 Specs synced from Circle's official endpoints on October 27, 2026. Existing resource names,
 flat options, client factories, and npm entry points are retained.
 

@@ -9,6 +9,8 @@ import { createAccessGroupsResource } from "./resources/accessGroups";
 import { createChatPreferencesResource } from "./resources/chatPreferences";
 import { createCommentsResource } from "./resources/comments";
 import { createCommunityResource } from "./resources/community";
+import { createCommunityMemberChargesResource } from "./resources/communityMemberCharges";
+import { createCommunityMemberSubscriptionsResource } from "./resources/communityMemberSubscriptions";
 import { createCommunityMembersResource } from "./resources/communityMembers";
 import { createCommunitySegmentsResource } from "./resources/communitySegments";
 import { createCoursesResource } from "./resources/courses";
@@ -39,6 +41,8 @@ export type AdminApi = {
   chatPreferences: ReturnType<typeof createChatPreferencesResource>;
   comments: ReturnType<typeof createCommentsResource>;
   community: ReturnType<typeof createCommunityResource>;
+  communityMemberCharges: ReturnType<typeof createCommunityMemberChargesResource>;
+  communityMemberSubscriptions: ReturnType<typeof createCommunityMemberSubscriptionsResource>;
   communityMembers: ReturnType<typeof createCommunityMembersResource>;
   communitySegments: ReturnType<typeof createCommunitySegmentsResource>;
   courses: ReturnType<typeof createCoursesResource>;
@@ -80,6 +84,8 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
     chatPreferences: createChatPreferencesResource(request),
     comments: createCommentsResource(request),
     community: createCommunityResource(request),
+    communityMemberCharges: createCommunityMemberChargesResource(request),
+    communityMemberSubscriptions: createCommunityMemberSubscriptionsResource(request),
     communityMembers: createCommunityMembersResource(request),
     communitySegments: createCommunitySegmentsResource(request),
     courses: createCoursesResource(request),

@@ -5,7 +5,7 @@ Counts are method/path exposure, not runtime correctness or test coverage. `raw`
 
 | Surface | Spec operations | Raw exposure | Named facade operations | Raw-only |
 | --- | ---: | ---: | ---: | ---: |
-| admin-v2 | 172 | 172 | 125 | 47 |
+| admin-v2 | 172 | 172 | 133 | 39 |
 | headless-client-v1 | 102 | 102 | 102 | 0 |
 | headless-auth-v1 | 4 | 4 | 4 | 0 |
 
@@ -19,8 +19,6 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 | admin-v2 | DELETE | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
 | admin-v2 | DELETE | `/api/admin/v2/paywall_coupons/{id}` | 13 |
 | admin-v2 | DELETE | `/api/admin/v2/paywalls/{id}` | 13 |
-| admin-v2 | GET | `/api/admin/v2/community_member_charges` | 12 |
-| admin-v2 | GET | `/api/admin/v2/community_member_subscriptions` | 12 |
 | admin-v2 | GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
 | admin-v2 | GET | `/api/admin/v2/filter_kit_configuration` | 14 |
 | admin-v2 | GET | `/api/admin/v2/filter_kit_controls` | 14 |
@@ -35,17 +33,11 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 | admin-v2 | GET | `/api/admin/v2/tax_setting` | 15 |
 | admin-v2 | GET | `/api/admin/v2/workflows` | 14 |
 | admin-v2 | GET | `/api/admin/v2/workflows/{id}` | 14 |
-| admin-v2 | PATCH | `/api/admin/v2/community_member_subscriptions/{id}/billing_date` | 12 |
 | admin-v2 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
 | admin-v2 | PATCH | `/api/admin/v2/paywall_affiliates/{id}` | 13 |
 | admin-v2 | PATCH | `/api/admin/v2/settings/connect` | 15 |
 | admin-v2 | POST | `/api/admin/v2/chat_room_message_imports` | 15 |
 | admin-v2 | POST | `/api/admin/v2/community_leads` | 15 |
-| admin-v2 | POST | `/api/admin/v2/community_member_charges/export` | 12 |
-| admin-v2 | POST | `/api/admin/v2/community_member_charges/{id}/refund` | 12 |
-| admin-v2 | POST | `/api/admin/v2/community_member_subscriptions/export` | 12 |
-| admin-v2 | POST | `/api/admin/v2/community_member_subscriptions/{id}/cancel` | 12 |
-| admin-v2 | POST | `/api/admin/v2/community_member_subscriptions/{id}/resume` | 12 |
 | admin-v2 | POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
 | admin-v2 | POST | `/api/admin/v2/filter_kit_controls` | 14 |
 | admin-v2 | POST | `/api/admin/v2/paywall_affiliate_payouts/export` | 13 |
@@ -120,9 +112,9 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/comments` | Yes | `comments.list` ([source](../src/adminApi/resources/comments.ts)) |
 | GET | `/api/admin/v2/comments/{id}` | Yes | `comments.get` ([source](../src/adminApi/resources/comments.ts)) |
 | GET | `/api/admin/v2/community` | Yes | `community.get` ([source](../src/adminApi/resources/community.ts)) |
-| GET | `/api/admin/v2/community_member_charges` | Yes | — |
+| GET | `/api/admin/v2/community_member_charges` | Yes | `communityMemberCharges.list` ([source](../src/adminApi/resources/communityMemberCharges.ts)) |
 | GET | `/api/admin/v2/community_member_spaces` | Yes | `communityMembers.spaces.list` ([source](../src/adminApi/resources/communityMembers.ts)) |
-| GET | `/api/admin/v2/community_member_subscriptions` | Yes | — |
+| GET | `/api/admin/v2/community_member_subscriptions` | Yes | `communityMemberSubscriptions.list` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
 | GET | `/api/admin/v2/community_members` | Yes | `communityMembers.list` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | GET | `/api/admin/v2/community_members/search` | Yes | `communityMembers.search` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | GET | `/api/admin/v2/community_members/{community_member_id}/access_groups` | Yes | `communityMembers.accessGroups.list` ([source](../src/adminApi/resources/communityMembers.ts)) |
@@ -180,7 +172,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/workflows/{id}` | Yes | — |
 | PATCH | `/api/admin/v2/access_groups/{access_group_id}/content` | Yes | `accessGroups.content.update` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | PATCH | `/api/admin/v2/access_groups/{id}/unarchive` | Yes | `accessGroups.unarchive` ([source](../src/adminApi/resources/accessGroups.ts)) |
-| PATCH | `/api/admin/v2/community_member_subscriptions/{id}/billing_date` | Yes | — |
+| PATCH | `/api/admin/v2/community_member_subscriptions/{id}/billing_date` | Yes | `communityMemberSubscriptions.changeBillingDate` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
 | PATCH | `/api/admin/v2/course_lessons/{id}` | Yes | `courses.lessons.update` ([source](../src/adminApi/resources/courses.ts)) |
 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | Yes | — |
 | PATCH | `/api/admin/v2/invitation_links/{id}/revoke` | Yes | `invitationLinks.revoke` ([source](../src/adminApi/resources/invitationLinks.ts)) |
@@ -191,11 +183,11 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/chat_room_message_imports` | Yes | — |
 | POST | `/api/admin/v2/comments` | Yes | `comments.create` ([source](../src/adminApi/resources/comments.ts)) |
 | POST | `/api/admin/v2/community_leads` | Yes | — |
-| POST | `/api/admin/v2/community_member_charges/export` | Yes | — |
-| POST | `/api/admin/v2/community_member_charges/{id}/refund` | Yes | — |
-| POST | `/api/admin/v2/community_member_subscriptions/export` | Yes | — |
-| POST | `/api/admin/v2/community_member_subscriptions/{id}/cancel` | Yes | — |
-| POST | `/api/admin/v2/community_member_subscriptions/{id}/resume` | Yes | — |
+| POST | `/api/admin/v2/community_member_charges/export` | Yes | `communityMemberCharges.export` ([source](../src/adminApi/resources/communityMemberCharges.ts)) |
+| POST | `/api/admin/v2/community_member_charges/{id}/refund` | Yes | `communityMemberCharges.refund` ([source](../src/adminApi/resources/communityMemberCharges.ts)) |
+| POST | `/api/admin/v2/community_member_subscriptions/export` | Yes | `communityMemberSubscriptions.export` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
+| POST | `/api/admin/v2/community_member_subscriptions/{id}/cancel` | Yes | `communityMemberSubscriptions.cancel` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
+| POST | `/api/admin/v2/community_member_subscriptions/{id}/resume` | Yes | `communityMemberSubscriptions.resume` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
 | POST | `/api/admin/v2/community_members` | Yes | `communityMembers.create` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | POST | `/api/admin/v2/community_segments` | Yes | `communitySegments.create` ([source](../src/adminApi/resources/communitySegments.ts)) |
 | POST | `/api/admin/v2/community_segments/{id}/duplicate` | Yes | `communitySegments.duplicate` ([source](../src/adminApi/resources/communitySegments.ts)) |
