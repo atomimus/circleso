@@ -129,14 +129,15 @@ Logging remains opt-in with secret headers redacted by default. Bodies require e
 tokens, refresh tokens, session cookies and auth headers must never be logged. Pagination stays
 in `src/core/pagination.ts`, supports bounded pages/items, empty pages and async iteration.
 
-## Review and publication boundaries
+## Integration and publication boundaries
 
 Preserve downloaded specs, generate declarations deterministically, and commit the declarations.
 The narrow generation-only workaround for Circle's missing `admin_v2_chat_room_message` schema
 must leave that response `unknown` until Circle provides an authoritative definition.
 
-Every task ends with validation, an explicit scoped commit, pushed task branch and PR for human
-review. Integration must be verified before successor work. Tasks 01–24 do not publish. Task 25
+Every task ends with validation and an explicit scoped commit pushed directly to `origin/main`.
+Verify the commit is present on `origin/main` before successor work; no separate branch, pull
+request or human review/merge gate is required. Tasks 01–24 do not publish. Task 25
 publishes/verifies an accepted candidate, task 26 prepares the stable decision/version, and task 27
 publishes/verifies accepted 1.0.0. All release gates in [README.md](README.md) and
 [WORKFLOW.md](WORKFLOW.md) still apply; a passing baseline suite does not qualify v1.

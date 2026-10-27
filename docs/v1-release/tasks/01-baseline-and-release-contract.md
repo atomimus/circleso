@@ -1,6 +1,6 @@
 # Task 01 Preserve the baseline and define the v1 contract
 
-Status: activated October 27, 2026. See [the task outcome](../results/01.md) and TASKS.json for current execution evidence and review state.
+Status: activated October 27, 2026. See [the task outcome](../results/01.md) and TASKS.json for current execution and integration evidence.
 
 You are working on the circleso npm TypeScript SDK in D:/Aiville/circleso, repository https://github.com/atomimus/circleso. The goal is a trustworthy v1 release covering Admin V2, Headless Member V1 and Headless Auth. This task belongs to the v1 release track.
 
@@ -10,7 +10,7 @@ Implement only task 01 in this chat after direct user activation or an authorize
 
 Required integrated tasks: none; this is the baseline task.
 
-Inspect the current branch, status, staged diff and dependency PR/results before editing. Preserve existing work, especially the excluded user-owned examples/admin-get-space-member.js. If a dependency is not integrated or another task is writing this checkout, report the exact unmet condition and stop. Do not automatically perform prerequisite tasks or infer completion from a status label alone.
+Verify the checkout is main and inspect status, staged diff and dependency commits/results before editing. Preserve existing work, especially the excluded user-owned examples/admin-get-space-member.js. If a dependency is not integrated or another task is writing this checkout, report the exact unmet condition and stop. Do not automatically perform prerequisite tasks or infer completion from a status label alone.
 
 ## Read and research
 
@@ -42,20 +42,20 @@ Record relevant source links and dates in the task outcome. Never infer an undoc
 
 4. Make the repository guidance durable: AGENTS.md is currently ignored and untracked. Review it for publication, preserve its architectural and security rules, and track it deliberately rather than force-adding unrelated ignored files.
 
-5. Checkpoint the reviewed, already-authorized API refresh plus planning/governance documents in this task branch. Do not implement the later fixes. Add clear contributing, compatibility, and task-result conventions.
+5. Checkpoint the reviewed, already-authorized API refresh plus planning/governance documents directly on main. Do not implement the later fixes. Add clear contributing, compatibility, and task-result conventions.
 
 ## Acceptance and finish
 
 - A reviewed baseline and support contract exist; known failures are recorded rather than presented as passing.
 - Existing SDK changes and the roadmap have a recoverable Git checkpoint; protected user files are untouched.
-- One scoped baseline commit is pushed and its PR is ready for review; the task 2 handoff waits until required review/integration and all completion gates finish.
+- The scoped baseline commit is verified on origin/main; perform the task 2 handoff after applicable checks and all completion gates finish.
 - Add meaningful regression/type/contract tests for the change and run the applicable full repository checks from WORKFLOW.md. A skipped or unavailable external check is not a pass.
 - Record a concise outcome in docs/v1-release/results/01.md and update only this task's record. Include dependency revisions, sources, validation evidence and remaining limitations.
 - Do not publish npm, create release tags/releases, move dist-tags or trigger a publishing workflow.
 
 ## GitHub checkpoint and completion handoff
 
-Use the accepted base and a scoped branch, normally codex/v1-task-01-baseline-and-release-contract. Explicitly stage only task-owned files after reviewing the diff and checking for secrets. Commit, push to origin and create/update a passing reviewable PR under WORKFLOW.md. Do not auto-merge, push directly to the default branch, force-push or absorb unrelated work. Attach the PR to the task chat when supported.
+Work directly on main. Explicitly stage only task-owned files after inspecting the diff and checking for secrets. Run the applicable checks, commit and push directly to origin/main under WORKFLOW.md, then verify the remote commit and CI evidence. Do not create task branches or pull requests, require human review/merge approval, force-push or absorb unrelated work.
 
 Suggested commit subject, only if it matches the actual diff:
 
@@ -63,6 +63,6 @@ Suggested commit subject, only if it matches the actual diff:
 📚 docs(release): establish the v1 baseline and support contract
 ```
 
-If the outcome is research-only, blocked or materially different, use an accurate Gitmoji + Conventional Commits subject instead. Report the actual commit SHA, branch, PR URL, CI state and exact remaining dependency or human review step. Finish this task before performing the final completion handoff below; pending review, integration or mandatory checks must not be treated as completion.
+If the outcome is research-only, blocked or materially different, use an accurate Gitmoji + Conventional Commits subject instead. Report the actual commit SHA, verified origin/main revision, CI state and exact remaining technical dependency or access condition. Finish this task before performing the final completion handoff below; failed pushes or mandatory checks must not be treated as completion.
 
-When task #01 is fully complete under D:/Aiville/circleso/docs/v1-release/WORKFLOW.md, including required checks, pushed commits, review/integration and recorded results, and task #02's prerequisites pass, immediately create and open a new local circleso chat and start task #02 using the full saved prompt at D:/Aiville/circleso/docs/v1-release/tasks/02-spec-generation-and-coverage.md, the workflow and completion evidence. Use the workflow's verified project lookup and create_thread/navigate_to_codex_page procedure, record the handoff chat ID, launch it only once, and do not implement task #02 in this chat.
+When task #01 is fully complete under D:/Aiville/circleso/docs/v1-release/WORKFLOW.md, including required checks, commits verified on origin/main and recorded results, and task #02's prerequisites pass, immediately create and open a new local circleso chat and start task #02 using the full saved prompt at D:/Aiville/circleso/docs/v1-release/tasks/02-spec-generation-and-coverage.md, the workflow and completion evidence. Use the workflow's verified project lookup and create_thread/navigate_to_codex_page procedure, record the handoff chat ID, launch it only once, and do not implement task #02 in this chat.

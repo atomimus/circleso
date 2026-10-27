@@ -1,10 +1,10 @@
 # CircleSo v1 release roadmap
 
-This plan prepares circleso for a reviewable, tested npm 1.0.0 release. It covers the three agreed REST APIs and the reliability, typing, documentation and release work identified in the audit.
+This plan prepares circleso for a tested npm 1.0.0 release. It covers the three agreed REST APIs and the reliability, typing, documentation and release work identified in the audit.
 
 There are 29 tasks in this plan. Task 01 was activated on October 27, 2026; see [TASKS.json](TASKS.json) and [its outcome](results/01.md) for current status. Tasks 01 through 27 form the v1 track. Tasks 29 and 30 are the Data API and legacy Admin V1 follow-ups and do not block v1. Task numbers are retained so existing references and launch buttons for surviving tasks remain valid. Creating this plan did not itself start implementation or publication.
 
-The user has authorized automatic completion handoffs: once a task is fully complete, it creates and opens a new local circleso chat and starts the next remaining task listed in TASKS.json. Required checks, reviews, integration and successor prerequisites must pass first. Task 30 ends the chain. Editing these instructions does not start it.
+The user has authorized automatic completion handoffs: once a task is fully complete, it creates and opens a new local circleso chat and starts the next remaining task listed in TASKS.json. Required technical checks, the commit's presence on origin/main and successor prerequisites must pass first. No human review or merge gate is required. Task 30 ends the chain. Editing these instructions does not start it.
 
 ## Start one task
 
@@ -12,13 +12,13 @@ Say **start task #N here** to execute its saved prompt in this chat. Say **open 
 
 The selected task checks that its dependencies are integrated and that another task is not writing the shared checkout. If not ready, it reports the specific dependency and stops; it does not start missing work automatically. On full completion it hands off to the next remaining task in TASKS.json in a new chat. Independent tasks can still be selected directly once their listed dependencies are integrated.
 
-Full prompts are linked below. Each contains research sources, exact scope, finish criteria, validation requirements, a suggested branch/commit and a final next-chat handoff instruction. The last task instead ends the chain.
+Full prompts are linked below. Each contains research sources, exact scope, finish criteria, validation requirements, a suggested commit and a final next-chat handoff instruction. The last task instead ends the chain.
 
-## Execution and review
+## Execution and integration
 
-Read [WORKFLOW.md](WORKFLOW.md) before any implementation. At every task boundary: verify the contract, implement the bounded change, test it, explicitly stage the task's files, commit, push a task branch, and leave a passing PR for human review. No direct pushes to main, automatic merges or force pushes are planned.
+Read [WORKFLOW.md](WORKFLOW.md) before any implementation. Work directly on main: verify the contract, implement the bounded change, test it, explicitly stage the task's files, commit and push to origin/main. Do not create separate task branches or pull requests, or wait for human review/merge approval. Do not force-push or overwrite unrelated work.
 
-An outcome is **ready for review** when its PR/checks are ready. It is **integrated** only when the accepted source actually includes it. Ready for review is not enough to trigger a completion handoff. Tasks 25 and 27 are dedicated external-publication steps, reached by direct selection or a completed predecessor's handoff; all other tasks stop short of npm publication.
+An outcome is **integrated** when its validated commit is verified on origin/main. That technical integration and the successor's prerequisites enable the completion handoff. Tasks 25 and 27 are dedicated external-publication steps, reached by direct selection or a completed predecessor's handoff; all other tasks stop short of npm publication.
 
 The work aims for verifiable reliability through contracts, regression tests, clean consumer installs and traceable releases. Missing access or unverified checks stay visible rather than being counted as success.
 
@@ -95,14 +95,14 @@ Before candidate preparation, all applicable implementation tasks must be integr
 - All published entry points work from a clean npm tarball in the agreed Node, browser, ESM/CJS and TypeScript consumers.
 - Examples compile, migration notes match the actual diff, and no unresolved release-blocking security/correctness issue remains.
 - Spec refresh/regeneration is reviewed and deterministic; the released artifact is traced to immutable accepted source.
-- Protected CI, trusted publishing, provenance and candidate installation evidence are ready before stable publication.
+- Passing CI, trusted publishing, provenance and candidate installation evidence are ready before stable publication.
 
-Task 24 prepares an RC and workflow without tagging/publishing. Task 25 publishes/verifies an RC under a prerelease tag. Task 26 prepares the stable version PR without publishing. Task 27 publishes/verifies 1.0.0 and latest after that concrete PR is accepted.
+Task 24 prepares an RC and workflow without tagging/publishing. Task 25 publishes/verifies an RC under a prerelease tag. Task 26 commits and pushes the stable version directly to main without publishing. Task 27 publishes/verifies 1.0.0 and latest after that exact source and its technical gates are verified.
 
 ## Audit coverage and planning files
 
 - [AUDIT.md](AUDIT.md) maps every audited gap to an owning task.
-- [WORKFLOW.md](WORKFLOW.md) defines activation, research, validation, Git/PR and publication rules.
+- [WORKFLOW.md](WORKFLOW.md) defines activation, research, validation, direct main commits and publication rules.
 - [CONTRACT.md](CONTRACT.md) defines the v1 public API, errors, compatibility and runtime support targets.
 - [TASKS.json](TASKS.json) is the machine-readable ID/dependency/status registry. Every initial status was planned; results record subsequent execution.
 - [SOURCES.md](SOURCES.md) lists primary research starting points.

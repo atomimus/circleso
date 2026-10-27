@@ -342,5 +342,5 @@ The downloaded spec stays intact, and the override stops applying when Circle de
 
 MIT. See `LICENSE`.
 
-For development and review conventions, see
+For development and commit conventions, see
 [CONTRIBUTING.md](https://github.com/atomimus/circleso/blob/main/CONTRIBUTING.md).

@@ -106,6 +106,12 @@ Pagination utilities live in `src/core/pagination.ts` and must:
 - Internal helpers can infer types, but must remain readable
 - Keep exports stable; breaking changes require a major bump
 
+## Git workflow
+- Work directly on `main` and push validated commits to `origin/main`.
+- Do not create task branches or pull requests, or wait for human review or merge approval.
+- Preserve unrelated work, stage explicit task-owned files, and run the applicable checks before pushing.
+- Verify completed task commits are on `origin/main` before the authorized next-task handoff.
+
 ---
 
 ## Testing strategy

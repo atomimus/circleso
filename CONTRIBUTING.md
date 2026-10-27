@@ -49,29 +49,30 @@ Use synthetic data. Keep Circle application/Admin tokens on the server. Never co
 credentials, auth headers, cookies, private member data or signed upload URLs. Logging is opt-in
 and redacts secrets by default. A live test requires a separately authorized test community.
 
-## Review and release
+## Commits and release
 
-Create a scoped `codex/` branch from the verified integration base. Review the diff, check only
-task-owned files for secrets, stage explicit paths, and make one cohesive commit using:
+Work directly on `main`. Inspect the diff, check only task-owned files for secrets, stage explicit
+paths, run the applicable checks, and make one cohesive commit using:
 
 ```text
 <gitmoji> <type>(<scope>): <imperative summary>
 ```
 
-Push the task branch and open a PR to `main`. Keep CI results and limitations visible; do not
-auto-merge or force-push. Breaking public runtime or TypeScript changes require a major release
+Push validated commits directly to `origin/main`. Separate branches, pull requests and human
+review/merge approval are not part of this workflow. Keep CI results and limitations visible;
+do not force-push. Breaking public runtime or TypeScript changes require a major release
 and migration notes. The current refresh belongs in v1, not an unannounced 0.3.x update.
 
 ## Task outcomes
 
 For task NN, write `docs/v1-release/results/NN.md`. Include the activation date, initial revision,
 integrated dependency revisions, official source links and dates, reviewed changes, exact
-validation evidence, known failures and owning task IDs, and remaining review/access gates.
-Supply the final commit SHA and PR/check state in the chat or PR; a commit cannot contain its
-own final SHA. Update only the selected record in `TASKS.json`.
+validation evidence, known failures and owning task IDs, and remaining technical/access gates.
+Supply the final commit SHA, `origin/main` integration evidence and check state in the chat;
+a commit cannot contain its own final SHA. Update only the selected record in `TASKS.json`.
 
-`ready_for_review` means a pushed, reviewable checkpoint. `integrated` requires verifying that
-the accepted source includes it. Do not launch a successor while review, integration or a
-mandatory check is pending. Follow the saved handoff procedure once all gates pass and record
-the returned chat ID once. Publication is restricted to tasks 25 and 27; ordinary task branches
+`integrated` requires verifying that `origin/main` includes the validated task commit. Do not
+launch a successor while a mandatory check or push is pending. Follow the saved handoff procedure
+once all technical gates pass and record the returned chat ID once. Publication is restricted
+to tasks 25 and 27; ordinary task commits
 must not publish npm packages, create release tags or move dist-tags.

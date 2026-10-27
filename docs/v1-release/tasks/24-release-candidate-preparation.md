@@ -10,7 +10,7 @@ Implement only task 24 in this chat after direct user activation or an authorize
 
 Required integrated tasks: 02, 03, 11, 21, 22, 23.
 
-Inspect the current branch, status, staged diff and dependency PR/results before editing. Preserve existing work, especially the excluded user-owned examples/admin-get-space-member.js. If a dependency is not integrated or another task is writing this checkout, report the exact unmet condition and stop. Do not automatically perform prerequisite tasks or infer completion from a status label alone.
+Verify the checkout is main and inspect status, staged diff and dependency commits/results before editing. Preserve existing work, especially the excluded user-owned examples/admin-get-space-member.js. If a dependency is not integrated or another task is writing this checkout, report the exact unmet condition and stop. Do not automatically perform prerequisite tasks or infer completion from a status label alone.
 
 ## Read and research
 
@@ -41,14 +41,14 @@ Record relevant source links and dates in the task outcome. Never infer an undoc
 
 3. Implement reviewed, manually gated GitHub Actions publishing with npm trusted publishing/OIDC and provenance where the package/account supports it. Verify current Node/npm and hosted-runner requirements rather than copying obsolete snippets.
 
-4. Use least-privilege workflows, a protected release environment, explicit version/tag/dist-tag checks, concurrency control and an immutable tested source. Prevent ordinary PRs/branch pushes from publishing and avoid hidden lifecycle regeneration changing the reviewed artifact.
+4. Use least-privilege workflows, a dedicated release environment without a human approval gate, explicit version/tag/dist-tag checks, concurrency control and an immutable tested source. Prevent ordinary main pushes from publishing and avoid hidden lifecycle regeneration changing the reviewed artifact.
 
 5. Provide setup instructions for npm owner/trusted-publisher configuration and recovery/deprecation procedures. Creating a release/tag or triggering npm publish is outside this preparation task.
 
 ## Acceptance and finish
 
-- The release candidate commit and package evidence are reviewable and all gates pass.
-- The trusted-publishing workflow is ready but cannot publish merely because this PR is pushed or merged.
+- The release candidate commit is verified on origin/main, package evidence is recorded and all technical gates pass.
+- The trusted-publishing workflow is ready but cannot publish merely because a commit is pushed to main.
 - Stop with no release tag, prerelease, npm publish or dist-tag change.
 - Add meaningful regression/type/contract tests for the change and run the applicable full repository checks from WORKFLOW.md. A skipped or unavailable external check is not a pass.
 - Record a concise outcome in docs/v1-release/results/24.md and update only this task's record. Include dependency revisions, sources, validation evidence and remaining limitations.
@@ -56,7 +56,7 @@ Record relevant source links and dates in the task outcome. Never infer an undoc
 
 ## GitHub checkpoint and completion handoff
 
-Use the accepted base and a scoped branch, normally codex/v1-task-24-release-candidate-preparation. Explicitly stage only task-owned files after reviewing the diff and checking for secrets. Commit, push to origin and create/update a passing reviewable PR under WORKFLOW.md. Do not auto-merge, push directly to the default branch, force-push or absorb unrelated work. Attach the PR to the task chat when supported.
+Work directly on main. Explicitly stage only task-owned files after inspecting the diff and checking for secrets. Run the applicable checks, commit and push directly to origin/main under WORKFLOW.md, then verify the remote commit and CI evidence. Do not create task branches or pull requests, require human review/merge approval, force-push or absorb unrelated work.
 
 Suggested commit subject, only if it matches the actual diff:
 
@@ -64,6 +64,6 @@ Suggested commit subject, only if it matches the actual diff:
 🔨 chore(release): prepare the v1 release candidate
 ```
 
-If the outcome is research-only, blocked or materially different, use an accurate Gitmoji + Conventional Commits subject instead. Report the actual commit SHA, branch, PR URL, CI state and exact remaining dependency or human review step. Finish this task before performing the final completion handoff below; pending review, integration or mandatory checks must not be treated as completion.
+If the outcome is research-only, blocked or materially different, use an accurate Gitmoji + Conventional Commits subject instead. Report the actual commit SHA, verified origin/main revision, CI state and exact remaining technical dependency or access condition. Finish this task before performing the final completion handoff below; failed pushes or mandatory checks must not be treated as completion.
 
-When task #24 is fully complete under D:/Aiville/circleso/docs/v1-release/WORKFLOW.md, including required checks, pushed commits, review/integration and recorded results, and task #25's prerequisites pass, immediately create and open a new local circleso chat and start task #25 using the full saved prompt at D:/Aiville/circleso/docs/v1-release/tasks/25-release-candidate-publication.md, the workflow and completion evidence. Use the workflow's verified project lookup and create_thread/navigate_to_codex_page procedure, record the handoff chat ID, launch it only once, and do not implement task #25 in this chat.
+When task #24 is fully complete under D:/Aiville/circleso/docs/v1-release/WORKFLOW.md, including required checks, commits verified on origin/main and recorded results, and task #25's prerequisites pass, immediately create and open a new local circleso chat and start task #25 using the full saved prompt at D:/Aiville/circleso/docs/v1-release/tasks/25-release-candidate-publication.md, the workflow and completion evidence. Use the workflow's verified project lookup and create_thread/navigate_to_codex_page procedure, record the handoff chat ID, launch it only once, and do not implement task #25 in this chat.
