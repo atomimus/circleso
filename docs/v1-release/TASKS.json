@@ -33,7 +33,7 @@
       "number": "02",
       "title": "Make spec generation deterministic and measure API coverage",
       "track": "v1",
-      "status": "in_progress",
+      "status": "integrated",
       "dependsOn": [1],
       "promptFile": "tasks/02-spec-generation-and-coverage.md",
       "resultFile": "results/02.md",
