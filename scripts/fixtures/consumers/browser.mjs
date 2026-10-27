@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import vm from "node:vm";
+import { gzipSync } from "node:zlib";
 import { build } from "esbuild";
 
 export async function checkBrowser(consumer) {
@@ -20,6 +21,8 @@ export async function checkBrowser(consumer) {
       logLevel: "silent",
     });
     const code = result.outputFiles[0].text;
+    assert.ok(Buffer.byteLength(code) <= 220 * 1024, "Member browser bundle exceeds 220 KiB");
+    assert.ok(gzipSync(code).byteLength <= 45 * 1024, "Member browser bundle exceeds 45 KiB gzip");
     for (const output of Object.values(result.metafile.outputs))
       assert.deepEqual(output.imports, []);
     assert.ok(!/\bBuffer\b|node:/.test(code), "Browser bundle includes a Node dependency");

@@ -10,6 +10,8 @@ Start with the [complete API reference](docs/api-reference.md),
 [0.3.0 to v1 migration guide](docs/migration-v1.md), and
 [support/compatibility policy](SUPPORT.md). Every public TypeScript example compiles
 against the actual installed tarball in CI. Reference guides ship in the package.
+See [SECURITY.md](SECURITY.md) for private vulnerability reporting and the
+[security review](docs/security-review.md) for credential/redirect boundaries and measured budgets.
 
 See [complete direct file uploads](docs/file-uploads.md) for metadata, MD5 and isolated storage PUTs via `directUploads.upload`.
 

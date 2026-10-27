@@ -38,3 +38,48 @@ Public checks need no Circle credentials. Live integration requires a separately
 test community with synthetic identities and controlled cleanup. Record unavailable or
 skipped external checks as unmet evidence, not passing coverage. Keep customer data,
 tokens/session cookies, signed URLs and private local planning out of Git and package files.
+
+## Dependency maintenance
+
+Review direct/transitive dependencies and advisories before each release and regularly
+during maintenance. Keep runtime dependencies small and pinned, commit the lockfile,
+and use `npm ci` to reproduce it. Run `npm audit --json` for the full development tree
+and `npm audit --omit=dev --json` separately; save dated evidence. An unavailable registry
+or scanner error is missing evidence, not a clean audit. Neither a zero count nor an
+advisory severity establishes exploitability: trace the affected version/function/input
+to the actual runtime, spec tool, test server or build path. Record fixes, mitigations,
+remaining exposure and the reason a release is safe or blocked.
+
+Prefer a narrow compatible update, read official release/advisory notes, and inspect the
+lock diff (including optional/native packages and install scripts). Never run a forced
+audit fix as a substitute for review. The Vite 7.3.7 override retains a patched existing
+major for Vitest; reassess/remove it deliberately with the next toolchain migration.
+Do not expose test/dev servers to untrusted networks or run untrusted code with secrets.
+
+Inspect each new dependency's actual license/notice and bundled code; preserve required
+notices, including bundled noble hashes in LICENSE. `npm ls --all` and the lockfile cover
+different things: the lock includes optional platforms absent locally. Run
+`npm audit signatures` as a separate registry-signature/provenance check and report
+unsupported/unverified entries accurately. Signatures/provenance identify origin/build
+evidence and do not establish that code is safe.
+
+After an update, run `npm run validate:ci`, the pinned current source compiler and browser
+matrix. Offline generation must remain identical unless a deliberate spec change is
+owned by the update. Inspect the actual tarball, production-only consumers, notices,
+public docs and size budgets. Compare workflow/compiler measurements on equivalent
+runtimes; investigate growth before raising a review budget. See the
+[review and operational limits](security-review.md) and [security policy](../SECURITY.md).
+
+## Publishing identity checks
+
+As checked October 27, 2026, [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
+requires npm ≥11.5.1 and Node ≥22.14.0. Verify the exact repository, workflow filename,
+environment and allowed actions in the package's publisher configuration. New configurations
+default to staged publishing; direct `npm publish` permission and dist-tag permission
+are distinct settings. Do not assume an older guide's identity or permissions are current.
+Use a supported hosted runner, constrain OIDC permission to the publication job, and keep
+long-lived npm credentials out of the workflow. GitHub trusted publishing automatically
+generates provenance; do not disable it. Verify the resulting attestation and artifact
+against the tested source; [provenance](https://docs.npmjs.com/generating-provenance-statements/)
+does not replace code review. Preparation must reconcile lifecycle rebuilds with the
+immutable tested tarball before any authorized publication. This guide enables no publish path.

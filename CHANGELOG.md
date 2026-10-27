@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Patch affected development dependencies, enable verified private vulnerability reporting,
+  ship SECURITY.md, document reviewed security/maintenance boundaries, and measure installed
+  workflows/compiler cost with package and browser size regression budgets.
+
 - Add real-browser/worker/CORS/cookie/upload acceptance from installed tarballs, composed
   ESM/CJS applications across the compiler/runtime matrix, and explicitly scoped manual
   live integration with owned disposable fixtures. Preserve native finite request bodies,

@@ -74,12 +74,16 @@
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "SUPPORT.md",
+    "SECURITY.md",
     "docs/*.md",
     "LICENSE"
   ],
   "dependencies": {
     "openapi-fetch": "0.15.0",
     "openapi-typescript-helpers": "0.0.15"
+  },
+  "overrides": {
+    "vite": "7.3.7"
   },
   "scripts": {
     "build": "tsx ./scripts/build.ts",
@@ -115,6 +119,6 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-current": "npm:typescript@7.0.2",
-    "vitest": "4.0.16"
+    "vitest": "4.1.12"
   }
 }

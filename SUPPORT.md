@@ -37,9 +37,9 @@ Report SDK bugs through [GitHub issues](https://github.com/atomimus/circleso/iss
 Include SDK/runtime/compiler versions, affected method, a synthetic reproduction,
 sanitized status/request ID and expected versus observed behavior. Omit tokens, cookies,
 signed URLs, private identifiers, payloads and raw error causes. Security-sensitive reports
-should use a private channel offered by the repository's
-[security page](https://github.com/atomimus/circleso/security); do not post exploit credentials
-in a public issue. No private reporting endpoint or security SLA is promised here.
+use the verified [private vulnerability form](https://github.com/atomimus/circleso/security/advisories/new).
+See [SECURITY.md](SECURITY.md) for disclosure and supported-version policy. Do not post
+exploit credentials publicly. No security response-time SLA is promised.
 
 Changes to supported public exports, runtime behavior, required inputs or generated public
 types are evaluated for semantic-version compatibility. Breaking changes require a major

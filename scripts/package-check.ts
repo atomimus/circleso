@@ -5,6 +5,7 @@ import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promi
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { gzipSync } from "node:zlib";
 import { transform } from "esbuild";
 import { documentationFiles, markdownLinks, typescriptBlocks } from "./documentation";
 import { liveConfig } from "./integration-policy";
@@ -78,6 +79,7 @@ try {
         "LICENSE",
         "CONTRIBUTING.md",
         "SUPPORT.md",
+        "SECURITY.md",
       ].includes(file) ||
         /^docs\/[\w-]+\.md$/.test(file) ||
         /^dist\/[\w-]+\.(?:js|cjs|d\.ts|d\.cts)(?:\.map)?$/.test(file),
@@ -166,6 +168,7 @@ try {
     "LICENSE",
     "CONTRIBUTING.md",
     "SUPPORT.md",
+    "SECURITY.md",
     ...publicDocs,
   ]) {
     assert.ok(names.includes(file), `Missing packaged documentation: ${file}`);
@@ -184,8 +187,15 @@ try {
       }
   }
   let maps = 0;
+  let declarationBytes = 0;
+  for (const file of names.filter((name) => /\.d\.(?:ts|cts)$/.test(name))) {
+    declarationBytes += (await readFile(path.join(installed, file))).byteLength;
+  }
+  assert.ok(declarationBytes <= 3 * 1024 * 1024, "Declarations exceed the 3 MiB review budget");
   for (const file of names.filter((name) => /\.(?:js|cjs)$/.test(name))) {
     const source = await readFile(path.join(installed, file), "utf8");
+    assert.ok(Buffer.byteLength(source) <= 350 * 1024, `${file} exceeds 350 KiB`);
+    assert.ok(gzipSync(source).byteLength <= 70 * 1024, `${file} exceeds 70 KiB gzip`);
     const mapName = `${file}.map`;
     assert.ok(names.includes(mapName), mapName);
     assert.ok(source.includes(`//# sourceMappingURL=${path.basename(mapName)}`));
@@ -228,12 +238,18 @@ try {
       /(?:from\s*["']|require\(["'])@noble\/hashes/,
     );
   }
-  for (const file of ["runtime.mjs"])
+  console.log(
+    `Package size budgets: ${declarationBytes} declaration bytes; runtime <=350 KiB/70 KiB gzip per file`,
+  );
+  for (const file of ["runtime.mjs", "measure.mjs"])
     await copyFile(path.join(fixtures, file), path.join(consumer, file));
   process.stdout.write(
     run(process.execPath, ["--enable-source-maps", path.join(consumer, "runtime.mjs")], consumer),
   );
   process.stdout.write(run(process.execPath, [path.join(fixtures, "browser.mjs"), consumer], root));
+  process.stdout.write(
+    run(process.execPath, ["--expose-gc", path.join(consumer, "measure.mjs")], consumer),
+  );
 
   const types = await readFile(path.join(fixtures, "types.txt"), "utf8");
   for (const extension of ["mts", "cts"]) {
@@ -305,8 +321,14 @@ try {
       const trace = compiler === "typescript" && resolution === "Node16";
       const output = run(
         process.execPath,
-        [cli, "-p", configFile, ...(trace ? ["--traceResolution"] : [])],
+        [cli, "-p", configFile, "--extendedDiagnostics", ...(trace ? ["--traceResolution"] : [])],
         consumer,
+      );
+      console.log(
+        `Package compiler measurements: ${compilerPackage.version}/${resolution}; ${output
+          .split(/\r?\n/)
+          .filter((line) => /^(?:Memory used|Check time|Total time):/.test(line))
+          .join("; ")}`,
       );
       if (trace) {
         for (const entry of ["index", "admin", "headless", "auth"]) {
@@ -381,6 +403,22 @@ try {
     );
   }
   // Explicit synthetic allowlist only: do not execute credential-driven examples.
+  const securityRecipe = path.join(consumer, "doc-docs-security-review.md-0.mts");
+  const compiledSecurity = await transform(await readFile(securityRecipe, "utf8"), {
+    loader: "ts",
+    format: "esm",
+    target: "es2022",
+    sourcefile: securityRecipe,
+  });
+  await writeFile(path.join(consumer, "pinned-fetch.mjs"), compiledSecurity.code);
+  await copyFile(path.join(fixtures, "security.mjs"), path.join(consumer, "security.mjs"));
+  process.stdout.write(
+    run(process.execPath, [path.join(consumer, "security.mjs")], consumer, {
+      NODE_EXTRA_CA_CERTS: path.join(root, "scripts/fixtures/acceptance/test-cert.pem"),
+      CIRCLE_FIXTURE_CERT: path.join(root, "scripts/fixtures/acceptance/test-cert.pem"),
+      CIRCLE_FIXTURE_KEY: path.join(root, "scripts/fixtures/acceptance/test-key.pem"),
+    }),
+  );
   for (const name of ["auth-and-cookies", "documented-workflows"]) {
     const input = path.join(consumer, `example-${name}.mts`);
     const output = path.join(consumer, `example-${name}.mjs`);
