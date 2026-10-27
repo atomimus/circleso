@@ -61,7 +61,7 @@
     "build": "tsup",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check .",
+    "lint": "tsx ./scripts/lint.ts",
     "format": "biome format --write .",
     "spec:sync": "tsx ./scripts/spec-sync.ts",
     "spec:check": "tsx ./scripts/spec-sync.ts --check",
@@ -70,6 +70,8 @@
     "coverage:api": "tsx ./scripts/api-coverage.ts",
     "coverage:write": "tsx ./scripts/api-coverage.ts --write",
     "coverage:check": "tsx ./scripts/api-coverage.ts --check",
+    "pack:check": "npm pack --dry-run --json --ignore-scripts",
+    "validate:ci": "npm run lint && npm run typecheck && npm test && npm run gen:check && npm run coverage:check && npm run build && npm run pack:check",
     "prepublishOnly": "npm run gen:types && npm run build"
   },
   "devDependencies": {

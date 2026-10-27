@@ -1,4 +1,2 @@
-# Stable input/output bytes on Windows and Unix checkouts.
-api/specs/*.yaml text eol=lf
-src/generated/*.d.ts text eol=lf
-docs/api-coverage.md text eol=lf
+# Stable text bytes and formatter behavior on Windows and Unix checkouts.
+* text=auto eol=lf

@@ -1,8 +1,8 @@
 # Contributing to circleso
 
-Read [AGENTS.md](AGENTS.md) for the architecture and
-[the v1 contract](docs/v1-release/CONTRACT.md) for compatibility requirements. The numbered release
-work follows [WORKFLOW.md](docs/v1-release/WORKFLOW.md); selecting a task activates only that task.
+Read [AGENTS.md](AGENTS.md) for architecture and repository rules. Release planning, compatibility
+contracts and task outcomes in `docs/v1-release/` are local-only and must never be added to Git.
+Selecting a release task activates only that task.
 Use one implementation task per checkout. Preserve unrelated work and stage explicit paths.
 
 ## Development
@@ -31,9 +31,13 @@ generated types by hand. See [the tooling guide](docs/spec-generation.md) and
 The release checklist in AGENTS.md also requires a deliberate spec refresh before publication;
 tasks 24–27 must reconcile it with building from immutable, reviewed release inputs.
 
-The lint command checks the repository. In a shared dirty checkout, pass only tracked and
-task-owned files to the installed Biome CLI so unrelated private files are neither read nor
-printed. Do not hide SDK source from CI. Do not run the user-owned
+`npm run validate:ci` runs the sequence above, including `pack:check` as the dry-run command.
+See [continuous validation](docs/ci.md) for the exact Node/OS matrix, trust boundaries and manual
+live-spec workflow. Ordinary checks never download mutable Circle specs.
+
+The lint command checks Git-tracked working-tree files using the installed Biome CLI. Explicitly
+stage new task-owned files before linting; unrelated untracked files are never read or printed.
+Do not hide SDK source from CI. Do not run the user-owned
 `examples/admin-get-space-member.js` or include it in a commit without explicit authorization.
 
 ## Changes and validation
@@ -75,6 +79,7 @@ validation evidence, known failures and owning task IDs, and remaining technical
 Supply the final commit SHA, `origin/main` integration evidence and check state in the chat;
 a commit cannot contain its own final SHA. Update only the selected record in `TASKS.json`.
 
+Keep these task outcomes and the local task registry outside Git, as required by AGENTS.md.
 `integrated` requires verifying that `origin/main` includes the validated task commit. Do not
 launch a successor while a mandatory check or push is pending. Follow the saved handoff procedure
 once all technical gates pass and record the returned chat ID once. Publication is restricted
