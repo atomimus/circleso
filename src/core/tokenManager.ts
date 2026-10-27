@@ -1,8 +1,8 @@
-import { CircleConfigError, CircleHttpError } from "./errors";
+import { CircleConfigError, CircleHttpError, CircleSdkError } from "./errors";
 import { HEADER_ACCEPT, HEADER_AUTHORIZATION, HEADER_CONTENT_TYPE } from "./headers";
-import { createSmartFetch, type RetryConfig } from "./http";
-import { createHttpLifetime, discardResponse } from "./httpLifetime";
-import { buildHttpError, readResponseBody, responseContext } from "./response";
+import { createRecoveringFetch, createSmartFetch, type RetryConfig } from "./http";
+import { createHttpLifetime } from "./httpLifetime";
+import { readResponseBody, responseContext } from "./response";
 
 const REFRESH_PATH = "/api/v1/headless/access_token/refresh";
 
@@ -18,6 +18,8 @@ export type TokenManagerConfig = TokenHooks & {
 
 export type AutoRefreshFetchConfig = {
   baseUrl: string;
+  /** Server-side Headless Auth application token; distinct from the member refresh token. */
+  authToken: string;
   authBaseUrl?: string;
   timeoutMs?: number;
   retries?: RetryConfig;
@@ -35,23 +37,37 @@ export type TokenManager = {
 };
 
 export function createTokenManager(config: TokenManagerConfig): TokenManager {
-  let accessToken = config.accessToken;
+  type Generation = { token: string | undefined; recovery?: Promise<string> };
+  let generation: Generation = { token: config.accessToken };
   let refreshInFlight: Promise<string> | undefined;
   const refreshToken = config.refreshToken;
 
   async function getAccessToken() {
-    if (config.getAccessToken) {
-      const stored = await config.getAccessToken();
-      if (stored !== undefined) {
-        accessToken = stored;
+    const before = generation;
+    try {
+      if (config.getAccessToken) {
+        const stored = await config.getAccessToken();
+        validateToken(stored);
+        // An older asynchronous read cannot overwrite a newer token generation.
+        if (generation === before && stored !== generation.token) {
+          generation = { token: stored };
+        }
       }
+      return generation.token;
+    } catch (cause) {
+      throw new CircleConfigError("Could not read the access token.", cause);
     }
-    return accessToken;
   }
 
   async function setAccessToken(token: string | undefined) {
-    accessToken = token;
-    await config.setAccessToken?.(token);
+    validateToken(token);
+    const before = generation;
+    try {
+      await config.setAccessToken?.(token);
+      if (generation === before) generation = { token };
+    } catch (cause) {
+      throw new CircleConfigError("Could not store the access token.", cause);
+    }
   }
 
   function getRefreshToken() {
@@ -59,8 +75,10 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
   }
 
   function createAutoRefreshFetch(options: AutoRefreshFetchConfig) {
+    if (!options.authToken) throw new CircleConfigError("authToken is required for auto-refresh.");
+    validateToken(options.authToken);
     const authBaseUrl = options.authBaseUrl ?? options.baseUrl;
-    const requestFetch = createSmartFetch({
+    const requestFetch = createRecoveringFetch({
       baseUrl: options.baseUrl,
       throwOnHttpError: false,
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
@@ -72,97 +90,124 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
     const refreshFetch = createSmartFetch({
       baseUrl: authBaseUrl,
       throwOnHttpError: false,
-      ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
-      ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      // Refresh PATCH has no documented idempotency guarantee, even when member calls opt in.
+      retries: { retries: 0 },
       ...(options.userAgent !== undefined ? { userAgent: options.userAgent } : {}),
       ...(options.fetcher !== undefined ? { fetcher: options.fetcher } : {}),
     });
 
-    const retriedRequests = new WeakSet<Request>();
-
     return async function autoRefreshFetch(request: Request): Promise<Response> {
-      const retryBase = request.clone();
-      const response = await requestFetch(request);
-      if (response.ok || retriedRequests.has(request)) {
-        return response;
-      }
-
-      const shouldRefresh = await shouldAttemptRefresh(response);
-      if (!shouldRefresh) {
-        return response;
-      }
-
-      const refreshTokenValue = getRefreshToken();
-      if (!refreshTokenValue) {
-        throw new CircleConfigError("refreshToken is required for auto-refresh.");
-      }
-
-      // This response will not be returned or parsed by the caller.
-      discardResponse(response);
-      // Cancellation stops this caller waiting; a shared refresh keeps its own attempt budget.
-      const refreshWait = createHttpLifetime([request.signal]);
-      try {
-        refreshWait.throwIfAborted();
-        await refreshWait.wait(refreshAccessToken(refreshFetch, refreshTokenValue, authBaseUrl));
-      } finally {
-        refreshWait.cleanup();
-      }
-
-      const newAccessToken = await getAccessToken();
-      if (!newAccessToken) {
-        throw await buildHttpError(response, request);
-      }
-
-      const retryRequest = cloneRequestWithAuth(retryBase, newAccessToken);
-      retriedRequests.add(retryRequest);
-      return requestFetch(retryRequest);
+      const sentAuthorization = request.headers.get(HEADER_AUTHORIZATION);
+      const sentGeneration = generation;
+      return requestFetch(request, async () => {
+        // Cancellation removes only this waiter; it never aborts shared refresh work.
+        const wait = createHttpLifetime([request.signal]);
+        try {
+          wait.throwIfAborted();
+          const nextToken = await wait.wait(recover(sentGeneration, sentAuthorization));
+          return new Headers({ [HEADER_AUTHORIZATION]: `Bearer ${nextToken}` });
+        } catch (cause) {
+          if (wait.signal.aborted)
+            Object.assign(wait.signal.reason, { url: request.url, method: request.method });
+          throw cause;
+        } finally {
+          wait.cleanup();
+        }
+      });
     };
-  }
 
-  async function refreshAccessToken(
-    refreshFetch: (request: Request) => Promise<Response>,
-    token: string,
-    authBaseUrl: string,
-  ) {
-    if (refreshInFlight) {
-      return refreshInFlight;
+    function recover(sent: Generation, authorization: string | null): Promise<string> {
+      if (
+        generation.token &&
+        (generation !== sent || authorization !== `Bearer ${generation.token}`)
+      ) {
+        return Promise.resolve(generation.token);
+      }
+      // Retain the settled failure on this generation: late failures must not start a stampede.
+      if (!sent.recovery) {
+        sent.recovery = recoverGeneration(sent);
+      }
+      return sent.recovery;
     }
 
-    const refreshPromise = (async () => {
+    async function recoverGeneration(sent: Generation): Promise<string> {
+      // A different generation may have rotated in caller storage during an earlier refresh.
+      // Serialize that generation's refresh without poisoning it with the older result/failure.
+      if (refreshInFlight) await refreshInFlight.catch(() => {});
+      if (generation !== sent) {
+        if (generation.token) return generation.token;
+        throw new CircleConfigError("Access token was cleared while refreshing.");
+      }
+      const operation = refreshAccessToken(sent);
+      refreshInFlight = operation;
+      try {
+        return await operation;
+      } finally {
+        if (refreshInFlight === operation) refreshInFlight = undefined;
+      }
+    }
+
+    async function refreshAccessToken(sent: Generation): Promise<string> {
       const refreshUrl = new URL(REFRESH_PATH, authBaseUrl).toString();
-      const refreshRequest = new Request(refreshUrl, {
-        method: "PATCH",
-        headers: {
-          [HEADER_AUTHORIZATION]: `Bearer ${token}`,
-          [HEADER_ACCEPT]: "application/json",
-          [HEADER_CONTENT_TYPE]: "application/json",
-        },
-        body: JSON.stringify({ refresh_token: token }),
-      });
-
-      const response = await refreshFetch(refreshRequest);
-      const evidence = await readBody(response);
-      const { parsedJson } = evidence;
-      const details = { ...responseContext(response, refreshRequest), ...evidence };
-
-      if (!response.ok) {
-        throw new CircleHttpError(`Token refresh failed with status ${response.status}`, details);
+      const context = { url: refreshUrl, method: "PATCH" };
+      // Also bound caller-owned hooks. A hook must cooperate to stop its own side effects.
+      const lifetime = createHttpLifetime([], options.timeoutMs);
+      let response: Response | undefined;
+      try {
+        const current = await lifetime.wait(getAccessToken());
+        if (generation !== sent) {
+          if (current) return current;
+          throw new CircleConfigError("Access token was cleared while refreshing.");
+        }
+        if (!refreshToken)
+          throw new CircleConfigError("refreshToken is required for auto-refresh.");
+        response = await refreshFetch(
+          new Request(refreshUrl, {
+            ...context,
+            signal: lifetime.signal,
+            headers: {
+              [HEADER_AUTHORIZATION]: `Bearer ${options.authToken}`,
+              [HEADER_ACCEPT]: "application/json",
+              [HEADER_CONTENT_TYPE]: "application/json",
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          }),
+        );
+        // Read once, through shared core readers: transport failures remain transport failures.
+        await response.text();
+        const evidence = await readResponseBody(response);
+        const details = { ...responseContext(response, context), ...evidence };
+        if (!response.ok) {
+          throw new CircleHttpError(`Token refresh failed with status ${response.status}`, details);
+        }
+        const nextToken = extractAccessToken(evidence.parsedJson);
+        if (!nextToken)
+          throw new CircleHttpError(
+            "Token refresh response missing a valid access_token.",
+            details,
+          );
+        if (generation === sent) {
+          // Publish only after storage succeeds; a late setter must not commit after the deadline.
+          await lifetime.wait(Promise.resolve().then(() => config.setAccessToken?.(nextToken)));
+          lifetime.throwIfAborted();
+          if (generation === sent) generation = { token: nextToken };
+        }
+        if (!generation.token)
+          throw new CircleConfigError("Access token was cleared while refreshing.");
+        return generation.token;
+      } catch (cause) {
+        if (lifetime.signal.aborted) {
+          Object.assign(
+            lifetime.signal.reason,
+            response ? responseContext(response, context) : context,
+          );
+          throw lifetime.signal.reason;
+        }
+        if (cause instanceof CircleSdkError) throw cause;
+        throw new CircleConfigError("Could not refresh or store the access token.", cause);
+      } finally {
+        lifetime.cleanup();
       }
-
-      const nextToken = extractAccessToken(parsedJson);
-      if (!nextToken) {
-        throw new CircleHttpError("Token refresh response missing access_token.", details);
-      }
-
-      await setAccessToken(nextToken);
-      return nextToken;
-    })();
-
-    refreshInFlight = refreshPromise;
-    try {
-      return await refreshPromise;
-    } finally {
-      refreshInFlight = undefined;
     }
   }
 
@@ -174,51 +219,23 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
   };
 }
 
-async function shouldAttemptRefresh(response: Response) {
-  if (response.status === 401 || response.status === 403) {
-    return true;
-  }
-
-  const { bodyText, parsedJson } = await readBody(response);
-  const message = extractMessage(parsedJson, bodyText);
-  return message?.toLowerCase().includes("expired") ?? false;
-}
-
-function cloneRequestWithAuth(request: Request, accessToken: string) {
-  const headers = new Headers(request.headers);
-  headers.set(HEADER_AUTHORIZATION, `Bearer ${accessToken}`);
-  return new Request(request, { headers });
-}
-
-async function readBody(response: Response) {
-  const copy = response.clone();
-  // Preserve transport/deadline failures; the shared parser supplies best-effort JSON evidence.
-  if (copy.ok) await copy.json();
-  else await copy.text();
-  return readResponseBody(copy);
-}
-
 function extractAccessToken(parsedJson: unknown) {
   if (!parsedJson || typeof parsedJson !== "object") {
     return undefined;
   }
 
   const value = (parsedJson as { access_token?: unknown }).access_token;
-  return typeof value === "string" && value.length > 0 ? value : undefined;
+  return typeof value === "string" && isHeaderSafeToken(value) ? value : undefined;
 }
 
-function extractMessage(parsedJson: unknown, bodyText?: string) {
-  if (typeof parsedJson === "string") {
-    return parsedJson;
+function validateToken(token: string | undefined): void {
+  if (token !== undefined && (typeof token !== "string" || !isHeaderSafeToken(token))) {
+    throw new CircleConfigError(
+      "Access token must be a non-empty header-safe string or undefined.",
+    );
   }
+}
 
-  if (parsedJson && typeof parsedJson === "object") {
-    const record = parsedJson as Record<string, unknown>;
-    const message = record.message ?? record.error ?? record.detail;
-    if (typeof message === "string") {
-      return message;
-    }
-  }
-
-  return bodyText;
+function isHeaderSafeToken(value: string): boolean {
+  return /^[!-~]+$/.test(value);
 }

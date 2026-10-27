@@ -377,11 +377,12 @@ describe("raw and resource contracts", () => {
       token: "synthetic",
       refreshToken: "synthetic-refresh",
       autoRefresh: true,
+      authToken: "synthetic-application",
       fetcher,
       retries: { retries: 0 },
     });
     await expect(headless.spaces.list()).rejects.toMatchObject({
-      name: status === 200 ? "CircleNetworkError" : "CircleHttpError",
+      name: "CircleHttpError",
       status,
       url: `${baseUrl}/api/v1/headless/access_token/refresh`,
       method: "PATCH",

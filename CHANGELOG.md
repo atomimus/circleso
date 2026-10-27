@@ -37,6 +37,13 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Single-flight Headless recovery by token generation, including late unauthorized responses and
+  failure fan-out. Refresh only HTTP 401, replay each original once with bounded upload bytes,
+  preserve refresh-call error context, and bound/cancel token-hook waiting without aborting other
+  waiters. Treat caller token storage as authoritative and never retry the refresh PATCH.
+- Require a separate Headless Auth application `authToken` for auto-refresh, matching Circle's
+  Auth SDK. Send the member refresh token only in JSON; missing `authToken` now fails early with
+  `CircleConfigError`. Keep this credential server-side; update existing auto-refresh configs.
 - Retry serialized JSON PUT/DELETE requests through public clients using bounded byte snapshots.
   Keep unknown streams single-attempt and offer an explicit per-call smart-fetch body factory.
   Validate retry options, cap jittered backoff, honor Retry-After dates/seconds and stop retries

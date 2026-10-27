@@ -273,6 +273,7 @@ describe("public client cancellation", () => {
       token: "synthetic-token",
       refreshToken: "synthetic-refresh",
       autoRefresh: true,
+      authToken: "synthetic-application",
       timeoutMs: 10,
       fetcher,
     });
@@ -305,6 +306,7 @@ describe("public client cancellation", () => {
       token,
       refreshToken: "synthetic-refresh",
       autoRefresh: true,
+      authToken: "synthetic-application",
       getAccessToken: () => token,
       setAccessToken: (value) => {
         token = value ?? "";

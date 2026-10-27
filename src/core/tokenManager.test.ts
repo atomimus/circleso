@@ -30,7 +30,7 @@ describe("token manager auto-refresh", () => {
       mainCalls += 1;
       if (mainCalls === 1) {
         return new Response(JSON.stringify({ message: "The access token is expired." }), {
-          status: 400,
+          status: 401,
           headers: { [HEADER_CONTENT_TYPE]: "application/json" },
         });
       }
@@ -48,6 +48,7 @@ describe("token manager auto-refresh", () => {
 
     const autoFetch = manager.createAutoRefreshFetch({
       baseUrl: BASE_URL,
+      authToken: "application-token",
       fetcher: fetcher as typeof fetch,
     });
 
@@ -60,7 +61,7 @@ describe("token manager auto-refresh", () => {
     expect(fetcher).toHaveBeenCalledTimes(3);
     expect(seen).toEqual([
       { url: `${BASE_URL}/api/headless/v1/me`, auth: "Bearer old-token" },
-      { url: REFRESH_URL, auth: "Bearer refresh-token" },
+      { url: REFRESH_URL, auth: "Bearer application-token" },
       { url: `${BASE_URL}/api/headless/v1/me`, auth: "Bearer next-token" },
     ]);
     expect(refreshBody).toBe(JSON.stringify({ refresh_token: "refresh-token" }));
@@ -89,6 +90,7 @@ describe("token manager auto-refresh", () => {
 
     const autoFetch = manager.createAutoRefreshFetch({
       baseUrl: BASE_URL,
+      authToken: "application-token",
       fetcher: fetcher as typeof fetch,
     });
 

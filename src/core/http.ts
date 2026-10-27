@@ -44,6 +44,17 @@ export type SmartFetchInit = RequestInit & {
 };
 
 export function createSmartFetch(config: SmartFetchConfig) {
+  const fetch = createFetch(config);
+  return (input: RequestInfo | URL, init?: SmartFetchInit) => fetch(input, init);
+}
+
+/** Internal auth adapter: share bounded uploads/deadlines with ordinary HTTP attempts. */
+export function createRecoveringFetch(config: SmartFetchConfig) {
+  const fetch = createFetch(config);
+  return (request: Request, recover: () => Promise<Headers>) => fetch(request, {}, recover);
+}
+
+function createFetch(config: SmartFetchConfig) {
   const fetcher = config.fetcher ?? globalThis.fetch;
   if (!fetcher) {
     throw new CircleConfigError("A fetch implementation is required.");
@@ -55,7 +66,11 @@ export function createSmartFetch(config: SmartFetchConfig) {
   const throwOnHttpError = config.throwOnHttpError ?? true;
   const baseRetryConfig = normalizeRetryConfig(config.retries);
 
-  async function smartFetch(input: RequestInfo | URL, init: SmartFetchInit = {}) {
+  async function smartFetch(
+    input: RequestInfo | URL,
+    init: SmartFetchInit = {},
+    recover?: () => Promise<Headers>,
+  ) {
     const request = input instanceof Request ? input : undefined;
     const { timeoutMs, retries, bodyFactory, body: initBody, ...requestInit } = init;
     const method = resolveMethod(request, requestInit.method);
@@ -69,6 +84,7 @@ export function createSmartFetch(config: SmartFetchConfig) {
     }
 
     let attempt = 0;
+    let recovered = false;
     let template: Request | undefined;
     let upload: { body: BodyInit | null; replayable: boolean } | undefined;
     const signals = [request?.signal, requestInit.signal];
@@ -91,7 +107,7 @@ export function createSmartFetch(config: SmartFetchConfig) {
           });
           if (!bodyFactory) {
             upload =
-              retryMethod && template.body
+              (retryMethod || recover) && template.body
                 ? await prepareRequestBody(template, retryConfig.maxReplayBodyBytes, lifetime)
                 : { body: template.body, replayable: !template.body };
           }
@@ -128,10 +144,24 @@ export function createSmartFetch(config: SmartFetchConfig) {
         fetching = false;
         lifetime.throwIfAborted();
 
+        if (received.status === 401 && recover && !recovered && upload?.replayable) {
+          // The auth wait has a separate, shared budget. Release the original attempt first.
+          discardResponse(received);
+          discardRequest(fetchRequest);
+          lifetime.cleanup();
+          const recoveryHeaders = await recover();
+          recoveryHeaders.forEach((value, key) => {
+            template?.headers.set(key, value);
+          });
+          recovered = true;
+          continue;
+        }
+
         const retryAfterMs = parseRetryAfter(received.headers.get(HEADER_RETRY_AFTER));
         if (
           !received.ok &&
           retryMethod &&
+          !recovered &&
           (bodyFactory || upload?.replayable) &&
           attempt < retryConfig.retries &&
           isRetryableStatus(received.status) &&
@@ -180,6 +210,7 @@ export function createSmartFetch(config: SmartFetchConfig) {
         if (
           fetching &&
           retryMethod &&
+          !recovered &&
           (bodyFactory || upload?.replayable) &&
           attempt < retryConfig.retries &&
           isRetryableNetworkError(error)
@@ -225,9 +256,13 @@ export function createSmartFetch(config: SmartFetchConfig) {
     }
   }
 
-  return async (input: RequestInfo | URL, init?: SmartFetchInit) => {
+  return async (
+    input: RequestInfo | URL,
+    init?: SmartFetchInit,
+    recover?: () => Promise<Headers>,
+  ) => {
     try {
-      return await smartFetch(input, init);
+      return await smartFetch(input, init, recover);
     } catch (cause) {
       if (cause instanceof CircleSdkError) throw cause;
       throw new CircleConfigError("Could not prepare HTTP request.", cause);

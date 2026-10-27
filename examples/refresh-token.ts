@@ -9,9 +9,10 @@ function requireEnv(name: string) {
 }
 
 const refreshToken = requireEnv("CIRCLE_HEADLESS_REFRESH_TOKEN");
+const authToken = requireEnv("CIRCLE_HEADLESS_AUTH_TOKEN");
 
 const auth = createAuth({
-  token: refreshToken,
+  token: authToken,
 });
 
 try {
@@ -19,8 +20,8 @@ try {
     refresh_token: refreshToken,
   });
 
-  console.log(JSON.stringify(data, null, 2));
-} catch (error) {
-  console.error(error);
+  console.log(data?.access_token ? "Access token refreshed." : "No access token returned.");
+} catch {
+  console.error("Token refresh failed.");
   process.exit(1);
 }

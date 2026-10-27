@@ -26,6 +26,7 @@ export type CircleSoConfig = {
     token?: string;
     accessToken?: string;
     refreshToken?: string;
+    authToken?: string;
     autoRefresh?: boolean;
     authBaseUrl?: string;
     getAccessToken?: TokenHooks["getAccessToken"];
@@ -86,6 +87,7 @@ export class CircleSo {
       ...(headlessConfig.refreshToken !== undefined
         ? { refreshToken: headlessConfig.refreshToken }
         : {}),
+      ...(headlessConfig.authToken !== undefined ? { authToken: headlessConfig.authToken } : {}),
       ...(headlessConfig.autoRefresh !== undefined
         ? { autoRefresh: headlessConfig.autoRefresh }
         : {}),

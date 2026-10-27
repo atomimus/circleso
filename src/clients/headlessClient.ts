@@ -39,6 +39,8 @@ export type HeadlessClientConfig = {
   token?: string;
   accessToken?: string;
   refreshToken?: string;
+  /** Server-side Headless Auth application token, required with autoRefresh. */
+  authToken?: string;
   autoRefresh?: boolean;
   authBaseUrl?: string;
   getAccessToken?: TokenHooks["getAccessToken"];
@@ -58,6 +60,11 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
   if (config.autoRefresh && !config.refreshToken) {
     throw new CircleConfigError("refreshToken is required when autoRefresh is enabled.");
   }
+  if (config.autoRefresh && !config.authToken) {
+    throw new CircleConfigError(
+      "authToken (Headless Auth application token) is required when autoRefresh is enabled. Keep it on your server; browser callers should refresh through their server.",
+    );
+  }
 
   const communityHost = config.communityHost ?? DEFAULT_COMMUNITY_HOST;
   const baseUrl = config.baseUrl ?? `https://${communityHost}`;
@@ -68,18 +75,25 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
     ...(config.setAccessToken !== undefined ? { setAccessToken: config.setAccessToken } : {}),
   });
 
-  const middleware = [createBearerAuthMiddleware({ token: () => tokenManager.getAccessToken() })];
+  const middleware = [
+    createBearerAuthMiddleware({
+      token: () => tokenManager.getAccessToken(),
+      ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
+    }),
+  ];
 
-  const autoRefreshFetch = config.autoRefresh
-    ? tokenManager.createAutoRefreshFetch({
-        baseUrl,
-        authBaseUrl: config.authBaseUrl ?? baseUrl,
-        ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
-        ...(config.retries !== undefined ? { retries: config.retries } : {}),
-        ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
-        ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),
-      })
-    : undefined;
+  const autoRefreshFetch =
+    config.autoRefresh && config.authToken
+      ? tokenManager.createAutoRefreshFetch({
+          baseUrl,
+          authToken: config.authToken,
+          authBaseUrl: config.authBaseUrl ?? baseUrl,
+          ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
+          ...(config.retries !== undefined ? { retries: config.retries } : {}),
+          ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
+          ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),
+        })
+      : undefined;
 
   const runtimeConfig = {
     baseUrl,

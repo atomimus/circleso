@@ -1,12 +1,14 @@
 import type { Middleware } from "openapi-fetch";
-import { CircleConfigError } from "../errors";
+import { CircleConfigError, CircleSdkError } from "../errors";
 import { HEADER_AUTHORIZATION } from "../headers";
+import { createHttpLifetime } from "../httpLifetime";
 import { BodySourceRequest } from "../requestBody";
 
 export type BearerTokenProvider = string | (() => string | undefined | Promise<string | undefined>);
 
 export type BearerAuthConfig = {
   token: BearerTokenProvider;
+  timeoutMs?: number;
 };
 
 export function createBearerAuthMiddleware(config: BearerAuthConfig): Middleware {
@@ -16,14 +18,29 @@ export function createBearerAuthMiddleware(config: BearerAuthConfig): Middleware
 
   return {
     async onRequest({ request }) {
-      const token = await resolveToken(config.token);
-      if (!token) {
-        throw new CircleConfigError("token is required for bearer authentication.");
+      const lifetime = createHttpLifetime([request.signal], config.timeoutMs);
+      try {
+        lifetime.throwIfAborted();
+        let token: string | undefined;
+        try {
+          token = await lifetime.wait(Promise.resolve(resolveToken(config.token)));
+        } catch (cause) {
+          lifetime.throwIfAborted();
+          if (cause instanceof CircleSdkError) throw cause;
+          throw new CircleConfigError("Could not read the bearer token.", cause);
+        }
+        if (!token) throw new CircleConfigError("token is required for bearer authentication.");
+        const headers = new Headers(request.headers);
+        headers.set(HEADER_AUTHORIZATION, `Bearer ${token}`);
+        return new BodySourceRequest(request, { headers });
+      } catch (cause) {
+        if (lifetime.signal.aborted) {
+          Object.assign(lifetime.signal.reason, { url: request.url, method: request.method });
+        }
+        throw cause;
+      } finally {
+        lifetime.cleanup();
       }
-
-      const headers = new Headers(request.headers);
-      headers.set(HEADER_AUTHORIZATION, `Bearer ${token}`);
-      return new BodySourceRequest(request, { headers });
     },
   };
 }

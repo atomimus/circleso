@@ -44,10 +44,11 @@ import { CircleSo } from "circleso";
 const adminToken = process.env.CIRCLE_ADMIN_TOKEN;
 const headlessToken = process.env.CIRCLE_HEADLESS_TOKEN;
 const refreshToken = process.env.CIRCLE_HEADLESS_REFRESH_TOKEN;
+const authToken = process.env.CIRCLE_HEADLESS_AUTH_TOKEN;
 
-if (!adminToken || !headlessToken || !refreshToken) {
+if (!adminToken || !headlessToken || !refreshToken || !authToken) {
   throw new Error(
-    "Missing CIRCLE_ADMIN_TOKEN, CIRCLE_HEADLESS_TOKEN, or CIRCLE_HEADLESS_REFRESH_TOKEN.",
+    "Missing Circle Admin, member access, member refresh, or Headless Auth application token.",
   );
 }
 
@@ -57,9 +58,10 @@ const sdk = new CircleSo({
   headless: {
     accessToken: headlessToken,
     refreshToken,
+    authToken,
     autoRefresh: true,
   },
-  auth: { token: refreshToken },
+  auth: { token: authToken },
   timeoutMs: 10_000,
   retries: { retries: 2, baseDelayMs: 200, maxDelayMs: 2000 },
 });
@@ -115,25 +117,62 @@ const data = await headless.bookmarks.list({
 console.log(data?.records ?? []);
 ```
 
-Optional auto-refresh when tokens expire:
+Optional auto-refresh on your server when tokens expire:
 
 ```ts
 import { createHeadless } from "circleso/headless";
 
 const headlessToken = process.env.CIRCLE_HEADLESS_TOKEN;
 const refreshToken = process.env.CIRCLE_HEADLESS_REFRESH_TOKEN;
-if (!headlessToken || !refreshToken) {
-  throw new Error("Missing CIRCLE_HEADLESS_TOKEN or CIRCLE_HEADLESS_REFRESH_TOKEN.");
+const authToken = process.env.CIRCLE_HEADLESS_AUTH_TOKEN;
+if (!headlessToken || !refreshToken || !authToken) {
+  throw new Error("Missing member access, member refresh, or Headless Auth application token.");
 }
 
 const headless = createHeadless({
   accessToken: headlessToken,
   refreshToken,
+  authToken,
   autoRefresh: true,
 });
 ```
 
 Need the low-level OpenAPI client? Use `headless.raw` or `createHeadlessClient`.
+
+With `autoRefresh: true`, HTTP 401 triggers recovery. HTTP 403 and other statuses do not;
+an error message containing "expired" alone does not trigger refresh. Concurrent requests using
+the same token share one refresh, and late 401s reuse the newer token. Each original request is
+replayed at most once after recovery, with the same method, URL, headers, cancellation and bounded
+upload bytes. This includes POST/PATCH after a 401; it does not opt them into ordinary network or
+status retries. The replay itself is never automatically retried again. Bodies that cannot be
+snapshotted within `maxReplayBodyBytes` return their original 401 without refreshing or replaying.
+
+Refresh makes one PATCH call to `/api/v1/headless/access_token/refresh` at `authBaseUrl` (or the
+member base URL), with the Headless Auth application `authToken` in Bearer auth and the member's
+refresh token in the JSON `refresh_token` field. Both tokens are required for auto-refresh.
+Keep `authToken` on your server; browser clients should refresh through their own server and
+use the token hooks for member requests. [Circle's Auth SDK](https://api.circle.so/apis/headless/auth-sdk/node.js)
+documents this separate application credential. Migration: configurations that previously enabled
+auto-refresh with only a member refresh token must now add `authToken`; omission throws
+`CircleConfigError` before any request. Refresh is never automatically retried, including with
+`retryNonIdempotent: true`. HTTP failures and malformed/missing `access_token` responses throw
+`CircleHttpError` with refresh URL, method,
+status, request ID and best-effort body evidence. Transport/deadline failures retain their SDK
+error type and refresh context. A failed recovery is remembered for that token generation;
+later failures share its error until caller storage supplies a different token or a new client
+is created. Refresh coordination is local to each client instance. Use a separate client per
+member session; create a new client when the member or refresh credentials change.
+
+Optional `getAccessToken`/`setAccessToken` hooks keep storage caller-owned. A getter is
+authoritative: returning `undefined` clears the cached token and prevents authenticated calls.
+The setter must persist the refreshed token before resolving; requests wait for that write before
+replaying. Hook failures become `CircleConfigError` with their original cause. Initial token reads
+have their own `timeoutMs` budget. Shared recovery has a separate `timeoutMs` budget covering token
+read, refresh fetch/body and storage write; each member HTTP attempt keeps its usual deadline.
+Canceling a waiter stops that caller without canceling shared recovery, even if all current waiters
+leave. With no deadline, a non-settling hook can keep recovery pending. A deadline stops SDK waiting
+and committing that refresh result but cannot undo side effects of a caller-owned hook that
+finishes later.
 
 ### Headless Auth (refresh access token)
 
@@ -141,19 +180,20 @@ Need the low-level OpenAPI client? Use `headless.raw` or `createHeadlessClient`.
 import { createAuth } from "circleso/auth";
 
 const refreshToken = process.env.CIRCLE_HEADLESS_REFRESH_TOKEN;
-if (!refreshToken) {
-  throw new Error("Missing CIRCLE_HEADLESS_REFRESH_TOKEN.");
+const authToken = process.env.CIRCLE_HEADLESS_AUTH_TOKEN;
+if (!refreshToken || !authToken) {
+  throw new Error("Missing member refresh or Headless Auth application token.");
 }
 
 const auth = createAuth({
-  token: refreshToken,
+  token: authToken,
 });
 
 const data = await auth.accessToken.refresh({
   refresh_token: refreshToken,
 });
 
-console.log(data?.access_token);
+console.log(data?.access_token ? "Access token refreshed." : "No access token returned.");
 ```
 
 Need the low-level OpenAPI client? Use `auth.raw` or `createHeadlessAuthClient`.
@@ -174,11 +214,12 @@ Common options across all clients:
 Per-surface options:
 
 - `admin`: `token`, `communityHost`, `baseUrl`
-- `headless`: `accessToken` or `token`, `refreshToken`, `autoRefresh`, `authBaseUrl`, `communityHost`
+- `headless`: `accessToken` or `token`, `refreshToken`, `authToken`, `autoRefresh`, `authBaseUrl`, `communityHost`
 - `auth`: `token`, `communityHost`, `baseUrl`
 
 Note: the unified `CircleSo` class constructs all three surfaces, so it requires
-an Admin token, Headless token, and Headless refresh token. If you only need
+an Admin token, member access token, and Headless Auth application token. Auto-refresh also requires
+the member refresh token and explicit `headless.authToken`. If you only need
 one surface, use `createAdmin`, `createHeadless`, or `createAuth` directly.
 
 `timeoutMs` starts before each attempt's body preparation and fetch, and remains active until the response body reaches
