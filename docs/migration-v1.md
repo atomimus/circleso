@@ -152,7 +152,7 @@ New [direct upload](file-uploads.md) and [rich-text](rich-text.md) helpers are o
 Cookie metadata methods and the navigation URL helper preserve data-only cookie calls.
 Optional [usage controls](usage-controls.md) default off; there is no SDK cache.
 None adds UI, a global cookie jar, secret storage, implicit idempotency or undocumented
-response schemas. Data API/legacy Admin V1 and real browser/live-community acceptance
+response schemas. Legacy Admin V1 and real browser/live-community acceptance
 remain separate integration work; see [support status](../SUPPORT.md).
 
 Sources: [published npm metadata](https://registry.npmjs.org/circleso/0.3.0),

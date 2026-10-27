@@ -13,6 +13,7 @@ Primary goals:
 - Clean architecture and easy regeneration when specs change
 
 ## Non-goals
+- Data API support or future Data API implementation work
 - UI components
 - Storing secrets for users
 - Automatically guessing undocumented behaviors
