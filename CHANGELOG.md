@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add 15 typed Admin operations for paywalls, subscription groups, coupon deletion,
+  affiliates and affiliate payouts, preserving raw clients and invitation links.
+  Document irreversible offer deletion, scheduled access syncs, payout scope JSON,
+  replacement-list semantics, eligibility errors and shared retry behavior.
+
 - Add typed Admin `communityMemberCharges` list/export/refund and
   `communityMemberSubscriptions` list/export/cancel/resume/changeBillingDate resources,
   including trial extensions through the billing-date operation. Preserve query-only

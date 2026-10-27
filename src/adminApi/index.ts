@@ -24,6 +24,11 @@ import { createInvitationLinksResource } from "./resources/invitationLinks";
 import { createMemberTagsResource } from "./resources/memberTags";
 import { createMessagesResource } from "./resources/messages";
 import { createPageProfileFieldsResource } from "./resources/pageProfileFields";
+import { createPaywallAffiliatePayoutsResource } from "./resources/paywallAffiliatePayouts";
+import { createPaywallAffiliatesResource } from "./resources/paywallAffiliates";
+import { createPaywallCouponsResource } from "./resources/paywallCoupons";
+import { createPaywallGroupsResource } from "./resources/paywallGroups";
+import { createPaywallsResource } from "./resources/paywalls";
 import { createPostsResource } from "./resources/posts";
 import { createProfileFieldsResource } from "./resources/profileFields";
 import { createSearchResource } from "./resources/search";
@@ -56,6 +61,11 @@ export type AdminApi = {
   memberTags: ReturnType<typeof createMemberTagsResource>;
   messages: ReturnType<typeof createMessagesResource>;
   pageProfileFields: ReturnType<typeof createPageProfileFieldsResource>;
+  paywallAffiliatePayouts: ReturnType<typeof createPaywallAffiliatePayoutsResource>;
+  paywallAffiliates: ReturnType<typeof createPaywallAffiliatesResource>;
+  paywallCoupons: ReturnType<typeof createPaywallCouponsResource>;
+  paywallGroups: ReturnType<typeof createPaywallGroupsResource>;
+  paywalls: ReturnType<typeof createPaywallsResource>;
   posts: ReturnType<typeof createPostsResource>;
   profileFields: ReturnType<typeof createProfileFieldsResource>;
   spaceGroups: ReturnType<typeof createSpaceGroupsResource>;
@@ -99,6 +109,11 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
     memberTags: createMemberTagsResource(request),
     messages: createMessagesResource(request),
     pageProfileFields: createPageProfileFieldsResource(request),
+    paywallAffiliatePayouts: createPaywallAffiliatePayoutsResource(request),
+    paywallAffiliates: createPaywallAffiliatesResource(request),
+    paywallCoupons: createPaywallCouponsResource(request),
+    paywallGroups: createPaywallGroupsResource(request),
+    paywalls: createPaywallsResource(request),
     posts: createPostsResource(request),
     profileFields: createProfileFieldsResource(request),
     spaceGroups: createSpaceGroupsResource(request),

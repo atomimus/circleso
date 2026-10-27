@@ -46,6 +46,47 @@ export async function contracts() {
   await admin.communityMemberSubscriptions.changeBillingDate(2, { operation: "refund" });
   // @ts-expect-error financial responses must not become any
   refunded?.invented_response_field;
+  const paywalls = await admin.paywalls.search({ status: "draft,active", paywall_id: "1,2" });
+  await admin.paywalls.delete(1);
+  await admin.paywalls.archive(1);
+  await admin.paywalls.publish(1);
+  await admin.paywalls.unarchive(1);
+  const sync = await admin.paywalls.syncMemberAccess(1);
+  const group = await admin.paywallGroups.create({ name: "Synthetic group", currency_id: 1 });
+  await admin.paywallGroups.update(2, {});
+  const coupon = await admin.paywallCoupons.delete(3);
+  await admin.paywallAffiliates.list({ filters: { status: "inactive", campaign_id: 4 } });
+  const invites = await admin.paywallAffiliates.invite({ existing_member_ids: [5] });
+  const affiliate = await admin.paywallAffiliates.update(6, { status: "disabled" });
+  const started = await admin.paywallAffiliatePayouts.start();
+  const paid = await admin.paywallAffiliatePayouts.markPaid({ community_member_ids: [5] });
+  const payoutExport = await admin.paywallAffiliatePayouts.export({ community_member_ids: [5] });
+  const paywallName: string | null | undefined = paywalls?.records?.[0]?.name;
+  const enrolled: string | null | undefined = affiliate?.enrolled_at;
+  const processing: number | undefined = started?.processing;
+  const processed: number | undefined = paid?.processed;
+  const syncState: "pending" | "processing" | "completed" | "partial_success" | "failed" | undefined = sync?.status;
+  const outcome: "invited" | "reinvited" | "already_active" | "failed" | undefined = invites?.results?.[0]?.status;
+  void [paywallName, enrolled, processing, processed, syncState, outcome, group, coupon, payoutExport];
+  // @ts-expect-error paywall IDs remain numeric
+  await admin.paywalls.archive("paywall");
+  // @ts-expect-error group creation requires currency ID
+  await admin.paywallGroups.create({ name: "Synthetic group" });
+  // @ts-expect-error group update requires a body
+  await admin.paywallGroups.update(2);
+  // @ts-expect-error affiliate member IDs are required
+  await admin.paywallAffiliates.invite({});
+  // @ts-expect-error inactive is not an update transition
+  await admin.paywallAffiliates.update(6, { status: "inactive" });
+  // @ts-expect-error payout scopes are numeric arrays
+  await admin.paywallAffiliatePayouts.start({ community_member_ids: "5" });
+  // @ts-expect-error sync status must not become any
+  const invalidSync: "complete" = sync!.status;
+  // @ts-expect-error nullable affiliate response stays nullable
+  const invalidDate: string = affiliate!.enrolled_at;
+  // @ts-expect-error inline payout response must not become any
+  started?.invented_response_field;
+  void [invalidSync, invalidDate];
   await member.bookmarks.list({ page: 1 });
   await auth.authToken.create({ email: "fixture@example.test" });
   await auth.accessToken.refresh({ refresh_token: "fixture" });

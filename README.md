@@ -165,6 +165,39 @@ schema, including optional/nullable fields.
 Contracts checked October 27, 2026 against the
 [official Admin V2 specification](https://api-headless.circle.so/api/admin/v2/swagger.yaml).
 
+#### Paywalls, affiliates and payouts
+
+The Admin API also exposes `paywalls` (search/delete/archive/publish/unarchive/syncMemberAccess),
+`paywallGroups` (create/update), `paywallCoupons` (delete), `paywallAffiliates`
+(list/invite/update) and `paywallAffiliatePayouts` (start/markPaid/export).
+See the [method reference, eligibility and access effects](https://github.com/atomimus/circleso/blob/main/docs/admin-paywalls.md)
+and the [compiled recipe](https://github.com/atomimus/circleso/blob/main/examples/admin-paywalls.ts).
+
+```ts
+import { createAdmin } from "circleso/admin";
+
+const admin = createAdmin({
+  token: process.env.CIRCLE_ADMIN_TOKEN!,
+  retries: { retries: 0 },
+});
+const paywalls = await admin.paywalls.search({ status: "active", page: 1, per_page: 20 });
+const affiliates = await admin.paywallAffiliates.list({ filters: { status: "enrolled" } });
+
+// Invoke only for an intended change; these IDs are illustrative.
+const scheduled = await admin.paywalls.syncMemberAccess(123);
+const payoutTask = await admin.paywallAffiliatePayouts.export({ community_member_ids: [456] });
+void [paywalls, affiliates, scheduled, payoutTask];
+```
+
+Archiving permanently discards the paywall's kept upsell offers; unarchiving does not
+restore them. Access sync returns a scheduled job and rejects access-group-enabled
+paywalls. Payout scope arrays belong in JSON; omitting them affects all eligible payouts.
+Exports return task JSON, not CSV bytes. Invitation-link access-group lists still replace
+the current set, while access-group content updates clear omitted assignment lists.
+The reference explains these differences and Circle's documented eligibility errors.
+PUT/DELETE inherit shared retries; use `retries: { retries: 0 }` for deliberate mutations
+and reconcile uncertain outcomes. No general payment-idempotency guarantee is documented.
+
 ### Headless API (Bearer)
 
 ```ts
@@ -638,7 +671,7 @@ npm run coverage:api
 
 The [operation inventory](https://github.com/atomimus/circleso/blob/main/docs/api-coverage.md)
 separates raw routes, named resources, and upstream schema limitations. It currently lists
-47 Admin operations awaiting named wrappers; all 278 operations are available through raw clients.
+24 Admin operations awaiting named wrappers; all 278 operations are available through raw clients.
 
 Check upstream deliberately with `npm run spec:check`. It saves changed candidate specs, generated
 types and unified patches in `.cache/spec-refresh-*`, exits with status 1 on drift, and leaves

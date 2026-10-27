@@ -5,7 +5,7 @@ Counts are method/path exposure, not runtime correctness or test coverage. `raw`
 
 | Surface | Spec operations | Raw exposure | Named facade operations | Raw-only |
 | --- | ---: | ---: | ---: | ---: |
-| admin-v2 | 172 | 172 | 133 | 39 |
+| admin-v2 | 172 | 172 | 148 | 24 |
 | headless-client-v1 | 102 | 102 | 102 | 0 |
 | headless-auth-v1 | 4 | 4 | 4 | 0 |
 
@@ -17,8 +17,6 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 | --- | --- | --- | --- |
 | admin-v2 | DELETE | `/api/admin/v2/community_leads/{id}` | 15 |
 | admin-v2 | DELETE | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
-| admin-v2 | DELETE | `/api/admin/v2/paywall_coupons/{id}` | 13 |
-| admin-v2 | DELETE | `/api/admin/v2/paywalls/{id}` | 13 |
 | admin-v2 | GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
 | admin-v2 | GET | `/api/admin/v2/filter_kit_configuration` | 14 |
 | admin-v2 | GET | `/api/admin/v2/filter_kit_controls` | 14 |
@@ -27,30 +25,17 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 | admin-v2 | GET | `/api/admin/v2/live/rooms/{room_id}/transcripts` | 15 |
 | admin-v2 | GET | `/api/admin/v2/locations/search` | 15 |
 | admin-v2 | GET | `/api/admin/v2/payment_method_setting` | 15 |
-| admin-v2 | GET | `/api/admin/v2/paywall_affiliates` | 13 |
-| admin-v2 | GET | `/api/admin/v2/paywalls/search` | 13 |
 | admin-v2 | GET | `/api/admin/v2/settings/connect` | 15 |
 | admin-v2 | GET | `/api/admin/v2/tax_setting` | 15 |
 | admin-v2 | GET | `/api/admin/v2/workflows` | 14 |
 | admin-v2 | GET | `/api/admin/v2/workflows/{id}` | 14 |
 | admin-v2 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
-| admin-v2 | PATCH | `/api/admin/v2/paywall_affiliates/{id}` | 13 |
 | admin-v2 | PATCH | `/api/admin/v2/settings/connect` | 15 |
 | admin-v2 | POST | `/api/admin/v2/chat_room_message_imports` | 15 |
 | admin-v2 | POST | `/api/admin/v2/community_leads` | 15 |
 | admin-v2 | POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
 | admin-v2 | POST | `/api/admin/v2/filter_kit_controls` | 14 |
-| admin-v2 | POST | `/api/admin/v2/paywall_affiliate_payouts/export` | 13 |
-| admin-v2 | POST | `/api/admin/v2/paywall_affiliate_payouts/mark_paid` | 13 |
-| admin-v2 | POST | `/api/admin/v2/paywall_affiliate_payouts/start` | 13 |
-| admin-v2 | POST | `/api/admin/v2/paywall_affiliates/invite` | 13 |
-| admin-v2 | POST | `/api/admin/v2/paywall_groups` | 13 |
-| admin-v2 | POST | `/api/admin/v2/paywalls/{paywall_id}/member_access_syncs` | 13 |
 | admin-v2 | POST | `/api/admin/v2/workflows/{id}/duplicate` | 14 |
-| admin-v2 | PUT | `/api/admin/v2/paywall_groups/{id}` | 13 |
-| admin-v2 | PUT | `/api/admin/v2/paywalls/{id}/archive` | 13 |
-| admin-v2 | PUT | `/api/admin/v2/paywalls/{id}/publish` | 13 |
-| admin-v2 | PUT | `/api/admin/v2/paywalls/{id}/unarchive` | 13 |
 | admin-v2 | PUT | `/api/admin/v2/tax_setting` | 15 |
 | admin-v2 | PUT | `/api/admin/v2/workflows/{id}/activate` | 14 |
 | admin-v2 | PUT | `/api/admin/v2/workflows/{id}/deactivate` | 14 |
@@ -93,8 +78,8 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | DELETE | `/api/admin/v2/forms/{id}` | Yes | `forms.delete` ([source](../src/adminApi/resources/forms.ts)) |
 | DELETE | `/api/admin/v2/invitation_links/{id}` | Yes | `invitationLinks.delete` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | DELETE | `/api/admin/v2/member_tags/{id}` | Yes | `memberTags.delete` ([source](../src/adminApi/resources/memberTags.ts)) |
-| DELETE | `/api/admin/v2/paywall_coupons/{id}` | Yes | — |
-| DELETE | `/api/admin/v2/paywalls/{id}` | Yes | — |
+| DELETE | `/api/admin/v2/paywall_coupons/{id}` | Yes | `paywallCoupons.delete` ([source](../src/adminApi/resources/paywallCoupons.ts)) |
+| DELETE | `/api/admin/v2/paywalls/{id}` | Yes | `paywalls.delete` ([source](../src/adminApi/resources/paywalls.ts)) |
 | DELETE | `/api/admin/v2/posts/{id}` | Yes | `posts.delete` ([source](../src/adminApi/resources/posts.ts)) |
 | DELETE | `/api/admin/v2/posts/{post_id}/post_followers` | Yes | `posts.followers.remove` ([source](../src/adminApi/resources/posts.ts)) |
 | DELETE | `/api/admin/v2/profile_fields/{id}` | Yes | `profileFields.delete` ([source](../src/adminApi/resources/profileFields.ts)) |
@@ -145,8 +130,8 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/member_tags/{id}` | Yes | `memberTags.get` ([source](../src/adminApi/resources/memberTags.ts)) |
 | GET | `/api/admin/v2/page_profile_fields` | Yes | `pageProfileFields.list` ([source](../src/adminApi/resources/pageProfileFields.ts)) |
 | GET | `/api/admin/v2/payment_method_setting` | Yes | — |
-| GET | `/api/admin/v2/paywall_affiliates` | Yes | — |
-| GET | `/api/admin/v2/paywalls/search` | Yes | — |
+| GET | `/api/admin/v2/paywall_affiliates` | Yes | `paywallAffiliates.list` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
+| GET | `/api/admin/v2/paywalls/search` | Yes | `paywalls.search` ([source](../src/adminApi/resources/paywalls.ts)) |
 | GET | `/api/admin/v2/posts` | Yes | `posts.list` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/posts/{id}` | Yes | `posts.get` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/posts/{post_id}/summary` | Yes | `posts.summary` ([source](../src/adminApi/resources/posts.ts)) |
@@ -176,7 +161,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | PATCH | `/api/admin/v2/course_lessons/{id}` | Yes | `courses.lessons.update` ([source](../src/adminApi/resources/courses.ts)) |
 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | Yes | — |
 | PATCH | `/api/admin/v2/invitation_links/{id}/revoke` | Yes | `invitationLinks.revoke` ([source](../src/adminApi/resources/invitationLinks.ts)) |
-| PATCH | `/api/admin/v2/paywall_affiliates/{id}` | Yes | — |
+| PATCH | `/api/admin/v2/paywall_affiliates/{id}` | Yes | `paywallAffiliates.update` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
 | PATCH | `/api/admin/v2/settings/connect` | Yes | — |
 | POST | `/api/admin/v2/access_groups` | Yes | `accessGroups.create` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | POST | `/api/admin/v2/access_groups/{access_group_id}/community_members` | Yes | `accessGroups.members.add` ([source](../src/adminApi/resources/accessGroups.ts)) |
@@ -205,12 +190,12 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/invitation_links` | Yes | `invitationLinks.create` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | POST | `/api/admin/v2/member_tags` | Yes | `memberTags.create` ([source](../src/adminApi/resources/memberTags.ts)) |
 | POST | `/api/admin/v2/messages` | Yes | `messages.create` ([source](../src/adminApi/resources/messages.ts)) |
-| POST | `/api/admin/v2/paywall_affiliate_payouts/export` | Yes | — |
-| POST | `/api/admin/v2/paywall_affiliate_payouts/mark_paid` | Yes | — |
-| POST | `/api/admin/v2/paywall_affiliate_payouts/start` | Yes | — |
-| POST | `/api/admin/v2/paywall_affiliates/invite` | Yes | — |
-| POST | `/api/admin/v2/paywall_groups` | Yes | — |
-| POST | `/api/admin/v2/paywalls/{paywall_id}/member_access_syncs` | Yes | — |
+| POST | `/api/admin/v2/paywall_affiliate_payouts/export` | Yes | `paywallAffiliatePayouts.export` ([source](../src/adminApi/resources/paywallAffiliatePayouts.ts)) |
+| POST | `/api/admin/v2/paywall_affiliate_payouts/mark_paid` | Yes | `paywallAffiliatePayouts.markPaid` ([source](../src/adminApi/resources/paywallAffiliatePayouts.ts)) |
+| POST | `/api/admin/v2/paywall_affiliate_payouts/start` | Yes | `paywallAffiliatePayouts.start` ([source](../src/adminApi/resources/paywallAffiliatePayouts.ts)) |
+| POST | `/api/admin/v2/paywall_affiliates/invite` | Yes | `paywallAffiliates.invite` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
+| POST | `/api/admin/v2/paywall_groups` | Yes | `paywallGroups.create` ([source](../src/adminApi/resources/paywallGroups.ts)) |
+| POST | `/api/admin/v2/paywalls/{paywall_id}/member_access_syncs` | Yes | `paywalls.syncMemberAccess` ([source](../src/adminApi/resources/paywalls.ts)) |
 | POST | `/api/admin/v2/posts` | Yes | `posts.create` ([source](../src/adminApi/resources/posts.ts)) |
 | POST | `/api/admin/v2/profile_fields` | Yes | `profileFields.create` ([source](../src/adminApi/resources/profileFields.ts)) |
 | POST | `/api/admin/v2/space_group_members` | Yes | `spaceGroupMembers.create` ([source](../src/adminApi/resources/spaceGroupMembers.ts)) |
@@ -237,10 +222,10 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | PUT | `/api/admin/v2/forms/{id}` | Yes | `forms.update` ([source](../src/adminApi/resources/forms.ts)) |
 | PUT | `/api/admin/v2/invitation_links/{id}` | Yes | `invitationLinks.update` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | PUT | `/api/admin/v2/member_tags/{id}` | Yes | `memberTags.update` ([source](../src/adminApi/resources/memberTags.ts)) |
-| PUT | `/api/admin/v2/paywall_groups/{id}` | Yes | — |
-| PUT | `/api/admin/v2/paywalls/{id}/archive` | Yes | — |
-| PUT | `/api/admin/v2/paywalls/{id}/publish` | Yes | — |
-| PUT | `/api/admin/v2/paywalls/{id}/unarchive` | Yes | — |
+| PUT | `/api/admin/v2/paywall_groups/{id}` | Yes | `paywallGroups.update` ([source](../src/adminApi/resources/paywallGroups.ts)) |
+| PUT | `/api/admin/v2/paywalls/{id}/archive` | Yes | `paywalls.archive` ([source](../src/adminApi/resources/paywalls.ts)) |
+| PUT | `/api/admin/v2/paywalls/{id}/publish` | Yes | `paywalls.publish` ([source](../src/adminApi/resources/paywalls.ts)) |
+| PUT | `/api/admin/v2/paywalls/{id}/unarchive` | Yes | `paywalls.unarchive` ([source](../src/adminApi/resources/paywalls.ts)) |
 | PUT | `/api/admin/v2/posts/{id}` | Yes | `posts.update` ([source](../src/adminApi/resources/posts.ts)) |
 | PUT | `/api/admin/v2/profile_fields/{id}` | Yes | `profileFields.update` ([source](../src/adminApi/resources/profileFields.ts)) |
 | PUT | `/api/admin/v2/profile_fields/{id}/archive` | Yes | `profileFields.archive` ([source](../src/adminApi/resources/profileFields.ts)) |
