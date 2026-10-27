@@ -63,7 +63,7 @@ describe("logger middleware", () => {
     expect(capturedRequest?.request.headers.get(HEADER_AUTHORIZATION)).toBe("REDACTED");
     expect(capturedRequest?.request.headers.get(HEADER_COOKIE)).toBe("REDACTED");
     expect(capturedRequest?.request.headers.get(HEADER_API_KEY)).toBe("REDACTED");
-    expect(capturedRequest?.request.headers.get("x-trace-id")).toBe("trace");
+    expect(capturedRequest?.request.headers.get("x-trace-id")).toBe("REDACTED");
     expect(capturedRequest?.requestBody).toBeUndefined();
     expect(await capturedRequest?.request.text()).toBe("");
 
@@ -100,6 +100,7 @@ describe("logger middleware", () => {
       method: "POST",
       headers: {
         [HEADER_AUTHORIZATION]: "Bearer secret",
+        [HEADER_CONTENT_TYPE]: "application/json",
       },
       body: JSON.stringify({
         access_token: "secret",

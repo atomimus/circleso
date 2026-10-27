@@ -461,8 +461,17 @@ for await (const msg of headless.iter.chatRoomMessages(chatRoomUuid, {
 
 ## Logging
 
-Provide `logger` hooks to capture requests and responses. Sensitive headers and token-like fields
-are redacted by default.
+Logging is opt-in. Hooks receive detached, redacted `Request`/`Response` snapshots and a logical
+call `id`/`schemaPath`. They cannot change the actual request or response. Callback URLs contain
+the origin and schema route (path arguments become `REDACTED`); query strings, fragments, URL
+credentials and base-path prefixes are omitted. Response snapshots retain status, type and
+redirected metadata, with server reason phrases redacted. The actual response keeps its URL,
+status, headers and readable body, including empty 204/205 responses.
+
+All opaque header values, including Authorization, API keys, Cookie, Set-Cookie, custom headers
+and request IDs, become `REDACTED`. Only recognized content MIME types (without parameters) and
+numeric Content-Length/Retry-After values survive. `redactHeaders` adds case-insensitive redactions
+to these defaults; it cannot disable them.
 
 ```ts
 import { createAdmin } from "circleso/admin";
@@ -475,6 +484,40 @@ const admin = createAdmin({
   },
 });
 ```
+
+Bodies are disabled by default. With `logBodies: true`, complete UTF-8 JSON and URL-encoded forms
+may be inspected through a clone. JSON keeps field names, structure and non-string scalar values;
+**every string value** is redacted, including strings under ordinary fields such as `message`.
+Token, authorization, cookie, session, password, secret, credential, signature and API-key fields
+have their entire value redacted. Form values are always redacted. Plain text, multipart uploads,
+binary data, malformed JSON/forms, invalid UTF-8 and unavailable/used/locked bodies are omitted.
+An absent body can be reported as `""`; an omitted body has no `requestBody`/`responseBody` property.
+Request snapshots have no body; response snapshots contain only inspected, redacted body text.
+
+Inspection defaults to 65,536 input bytes and 50 ms per body. Configure `maxBodyBytes` from 0
+(disable inspection) through 1,048,576, and `bodyReadTimeoutMs` from 1 through 1000. Large declared
+bodies are skipped. Reads stop at the byte limit, deadline or 1024 stream reads; incomplete bodies
+are omitted as a whole, with no raw/truncated prefix logged. The clone is cancelled without waiting
+for the other tee branch. Inspection can prefetch up to the cap plus a transport-provided chunk;
+it does not impose a total network/stream memory limit. `parseAs: "stream"` responses are never
+inspected, preserving caller control of pulls. Timers depend on the runtime event loop. Keep
+secrets out of route, field/header names and non-string data that snapshots intentionally retain.
+
+Hooks run once per logical call; retries and internal auto-refresh HTTP calls do not emit separate
+events. `onError` receives only a known SDK error class name (otherwise `UnknownError`) and an HTTP
+status when available. It never receives raw messages, stacks, bodies or cause chains. The error
+thrown to the caller still retains its original evidence and cause; avoid logging it indiscriminately.
+
+Synchronous and asynchronous hooks are awaited in order. A thrown/rejected hook fails the SDK call
+with `CircleConfigError("Logger onRequest/onResponse/onError callback failed.")`, with the actual
+hook name and original failure in `cause`. An `onError` hook failure takes precedence over the
+transport failure. Hooks must settle; inspection deadlines do not time out caller-owned hook code.
+For best-effort logging, catch sink failures inside your hook. Hook return values are ignored.
+
+Migration: logger contexts no longer extend raw openapi-fetch middleware parameters. Use
+`id`/`schemaPath`, snapshot metadata and the optional body fields instead of `params`/`options` or
+raw error properties. Arbitrary option objects, serializers, fetch functions and error causes
+are never automatically serialized or exposed to logger hooks.
 
 ## Examples
 

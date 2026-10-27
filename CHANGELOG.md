@@ -37,6 +37,13 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Preserve empty/null-body responses (including 204/205) with body logging enabled. Keep actual
+  response metadata and body readability intact; give hooks detached, conservative snapshots.
+  Redact opaque headers, URL arguments/query strings, JSON strings and credential subtrees;
+  omit unsafe payloads and raw error causes. Bound opt-in inspection by bytes, time and reads.
+- Await logger hooks and wrap synchronous/asynchronous failures in `CircleConfigError` with the
+  original cause. Migration: logger contexts no longer expose raw `params`/`options` or raw error
+  properties; header values and body strings are redacted more broadly. See README logging policy.
 - Default every client to `https://app.circle.so` independently of `communityHost`; use that
   option only for Admin's Host header. Migration: set `baseUrl` explicitly if you previously
   relied on `communityHost` selecting the destination. Validate URLs, hosts, credentials,
