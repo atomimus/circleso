@@ -1,7 +1,7 @@
 # 1.0.0-rc.1 candidate notes
 
 Published October 27, 2026 at `next`. The registry's current
-`latest` remains 0.3.0. Read the [migration guide](migration-v1.md) and
+`latest` selects stable `1.0.0`. Read the [migration guide](migration-v1.md) and
 [changelog](../CHANGELOG.md) before adopting the candidate.
 
 This candidate covers 172 Admin V2, 102 Headless Member V1 and four Headless Auth operations

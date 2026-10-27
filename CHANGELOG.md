@@ -2,14 +2,17 @@
 
 ## Unreleased
 
-## 1.0.0 (prepared, not published)
+## 1.0.0 — 2026-10-27
 
-- Prepare stable v1 from the accepted 1.0.0-rc.1 runtime, declarations and dependency
-  graph, with matching package/lockfile versions and updated release documentation.
+- Publish stable v1 from the accepted 1.0.0-rc.1 runtime, declarations and dependency
+  graph, using the exact qualified CI tarball with signed provenance at `latest`.
   See [release notes](docs/release-v1.md) and [migration from 0.3.0](docs/migration-v1.md).
-- The candidate is published at `next`; `latest` remains 0.3.0 until stable publication.
-  Installed candidate signatures, provenance and consumer acceptance were verified.
+- Verify fresh registry installations, signatures, provenance, ESM/CJS/TypeScript and
+  browser consumers. The candidate remains at `next`; `latest` selects 1.0.0.
   No live Circle qualification or timed customer-deployment soak is claimed.
+- Preserve the failed publishing workflow: publication succeeded before an immediate
+  stale metadata read failed. Read-only reconciliation verified all postconditions;
+  publication was not repeated. The GitHub release and its source tag are immutable.
 
 ## 1.0.0-rc.1 — 2026-10-27
 

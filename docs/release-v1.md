@@ -1,8 +1,8 @@
 # circleso 1.0.0
 
-Prepared October 27, 2026; stable publication is pending. The published candidate is
-`1.0.0-rc.1` at `next`, and `latest` remains `0.3.0`. After stable publication, install
-`circleso@1.0.0`. Consult the [changelog](../CHANGELOG.md) and
+Published October 27, 2026: [npm 1.0.0](https://www.npmjs.com/package/circleso/v/1.0.0)
+is at `latest`; `next` remains `1.0.0-rc.1`. Install `circleso@1.0.0`.
+See the [immutable GitHub release](https://github.com/atomimus/circleso/releases/tag/v1.0.0), [changelog](../CHANGELOG.md) and
 [migration guide](migration-v1.md) before upgrading from 0.3.0.
 
 ## Included in v1
@@ -31,10 +31,25 @@ CI artifact byte for byte. Candidate qualification includes strict TypeScript 5.
 with Node16, NodeNext and Bundler resolution, ESM/CJS applications, compiled examples,
 and Chromium, Firefox and WebKit on Ubuntu. See [candidate notes](release-candidate.md).
 
-Stable bytes require their own clean-install, generation, unit, package, documentation
-and browser checks from an immutable source revision. The actual retained artifact records
-the full source/tree, CI run/attempt, complete file inventory and tarball SHA-512.
-[Publishing](publishing.md) explains how to match the tested and published bytes.
+Stable source
+[`43c4cdd`](https://github.com/atomimus/circleso/commit/43c4cdd3e7a88dc2ef3d48d68b8f14b391c12975)
+passed all six jobs and every step in
+[Offline CI](https://github.com/atomimus/circleso/actions/runs/40489845981), including
+1,194 tests per Node target and 27 browser tests per Ubuntu Node target. The publishing
+qualification repeated installed consumers and all three browser engines on the retained bytes.
+
+Fresh registry installs passed runtime workflows, all eight ESM/CJS entries, six strict
+compiler/resolution pairs, 12 compiled ESM/CJS applications, 31 documentation TypeScript
+blocks and 11 examples per compiler. Post-publication Windows Chromium/Firefox passed
+18/18 browser tests. npm verified three registry signatures and the package attestation;
+both signed subjects, source and workflow invocation match the downloaded package.
+
+The registry tarball equals retained CI artifact `12727801021` byte for byte: 60 files,
+1,128,212 compressed bytes; SHA-256
+`6fd283015031edb7320c81754f3a569013d256a1ad2314b49bbb1d22f49b36e4`.
+Its SHA-512 integrity is
+`sha512-DacdrFpvVvO2rUYP6aDMNyvJdF91zBqU0CdU/KlUTAJkEONZxRR7zIuKSavnKcXTaQxOPkr7BLau7mZRzA5ZYw==`.
+[Publishing](publishing.md) explains how to verify the artifact, signatures and provenance.
 
 Live Circle behavior remains unverified: no authorized test community was configured.
 There was no timed customer-deployment soak. Windows Playwright WebKit cookie isolation
@@ -49,14 +64,17 @@ redacted diagnostics and safe mutation policy. Read [security boundaries](securi
 
 ## Publication and recovery
 
-Stable publication uses the qualified immutable tarball, `v1.0.0` at its exact source,
-and npm `1.0.0` at `latest`. Preparation does not create the tag or publish the package.
+Stable publication used the qualified tarball, `v1.0.0` at its exact source,
+and npm `1.0.0` at `latest`. The published GitHub release locks its tag against changes.
 The existing GitHub Actions trusted publisher is `atomimus/circleso`, `publish.yml`,
 environment `npm-release`, with direct publication allowed. The publisher pins hosted
 Node 24.22.1/npm 11.19.1, uses OIDC/provenance and publishes once with scripts disabled.
 
-The candidate command succeeded before a stale immediate registry check failed. If that
-happens again, inspect registry integrity, tags, signatures and source provenance through
-read-only checks before considering any further action. Never repeat a successful publish
-to make a workflow green. Preserve the failed workflow and reconciled evidence. Follow
+The stable command succeeded in
+[publishing run 40490961461](https://github.com/atomimus/circleso/actions/runs/40490961461),
+attempt 1, before a stale immediate registry check failed. The workflow remains failed;
+read-only reconciliation verified registry integrity, tags, installed signatures and exact
+source provenance. No publication was repeated. For future uncertain outcomes, inspect these
+postconditions before any further action. Never repeat a successful publish to make a
+workflow green. Preserve the failed workflow and reconciled evidence. Follow
 [recovery](publishing.md#recovery); versions cannot be reused and defects need a forward fix.
