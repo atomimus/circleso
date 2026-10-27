@@ -8,10 +8,11 @@ import {
 } from "./config";
 import { CircleConfigError, CircleHttpError, CircleSdkError } from "./errors";
 import { HEADER_ACCEPT, HEADER_AUTHORIZATION, HEADER_CONTENT_TYPE } from "./headers";
-import { createRecoveringFetch, createSmartFetch, type RetryConfig } from "./http";
+import { createRecoveringFetch, type RetryConfig } from "./http";
 import { createHttpLifetime } from "./httpLifetime";
 import { readResponseBody, responseContext } from "./response";
 import { requireServerRuntime } from "./runtime";
+import type { UsageControlsConfig } from "./usageControls";
 
 const REFRESH_PATH = "/api/v1/headless/access_token/refresh";
 
@@ -32,6 +33,7 @@ export type AutoRefreshFetchConfig = {
   authBaseUrl?: string;
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   fetcher?: typeof fetch;
 };
@@ -102,15 +104,7 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
       throwOnHttpError: false,
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
-      ...(options.userAgent !== undefined ? { userAgent: options.userAgent } : {}),
-      ...(options.fetcher !== undefined ? { fetcher: options.fetcher } : {}),
-    });
-
-    const refreshFetch = createSmartFetch({
-      baseUrl: authBaseUrl,
-      throwOnHttpError: false,
-      // Refresh PATCH has no documented idempotency guarantee, even when member calls opt in.
-      retries: { retries: 0 },
+      ...(options.usage !== undefined ? { usage: options.usage } : {}),
       ...(options.userAgent !== undefined ? { userAgent: options.userAgent } : {}),
       ...(options.fetcher !== undefined ? { fetcher: options.fetcher } : {}),
     });
@@ -180,7 +174,7 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
         }
         if (!refreshToken)
           throw new CircleConfigError("refreshToken is required for auto-refresh.");
-        response = await refreshFetch(
+        response = await requestFetch(
           new Request(refreshUrl, {
             ...context,
             signal: lifetime.signal,
@@ -191,6 +185,8 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
             },
             body: JSON.stringify({ refresh_token: refreshToken }),
           }),
+          undefined,
+          { retries: { retries: 0 } },
         );
         // Read once, through shared core readers: transport failures remain transport failures.
         await response.text();

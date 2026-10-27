@@ -14,6 +14,9 @@ signed attachments and explicit editor extensions with `richText`.
 See [authentication and cookies](docs/authentication.md) for all three member-token selectors,
 refresh/revoke ownership, typed cookie response metadata, server forwarding and browser recipes.
 
+See [optional usage controls](docs/usage-controls.md) for bounded per-client concurrency,
+rolling attempt budgets, circuit recovery and an isolated caller-owned read-cache recipe.
+
 ## Features
 
 - Strongly typed requests and responses from the official OpenAPI specs
@@ -393,6 +396,7 @@ Common options across all clients:
 
 - `timeoutMs`: per-attempt deadline in milliseconds, covering fetch and response body reads
 - `retries`: `{ retries, baseDelayMs, maxDelayMs, jitterRatio, retryNonIdempotent, maxReplayBodyBytes, maxRetryAfterMs }`
+- `usage`: opt-in bounded concurrency/queues, rolling attempt budget and circuit breaker; see [usage controls](docs/usage-controls.md)
 - `userAgent`: custom user-agent value
 - `logger`: hooks for request/response logging with redaction
 - `fetcher`: custom fetch implementation

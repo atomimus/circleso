@@ -6,11 +6,13 @@ import { createSmartFetch, type RetryConfig } from "../core/http";
 import { createLoggerMiddleware, type LoggerHooks } from "../core/middleware/logger";
 import { BodySourceRequest } from "../core/requestBody";
 import { createResponseMiddleware } from "../core/response";
+import type { UsageControlsConfig } from "../core/usageControls";
 
 export type ClientRuntimeConfig = {
   baseUrl: string;
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   logger?: LoggerHooks;
   fetcher?: typeof fetch;
@@ -36,6 +38,7 @@ export function createOpenApiClient<Paths extends object>(
     throwOnHttpError: false,
     ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
     ...(config.retries !== undefined ? { retries: config.retries } : {}),
+    ...(config.usage !== undefined ? { usage: config.usage } : {}),
     ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
     ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),
   });

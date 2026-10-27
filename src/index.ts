@@ -9,6 +9,7 @@ import {
 import type { RetryConfig } from "./core/http";
 import type { LoggerHooks } from "./core/middleware/logger";
 import type { TokenHooks } from "./core/tokenManager";
+import type { UsageControlsConfig } from "./core/usageControls";
 import { createHeadless, type HeadlessApi } from "./headlessApi";
 
 export * from "./adminApi";
@@ -45,6 +46,7 @@ export type CircleSoConfig = {
   };
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   logger?: LoggerHooks;
   fetcher?: typeof fetch;
@@ -71,6 +73,7 @@ export class CircleSo {
     const sharedRuntime = {
       ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
       ...(config.retries !== undefined ? { retries: config.retries } : {}),
+      ...(config.usage !== undefined ? { usage: config.usage } : {}),
       ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
       ...(config.logger !== undefined ? { logger: config.logger } : {}),
       ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),

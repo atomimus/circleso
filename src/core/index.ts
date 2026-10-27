@@ -42,3 +42,4 @@ export { createSessionCookiesUrl, type SessionCookiesUrlOptions } from "./sessio
 export type { AuthConfig, ClientConfig, HttpMethod, QueryValue, RequestOptions } from "./types";
 export type { DirectUploadInput, DirectUploadOptions, DirectUploadResult } from "./uploads";
 export { joinPath, joinUrl, withQuery } from "./url";
+export type { UsageControlRejection, UsageControlsConfig } from "./usageControls";

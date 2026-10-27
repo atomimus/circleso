@@ -11,6 +11,7 @@ import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
 import { requireServerRuntime } from "../core/runtime";
 import { createTokenManager, type TokenHooks } from "../core/tokenManager";
+import type { UsageControlsConfig } from "../core/usageControls";
 import type { paths as HeadlessPaths } from "../generated/headless-client-v1";
 import { createHeadlessIterators, type HeadlessIterators } from "../headlessApi/cursorIterators";
 import { createHeadlessRequester } from "../headlessApi/request";
@@ -39,6 +40,7 @@ export type HeadlessClientConfig = {
   setAccessToken?: TokenHooks["setAccessToken"];
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   logger?: LoggerHooks;
   fetcher?: typeof fetch;
@@ -102,6 +104,7 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
           authBaseUrl: config.authBaseUrl ?? baseUrl,
           ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
           ...(config.retries !== undefined ? { retries: config.retries } : {}),
+          ...(config.usage !== undefined ? { usage: config.usage } : {}),
           ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
           ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),
         })
@@ -111,6 +114,7 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
     baseUrl,
     ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
     ...(config.retries !== undefined ? { retries: config.retries } : {}),
+    ...(config.usage !== undefined ? { usage: config.usage } : {}),
     ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
     ...(config.logger !== undefined ? { logger: config.logger } : {}),
     ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),

@@ -7,11 +7,15 @@ export function createHttpLifetime(
 ) {
   const controller = new AbortController();
   const listeners: (() => void)[] = [];
+  const disposers: (() => void)[] = [];
+  let cleaned = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const cleanup = () => {
+    cleaned = true;
     if (timer !== undefined) clearTimeout(timer);
     for (const remove of listeners.splice(0)) remove();
+    for (const dispose of disposers.splice(0)) dispose();
   };
   const abort = (error: CircleNetworkError | CircleTimeoutError) => {
     if (!controller.signal.aborted) controller.abort(error);
@@ -42,6 +46,10 @@ export function createHttpLifetime(
   return {
     signal: controller.signal,
     cleanup,
+    onCleanup(dispose: () => void) {
+      if (cleaned) dispose();
+      else disposers.push(dispose);
+    },
     throwIfAborted,
     /** Also bounds custom fetchers that do not reject when their signal aborts. */
     wait<T>(operation: Promise<T>): Promise<T> {

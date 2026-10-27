@@ -9,6 +9,7 @@ import {
 } from "./httpLifetime";
 import { BodySourceRequest, discardRequest, prepareRequestBody } from "./requestBody";
 import { buildHttpError, prepareResponse, responseContext } from "./response";
+import { createUsageController, type UsageControlsConfig } from "./usageControls";
 
 const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]);
 
@@ -29,11 +30,12 @@ export type SmartFetchConfig = {
   baseUrl: string;
   defaultHeaders?: Record<string, string>;
   userAgent?: string;
-  /** Per-attempt deadline through body consumption; excludes retry waiting. Zero disables it. */
+  /** Per-attempt deadline through admission/body consumption; excludes retry waits. Zero disables it. */
   timeoutMs?: number;
   retries?: RetryConfig;
   throwOnHttpError?: boolean;
   fetcher?: typeof fetch;
+  usage?: UsageControlsConfig;
 };
 
 export type SmartFetchInit = RequestInit & {
@@ -52,7 +54,8 @@ export function createSmartFetch(config: SmartFetchConfig) {
 /** Internal auth adapter: share bounded uploads/deadlines with ordinary HTTP attempts. */
 export function createRecoveringFetch(config: SmartFetchConfig) {
   const fetch = createFetch(config);
-  return (request: Request, recover: () => Promise<Headers>) => fetch(request, {}, recover);
+  return (request: Request, recover?: () => Promise<Headers>, init: SmartFetchInit = {}) =>
+    fetch(request, init, recover);
 }
 
 function createFetch(config: SmartFetchConfig) {
@@ -78,6 +81,7 @@ function createFetch(config: SmartFetchConfig) {
   }
   const throwOnHttpError = config.throwOnHttpError ?? true;
   const baseRetryConfig = normalizeRetryConfig(config.retries);
+  const usage = createUsageController(config.usage);
 
   async function smartFetch(
     input: RequestInfo | URL,
@@ -108,8 +112,12 @@ function createFetch(config: SmartFetchConfig) {
       let pendingResponse: Response | undefined;
       let fetchRequest: Request | undefined;
       let fetching = false;
+      let admission: Awaited<ReturnType<NonNullable<typeof usage>["acquire"]>> | undefined;
 
       try {
+        lifetime.throwIfAborted();
+        if (usage) admission = await usage.acquire(lifetime.signal);
+        if (admission) lifetime.onCleanup(admission.release);
         lifetime.throwIfAborted();
         if (!template) {
           template = new BodySourceRequest(request ?? url, {
@@ -159,6 +167,7 @@ function createFetch(config: SmartFetchConfig) {
         );
         fetching = false;
         lifetime.throwIfAborted();
+        admission?.record(received.status);
 
         if (received.status === 401 && recover && !recovered && upload?.replayable) {
           // The auth wait has a separate, shared budget. Release the original attempt first.
@@ -210,6 +219,7 @@ function createFetch(config: SmartFetchConfig) {
 
         return response;
       } catch (error) {
+        if (fetching && !lifetime.signal.aborted) admission?.record(0);
         if (lifetime.signal.aborted) {
           Object.assign(lifetime.signal.reason, {
             url,

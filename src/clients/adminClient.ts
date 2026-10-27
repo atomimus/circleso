@@ -9,6 +9,7 @@ import type { RetryConfig } from "../core/http";
 import { createAdminAuthMiddleware } from "../core/middleware/adminAuth";
 import { createAdminQueryMiddleware } from "../core/middleware/adminQuery";
 import type { LoggerHooks } from "../core/middleware/logger";
+import type { UsageControlsConfig } from "../core/usageControls";
 import type { paths as AdminPaths } from "../generated/admin-v2";
 import { createOpenApiClient, type DualClient } from "./shared";
 
@@ -20,6 +21,7 @@ export type AdminClientConfig = {
   communityHost?: string;
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   logger?: LoggerHooks;
   fetcher?: typeof fetch;
@@ -48,6 +50,7 @@ export function createAdminClient(config: AdminClientConfig): AdminClient {
     baseUrl,
     ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
     ...(config.retries !== undefined ? { retries: config.retries } : {}),
+    ...(config.usage !== undefined ? { usage: config.usage } : {}),
     ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
     ...(config.logger !== undefined ? { logger: config.logger } : {}),
     ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),

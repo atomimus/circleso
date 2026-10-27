@@ -13,6 +13,34 @@ import { richText as memberRichText } from "circleso/headless";
 import { createSessionCookiesUrl } from "circleso";
 import { createSessionCookiesUrl as memberSessionUrl } from "circleso/headless";
 import type { CircleResponse, SessionCookiesUrlOptions } from "circleso/headless";
+import type { UsageControlsConfig, UsageControlRejection } from "circleso";
+import type { UsageControlsConfig as AdminUsage } from "circleso/admin";
+import type { UsageControlsConfig as MemberUsage } from "circleso/headless";
+import type { UsageControlsConfig as AuthUsage } from "circleso/auth";
+
+export function usageContracts() {
+  const usage: UsageControlsConfig = { maxConcurrent: 2, maxQueueSize: 0, maxQueueWaitMs: 100, rate: { maxRequests: 2, intervalMs: 1000 }, circuitBreaker: { failureThreshold: 3, cooldownMs: 1000, failureStatuses: [429, 503] } };
+  const scopes: [AdminUsage, MemberUsage, AuthUsage] = [usage, usage, usage];
+  createAdmin({ token: "synthetic", usage });
+  createHeadless({ accessToken: "synthetic", usage });
+  createAuth({ token: "synthetic", usage });
+  createAdminClient({ token: "synthetic", usage });
+  createHeadlessClient({ accessToken: "synthetic", usage });
+  createHeadlessAuthClient({ token: "synthetic", usage });
+  createSmartFetch({ baseUrl: "https://example.test", usage });
+  const config: CircleSoConfig = { usage }; void [config, scopes];
+  const cause: UsageControlRejection = { code: "CIRCLE_QUEUE_FULL" }; void cause;
+  // @ts-expect-error Numeric bounds do not accept strings.
+  createHeadless({ token: "synthetic", usage: { maxConcurrent: "2" } });
+  // @ts-expect-error The rate window is required.
+  createHeadless({ token: "synthetic", usage: { rate: { maxRequests: 2 } } });
+  // @ts-expect-error No credential callbacks or request-derived metric labels.
+  createHeadless({ token: "synthetic", usage: { key: "authorization" } });
+  // @ts-expect-error No implicit cache configuration.
+  createHeadless({ token: "synthetic", cache: true });
+  // @ts-expect-error Rejection codes are a closed, credential-free union.
+  const invalid: UsageControlRejection = { code: "secret" }; void invalid;
+}
 
 export async function authCookieContracts(auth: AuthApi, member: HeadlessApi) {
   await auth.authToken.create({ email: "synthetic@example.test" });

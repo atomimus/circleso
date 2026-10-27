@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add opt-in per-client `usage` controls for bounded queues/concurrency, rolling attempt
+  budgets and circuit recovery, sharing admission with retries and single-flight refresh.
+  Keep defaults unchanged; document and test an explicit isolated server read-cache recipe.
+
 - Add typed cookie `createWithResponse`/`deleteWithResponse` metadata and a validated
   `createSessionCookiesUrl` helper from root/Headless. Document complete token/cookie
   workflows, shared-refresh revocation scope and browser/server boundaries; include

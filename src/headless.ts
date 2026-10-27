@@ -19,6 +19,7 @@ export type {
   RequestOptions,
 } from "./core/types";
 export type { DirectUploadInput, DirectUploadOptions, DirectUploadResult } from "./core/uploads";
+export type { UsageControlRejection, UsageControlsConfig } from "./core/usageControls";
 export type { HeadlessApi, HeadlessApiConfig } from "./headlessApi";
 export { createHeadless } from "./headlessApi";
 export type { HeadlessDirectUploadOptions } from "./headlessApi/resources/directUploads";

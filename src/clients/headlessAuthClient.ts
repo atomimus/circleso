@@ -8,6 +8,7 @@ import type { RetryConfig } from "../core/http";
 import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
 import { requireServerRuntime } from "../core/runtime";
+import type { UsageControlsConfig } from "../core/usageControls";
 import type { paths as HeadlessAuthPaths } from "../generated/headless-auth-v1";
 import { createOpenApiClient, type DualClient } from "./shared";
 
@@ -20,6 +21,7 @@ export type HeadlessAuthClientConfig = {
   token: string;
   timeoutMs?: number;
   retries?: RetryConfig;
+  usage?: UsageControlsConfig;
   userAgent?: string;
   logger?: LoggerHooks;
   fetcher?: typeof fetch;
@@ -40,6 +42,7 @@ export function createHeadlessAuthClient(config: HeadlessAuthClientConfig): Head
     baseUrl,
     ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
     ...(config.retries !== undefined ? { retries: config.retries } : {}),
+    ...(config.usage !== undefined ? { usage: config.usage } : {}),
     ...(config.userAgent !== undefined ? { userAgent: config.userAgent } : {}),
     ...(config.logger !== undefined ? { logger: config.logger } : {}),
     ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),

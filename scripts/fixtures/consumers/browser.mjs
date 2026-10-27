@@ -41,6 +41,7 @@ export async function checkBrowser(consumer) {
       Response,
       Headers,
       AbortController,
+      DOMException,
       ReadableStream,
       TextEncoder,
       TextDecoder,
@@ -61,6 +62,31 @@ export async function checkBrowser(consumer) {
     });
     // JSON is parsed inside the VM; compare data without cross-realm prototype identity.
     assert.equal(JSON.stringify(await member.bookmarks.list()), '{"records":[]}');
+    let usageCalls = 0;
+    const controlledMember = createHeadless({
+      accessToken: "synthetic",
+      usage: { maxConcurrent: 1, maxQueueSize: 0 },
+      fetcher: async () => {
+        usageCalls++;
+        return new Response(new ReadableStream());
+      },
+    });
+    const activeUsage = await controlledMember.raw.GET("/api/headless/v1/bookmarks", {
+      parseAs: "stream",
+    });
+    await assert.rejects(
+      controlledMember.bookmarks.list(),
+      (error) => error.cause.code === "CIRCLE_QUEUE_FULL",
+    );
+    assert.equal(usageCalls, 1);
+    await activeUsage.data.cancel();
+    await (
+      await controlledMember.raw.GET("/api/headless/v1/bookmarks", { parseAs: "stream" })
+    ).data.cancel();
+    assert.equal(usageCalls, 2);
+    console.log(
+      "Browser VM usage controls: isolated Member queue, overflow and body cancellation pass",
+    );
     const cookieMember = createHeadless({
       accessToken: "synthetic-member",
       fetcher: async (request) => {

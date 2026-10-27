@@ -344,3 +344,60 @@ for (const modules of [esm, cjs]) {
 console.log(
   "Package rich text: root/Admin/Member ESM/CJS builders, validation and public writes pass",
 );
+
+for (const modules of [esm, cjs]) {
+  for (const index of [0, 1, 2, 3]) {
+    const mod = modules[index];
+    let calls = 0;
+    const config = {
+      token: "synthetic",
+      usage: { maxConcurrent: 1, maxQueueSize: 0 },
+      fetcher: async () => {
+        calls++;
+        return new Response(new ReadableStream());
+      },
+    };
+    const client =
+      index === 1
+        ? mod.createAdmin(config)
+        : index === 3
+          ? mod.createAuth(config)
+          : mod.createHeadless(config);
+    const call = () =>
+      index === 3
+        ? client.raw.POST("/api/v1/headless/auth_token", {
+            body: { email: "synthetic@example.test" },
+            parseAs: "stream",
+          })
+        : client.raw.GET(index === 1 ? "/api/admin/v2/spaces" : "/api/headless/v1/bookmarks", {
+            parseAs: "stream",
+          });
+    const first = await call();
+    await assert.rejects(call(), (error) => {
+      assert.ok(error instanceof esm[0].CircleNetworkError);
+      assert.deepEqual(error.cause, { code: "CIRCLE_QUEUE_FULL" });
+      assert.ok(Object.isFrozen(error.cause));
+      return true;
+    });
+    assert.equal(calls, 1);
+    await first.data.cancel();
+    await (await call()).data.cancel();
+    assert.equal(calls, 2);
+  }
+  let attempts = 0;
+  const controlled = modules[0].createSmartFetch({
+    baseUrl: "https://example.test",
+    retries: { retries: 0 },
+    usage: { circuitBreaker: { failureThreshold: 1, cooldownMs: 1000 } },
+    fetcher: async () => {
+      attempts++;
+      return new Response(null, { status: 503 });
+    },
+  });
+  await assert.rejects(controlled("/one"), esm[0].CircleHttpError);
+  await assert.rejects(controlled("/two"), (error) => error.cause.code === "CIRCLE_CIRCUIT_OPEN");
+  assert.equal(attempts, 1);
+}
+console.log(
+  "Package usage controls: all eight entries/formats bound active bodies/queues; circuits isolate and reject before transport",
+);
