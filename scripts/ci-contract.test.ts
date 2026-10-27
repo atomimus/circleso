@@ -62,6 +62,7 @@ it("keeps live spec downloads out of public validation and requires deliberate m
     "test",
     "gen:check",
     "coverage:check",
+    "docs:check",
     "build",
     "pack:check",
     "test:package",

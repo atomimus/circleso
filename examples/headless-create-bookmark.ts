@@ -8,9 +8,10 @@ function requireEnv(name: string) {
   return value;
 }
 
-const recordId = Number.parseInt(requireEnv("CIRCLE_BOOKMARK_RECORD_ID"), 10);
-if (!Number.isFinite(recordId)) {
-  throw new Error("CIRCLE_BOOKMARK_RECORD_ID must be a number.");
+const recordIdText = requireEnv("CIRCLE_BOOKMARK_RECORD_ID");
+const recordId = Number(recordIdText);
+if (!/^\d+$/.test(recordIdText) || !Number.isSafeInteger(recordId) || recordId < 1) {
+  throw new Error("CIRCLE_BOOKMARK_RECORD_ID must be a positive safe integer.");
 }
 
 const bookmarkType = process.env.CIRCLE_BOOKMARK_TYPE ?? "post";
@@ -20,6 +21,8 @@ if (bookmarkType !== "post" && bookmarkType !== "comment") {
 
 const headless = createHeadless({
   accessToken: requireEnv("CIRCLE_HEADLESS_TOKEN"),
+  retries: { retries: 0 },
+  timeoutMs: 10_000,
 });
 
 try {
@@ -28,8 +31,8 @@ try {
     bookmark_type: bookmarkType,
   });
 
-  console.log(JSON.stringify(data, null, 2));
-} catch (error) {
-  console.error(error);
+  console.log(data ? "Bookmark created." : "Bookmark request completed.");
+} catch {
+  console.error("Bookmark creation failed; reconcile the intended change before repeating.");
   process.exit(1);
 }

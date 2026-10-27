@@ -3,7 +3,7 @@
 These server-only resources use the existing Admin client, flat options and shared
 networking. Contracts checked October 27, 2026 against the
 [official Admin V2 spec](https://api-headless.circle.so/api/admin/v2/swagger.yaml).
-The [compile-only recipes](../examples/admin-workflows-and-filters.ts) cover all 11
+The [compile-only recipes](https://github.com/atomimus/circleso/blob/main/examples/admin-workflows-and-filters.ts) cover all 11
 operations. Validation never executes their mutations.
 
 ## Workflows

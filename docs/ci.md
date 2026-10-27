@@ -1,6 +1,6 @@
 # Continuous validation
 
-The [offline workflow](../.github/workflows/ci.yml) validates direct pushes to `main`, pull requests
+The [offline workflow](https://github.com/atomimus/circleso/blob/main/.github/workflows/ci.yml) validates direct pushes to `main`, pull requests
 targeting `main` and manual dispatches. Every job installs the exact `package-lock.json` dependency
 tree with `npm ci --no-audit --no-fund` and runs the same checks. No Circle credentials are needed.
 The install downloads public npm packages; "offline" means the checks use committed specs and
@@ -44,6 +44,7 @@ npm run typecheck
 npm test
 npm run gen:check
 npm run coverage:check
+npm run docs:check
 npm run build
 npm run pack:check
 npm run test:package
@@ -79,8 +80,8 @@ type-only imports, import-assignment require, positive/negative request contract
 properties and `skipLibCheck: false`. The minimum compiler's resolution trace must select all
 eight ESM/CJS public declaration targets. The current compiler is a development-only npm alias;
 source tooling explicitly selects 5.9.3 so executable-name collisions cannot change that version.
-README/request-guide TypeScript blocks and tracked TypeScript examples compile against the
-installed tarball with both compilers; examples are never executed. Only that documentation
+All tracked public Markdown TypeScript blocks and tracked TypeScript examples compile against the
+installed tarball with both compilers; only the explicit synthetic fixture allowlist executes. That documentation
 pass opts into the development Node types needed by the server examples.
 
 Root and Headless Member bundles use esbuild 0.27.2 with the browser platform, no external runtime
@@ -103,7 +104,7 @@ Reviewed pins on October 27, 2026:
 - [setup-node v7.1.0](https://github.com/actions/setup-node/tree/949feb2413d6458794dcd2491c4babbbce0c15c1)
   (`949feb2413d6458794dcd2491c4babbbce0c15c1`)
 
-The [live-spec workflow](../.github/workflows/live-spec.yml) runs only on an explicit manual
+The [live-spec workflow](https://github.com/atomimus/circleso/blob/main/.github/workflows/live-spec.yml) runs only on an explicit manual
 dispatch selecting `main`. It invokes `npm run spec:check`, comparing the three public Circle
 specs without accepting changes. It needs no community credentials and does not run on pushes or
 pull requests. Drift is a failure, not a passing skip; reproduce locally for the saved candidate
@@ -112,6 +113,17 @@ files/patches described in [spec generation](spec-generation.md).
 No integration workflow exists yet: task 22 owns live tests against a separately authorized test
 community. Keep those jobs separate from public checks, without forwarding credentials to untrusted
 code. Do not add placeholder skipped tests as evidence.
+
+## Documentation checks
+
+`docs:check` discovers all tracked public Markdown files, checks local/repository links
+and heading anchors, and compares the public export/resource call-shape reference with
+the TypeScript source. `docs:write` deliberately regenerates that reference. The package
+gate discovers every tracked TypeScript fence (ts/typescript/mts/cts) and examples/*.ts,
+then compiles them with both installed compilers against the tarball's actual exports.
+No source aliases are used there. An explicit synthetic-only allowlist executes auth/cookie
+and upload/rich-text/Admin/Member examples through the installed package; credential-driven
+examples are never automatically run. Packaged public guides/support files are byte-checked.
 
 ## Extending the gates
 

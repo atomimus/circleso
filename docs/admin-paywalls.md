@@ -10,7 +10,7 @@ Options use the generated field names at the top level, alongside `headers`, `si
 and `credentials`. Nested schema objects stay nested: affiliate `filters` is an object;
 invitation-link `paywall` is one object or `null`. IDs are numeric Circle IDs, with
 affiliate IDs used for affiliate updates and community member IDs used for invitations
-and payout scopes. See the [compiled recipe](../examples/admin-paywalls.ts).
+and payout scopes. See the [compiled recipe](https://github.com/atomimus/circleso/blob/main/examples/admin-paywalls.ts).
 
 ## Methods
 

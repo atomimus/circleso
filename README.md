@@ -6,6 +6,11 @@ The published package is **0.3.0**. This checkout contains an unreleased API ref
 qualification is in progress. See [continuous validation](https://github.com/atomimus/circleso/blob/main/docs/ci.md)
 for the CI runtime matrix and local development checks.
 
+Start with the [complete API reference](docs/api-reference.md),
+[0.3.0 to v1 migration guide](docs/migration-v1.md), and
+[support/compatibility policy](SUPPORT.md). Every public TypeScript example compiles
+against the actual installed tarball in CI. Reference guides ship in the package.
+
 See [complete direct file uploads](docs/file-uploads.md) for metadata, MD5 and isolated storage PUTs via `directUploads.upload`.
 
 See [rich text builders](docs/rich-text.md) for paragraphs, links, mentions, line breaks,
@@ -41,6 +46,11 @@ rolling attempt budgets, circuit recovery and an isolated caller-owned read-cach
 ```bash
 npm install circleso
 ```
+
+This installs the published registry version, currently 0.3.0. The examples below target
+the unreleased v1 checkout. To try these APIs before v1 publication, run `npm ci`,
+`npm run build` and `npm pack --ignore-scripts` in this checkout, then install the resulting
+local tarball in a separate application. Do not assume an unreleased v1 dist-tag exists.
 
 ## Exports
 
@@ -563,9 +573,8 @@ try {
   await smartFetch("/api/headless/v1/bookmarks");
 } catch (error) {
   if (error instanceof CircleHttpError) {
-    console.error(error.status, error.url);
-    console.error(error.requestId);
-    console.error(error.bodyText ?? error.parsedJson);
+    console.error("Circle request failed", error.status);
+    // Inspect URL/body/cause only through your application's redacted diagnostics.
   } else {
     throw error;
   }
@@ -704,6 +713,15 @@ npx tsx examples/headless-create-bookmark.ts
 npx tsx examples/refresh-token.ts
 ```
 
+These three scripts use environment credentials and make real requests; bookmark creation
+is an explicit mutation. Other TypeScript recipes export functions and run only when invoked.
+See the complete [server workflow recipe](https://github.com/atomimus/circleso/blob/main/examples/member-workflow.ts)
+for bounded Admin/Member reads, verified-member Auth, upload/rich-text writes and cookie forwarding.
+Its `readFromEnvironment` needs CIRCLE_ADMIN_TOKEN/CIRCLE_HEADLESS_TOKEN; upload needs
+CIRCLE_UPLOAD_PATH, CIRCLE_UPLOAD_FILENAME, CIRCLE_SPACE_ID, CIRCLE_POST_TITLE and
+CIRCLE_POST_TEXT (optional CIRCLE_UPLOAD_CONTENT_TYPE). Keep files/application tokens on
+the server. For credential-free execution, the package gate runs only synthetic fixtures.
+
 Required environment variables:
 
 - Admin example: `CIRCLE_ADMIN_TOKEN`, optional `CIRCLE_COMMUNITY_HOST` (defaults to `app.circle.so`)
@@ -743,7 +761,7 @@ npm run coverage:api
 
 The [operation inventory](https://github.com/atomimus/circleso/blob/main/docs/api-coverage.md)
 separates raw routes, named resources, and upstream schema limitations. It currently lists
-24 Admin operations awaiting named wrappers; all 278 operations are available through raw clients.
+all 278 operations with named and raw access: 172 Admin, 102 Member and four Auth.
 
 Check upstream deliberately with `npm run spec:check`. It saves changed candidate specs, generated
 types and unified patches in `.cache/spec-refresh-*`, exits with status 1 on drift, and leaves

@@ -5,6 +5,7 @@ import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promi
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { documentationFiles, markdownLinks, typescriptBlocks } from "./documentation";
 
 const root = process.cwd();
 const require = createRequire(import.meta.url);
@@ -61,7 +62,15 @@ try {
   const names = packed.files.map(({ path: file }) => file);
   for (const file of names) {
     assert.ok(
-      ["package.json", "README.md", "CHANGELOG.md", "LICENSE"].includes(file) ||
+      [
+        "package.json",
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        "CONTRIBUTING.md",
+        "SUPPORT.md",
+      ].includes(file) ||
+        /^docs\/[\w-]+\.md$/.test(file) ||
         /^dist\/[\w-]+\.(?:js|cjs|d\.ts|d\.cts)(?:\.map)?$/.test(file),
       `Unexpected package file: ${file}`,
     );
@@ -141,11 +150,29 @@ try {
       for (const file of Object.values(condition)) assert.ok(names.includes(file.slice(2)), file);
     }
   }
-  for (const file of ["README.md", "CHANGELOG.md", "LICENSE"]) {
+  const publicDocs = documentationFiles(root).filter((file) => file.startsWith("docs/"));
+  for (const file of [
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "SUPPORT.md",
+    ...publicDocs,
+  ]) {
+    assert.ok(names.includes(file), `Missing packaged documentation: ${file}`);
     assert.equal(
       await readFile(path.join(installed, file), "utf8"),
       await readFile(path.join(root, file), "utf8"),
     );
+    if (file.endsWith(".md"))
+      for (const href of markdownLinks(await readFile(path.join(installed, file), "utf8"))) {
+        if (/^[a-z][\w+.-]*:/i.test(href) || href.startsWith("//")) continue;
+        const pathname = decodeURIComponent(href.split("#")[0] ?? "");
+        const target = pathname
+          ? path.posix.normalize(path.posix.join(path.posix.dirname(file), pathname))
+          : file;
+        assert.ok(names.includes(target), `Packaged ${file} links to omitted ${target}`);
+      }
   }
   let maps = 0;
   for (const file of names.filter((name) => /\.(?:js|cjs)$/.test(name))) {
@@ -205,22 +232,11 @@ try {
   await copyFile(path.join(fixtures, "require.txt"), path.join(consumer, "require.cts"));
   await copyFile(path.join(fixtures, "types-only.txt"), path.join(consumer, "types-only.cts"));
   const documentation: string[] = [];
-  for (const file of [
-    "README.md",
-    "docs/request-options.md",
-    "docs/admin-workflows-and-filters.md",
-    "docs/admin-remaining-resources.md",
-    "docs/pagination.md",
-    "docs/file-uploads.md",
-    "docs/rich-text.md",
-    "docs/authentication.md",
-    "docs/usage-controls.md",
-  ]) {
+  for (const file of documentationFiles(root)) {
     const source = await readFile(path.join(root, file), "utf8");
-    for (const [index, block] of [...source.matchAll(/```ts\r?\n([\s\S]*?)```/g)].entries()) {
-      assert.ok(block[1]);
-      const filename = `doc-${path.basename(file)}-${index}.mts`;
-      await writeFile(path.join(consumer, filename), block[1]);
+    for (const [index, block] of typescriptBlocks(source).entries()) {
+      const filename = `doc-${file.replaceAll(/[\\/]/g, "-")}-${index}.${block.extension}`;
+      await writeFile(path.join(consumer, filename), block.source);
       documentation.push(filename);
     }
   }
@@ -302,8 +318,25 @@ try {
     );
     run(process.execPath, [cli, "-p", docConfig], consumer);
     console.log(
-      `Package docs: TS ${compilerPackage.version}; ${documentation.length - examples.length} TS blocks + ${examples.length} tracked TS examples compile (never executed)`,
+      `Package docs: TS ${compilerPackage.version}; ${documentation.length - examples.length} TS blocks + ${examples.length} tracked TS examples compile against installed exports`,
     );
+  }
+  // Explicit synthetic allowlist only: do not execute credential-driven examples.
+  for (const name of ["auth-and-cookies", "documented-workflows"]) {
+    const input = path.join(consumer, `example-${name}.mts`);
+    const output = path.join(consumer, `example-${name}.mjs`);
+    run(
+      process.execPath,
+      [
+        require.resolve("esbuild/bin/esbuild"),
+        input,
+        "--platform=node",
+        "--format=esm",
+        `--outfile=${output}`,
+      ],
+      consumer,
+    );
+    process.stdout.write(run(process.execPath, [output], consumer));
   }
   const evidence = {
     version: manifest.version,

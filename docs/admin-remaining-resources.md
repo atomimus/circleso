@@ -61,7 +61,7 @@ no declared properties, so the pinned generator emits `Record<string, never>`. T
 limitation affects import `rich_text_body`, and note responses have an opaque nullable
 `tiptap_body`. Raw clients and responses preserve these generated contracts. Named writes
 additionally accept the [rich text builders](rich-text.md) through a narrow request-only
-compatibility layer. The [compile-only recipe](../examples/admin-remaining-resources.ts)
+compatibility layer. The [compile-only recipe](https://github.com/atomimus/circleso/blob/main/examples/admin-remaining-resources.ts)
 uses common builders without assertions; arbitrary editor extensions need the explicit
 JSON escape hatch and remain the caller's responsibility.
 See Circle's [TipTap documentation](https://api.circle.so/get-started/concepts/tiptap-editor)

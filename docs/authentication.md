@@ -2,7 +2,7 @@
 
 Checked against Circle's current documentation and the committed Auth/Member specs on
 October 27, 2026. These recipes target this unreleased v1 checkout. Run the entirely
-synthetic [auth/cookie fixture](../examples/auth-and-cookies.ts) with
+synthetic [auth/cookie fixture](https://github.com/atomimus/circleso/blob/main/examples/auth-and-cookies.ts) with
 `npx tsx examples/auth-and-cookies.ts` after building the checkout. It exercises every
 flow below without credentials or Circle requests. The package checks compile these
 recipes; they never execute live authentication examples.

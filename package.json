@@ -72,6 +72,9 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SUPPORT.md",
+    "docs/*.md",
     "LICENSE"
   ],
   "dependencies": {
@@ -93,7 +96,9 @@
     "coverage:check": "tsx ./scripts/api-coverage.ts --check",
     "pack:check": "npm pack --dry-run --json --ignore-scripts",
     "test:package": "tsx ./scripts/package-check.ts",
-    "validate:ci": "npm run lint && npm run typecheck && npm test && npm run gen:check && npm run coverage:check && npm run build && npm run pack:check && npm run test:package",
+    "docs:check": "tsx ./scripts/docs-reference.ts",
+    "docs:write": "tsx ./scripts/docs-reference.ts --write",
+    "validate:ci": "npm run lint && npm run typecheck && npm test && npm run gen:check && npm run coverage:check && npm run docs:check && npm run build && npm run pack:check && npm run test:package",
     "prepublishOnly": "npm run gen:types && npm run build"
   },
   "devDependencies": {

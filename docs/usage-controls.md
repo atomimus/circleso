@@ -110,7 +110,7 @@ Use application metrics with fixed labels, without tokens, member IDs, URLs or q
 ## Explicit server read-cache recipe
 
 The SDK provides no automatic response cache. The complete, compiled and regression-tested
-[session space cache example](../examples/usage-controls.ts) is application code you may copy.
+[session space cache example](https://github.com/atomimus/circleso/blob/main/examples/usage-controls.ts) is application code you may copy.
 It requires Node server Fetch that exposes all Set-Cookie headers; it must not be used
 with browser-filtered responses, a custom transport that hides cookies, or a shared CDN.
 Browsers filter Set-Cookie even when the network response contains it, so an absent visible

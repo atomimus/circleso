@@ -1,6 +1,6 @@
 # Contributing to circleso
 
-Read [AGENTS.md](AGENTS.md) for architecture and repository rules. Release planning, compatibility
+Read [AGENTS.md](https://github.com/atomimus/circleso/blob/main/AGENTS.md) for architecture and repository rules. Release planning, compatibility
 contracts and task outcomes in `docs/v1-release/` are local-only and must never be added to Git.
 Selecting a release task activates only that task.
 Use one implementation task per checkout. Preserve unrelated work and stage explicit paths.
@@ -18,6 +18,7 @@ npm run typecheck
 npm test
 npm run gen:check
 npm run coverage:check
+npm run docs:check
 npm run build
 npm pack --dry-run --json --ignore-scripts
 npm run test:package
@@ -46,6 +47,15 @@ Do not hide SDK source from CI. Do not run the user-owned
 `examples/admin-get-space-member.js` or include it in a commit without explicit authorization.
 
 ## Changes and validation
+
+The [API reference](docs/api-reference.md), [migration guide](docs/migration-v1.md),
+[support policy](SUPPORT.md) and [release maintenance guide](docs/release-maintenance.md)
+are public consumer documentation. Keep them separate from private local planning.
+Run `npm run docs:write` after an intentional export/resource change, then inspect its
+generated inventory. `docs:check` checks tracked Markdown links/anchors and API drift.
+The package gate discovers all tracked Markdown TypeScript fences and examples, compiles
+them against installed exports with both compilers, and executes only the explicit synthetic
+auth/cookie and upload/rich-text fixtures. Credential-driven recipes remain compile-only.
 
 Keep public entry points, existing resource names and flat options stable. Keep networking and
 error handling in `src/core`, and global header/request/response changes in middleware. New API

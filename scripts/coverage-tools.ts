@@ -348,7 +348,7 @@ export function report(surfaces: Surface[]): string {
     );
     for (const op of surface.operations)
       lines.push(
-        `| ${op.method} | \`${op.path}\` | ${op.raw ? "Yes" : "Missing"} | ${op.wrappers.map((wrapper) => `\`${wrapper.name}\` ([source](../src/${surface.module}/${wrapper.file}))`).join(", ") || "—"} |`,
+        `| ${op.method} | \`${op.path}\` | ${op.raw ? "Yes" : "Missing"} | ${op.wrappers.map((wrapper) => `\`${wrapper.name}\` ([source](https://github.com/atomimus/circleso/blob/main/src/${surface.module}/${wrapper.file}))`).join(", ") || "—"} |`,
       );
   }
   return `${lines.join("\n")}\n`;

@@ -13,6 +13,7 @@ const authToken = requireEnv("CIRCLE_HEADLESS_AUTH_TOKEN");
 
 const auth = createAuth({
   token: authToken,
+  timeoutMs: 10_000,
 });
 
 try {

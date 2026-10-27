@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add the complete v1 public API/call-shape reference, migration from the actual published
+  0.3.0 artifact, support and release-maintenance guidance, and environment-driven workflow
+  recipes. Ship public guides in the tarball; permanently check all public Markdown links,
+  reference drift, every TypeScript snippet/example and installed synthetic workflows.
+
 - Add opt-in per-client `usage` controls for bounded queues/concurrency, rolling attempt
   budgets and circuit recovery, sharing admission with retries and single-flight refresh.
   Keep defaults unchanged; document and test an explicit isolated server read-cache recipe.

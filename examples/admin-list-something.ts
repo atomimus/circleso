@@ -12,6 +12,7 @@ const communityHost = process.env.CIRCLE_COMMUNITY_HOST;
 
 const admin = createAdmin({
   token: requireEnv("CIRCLE_ADMIN_TOKEN"),
+  timeoutMs: 10_000,
   ...(communityHost ? { communityHost } : {}),
 });
 
@@ -21,7 +22,9 @@ try {
   for (const group of data?.records ?? []) {
     console.log(`${group.id} ${group.name}`);
   }
-} catch (error) {
-  console.error(error);
+} catch {
+  console.error(
+    "Admin read failed; inspect SDK error context through a redacted application handler.",
+  );
   process.exit(1);
 }
