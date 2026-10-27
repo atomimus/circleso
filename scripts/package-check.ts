@@ -58,6 +58,7 @@ async function json<T>(file: string): Promise<T> {
 }
 
 try {
+  const externalTarball = process.env.CIRCLE_PACKAGE_TARBALL;
   const [packed] = JSON.parse(
     run(
       process.execPath,
@@ -66,8 +67,12 @@ try {
     ),
   ) as Packed[];
   assert.ok(packed);
-  const tarball = path.join(temp, packed.filename);
+  const tarball = externalTarball
+    ? path.resolve(externalTarball)
+    : path.join(temp, packed.filename);
   const bytes = await readFile(tarball);
+  // An externally retained release/registry artifact must match the clean source build exactly.
+  // All consumers below install these supplied bytes, never the locally repacked comparison.
   assert.equal(`sha512-${createHash("sha512").update(bytes).digest("base64")}`, packed.integrity);
   const names = packed.files.map(({ path: file }) => file);
   for (const file of names) {

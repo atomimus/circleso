@@ -1205,7 +1205,7 @@ export interface paths {
                             digests_hide_stats?: boolean;
                             is_private?: boolean;
                             /** @enum {string} */
-                            locale?: "en" | "pt" | "pt-PT" | "es" | "fr" | "it";
+                            locale?: "en" | "pt" | "pt-PT" | "es" | "fr" | "it" | "de";
                             locked_post_cta_body?: string;
                             locked_post_cta_button_text?: string;
                             locked_post_cta_button_url?: string;
@@ -4431,6 +4431,17 @@ export interface paths {
                 content: {
                     "application/json": {
                         event: {
+                            /**
+                             * @description Invites members (by member, space, space group, or member tag) and cohosts after the event is created.
+                             *
+                             *     Invitations are best-effort: event creation can return 201 even if some or all invitations fail. The response does not report invitation results. The event attendees endpoint lists only confirmed RSVPs; pending invitations are excluded, so absence from that endpoint does not necessarily indicate an invitation failure.
+                             *
+                             *     For published events, invitation or confirmation emails are scheduled according to the effective Auto-RSVP setting, subject to applicable notification settings and preferences. For drafts, these notifications are deferred until publication.
+                             *
+                             *     If the event author is not an admin or space moderator, auto_rsvp_invited_attendees is turned off before invitees are added.
+                             *
+                             *     For recurring events, invitations apply only to the first occurrence. To invite people to other occurrences, use the update endpoint with recurring_setting_attributes.edit_mode set to remaining or all.
+                             */
                             attendee_invite_attributes?: {
                                 invited_cohost_ids?: number[];
                                 invited_entities_ids?: {

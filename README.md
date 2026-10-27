@@ -2,8 +2,9 @@
 
 Type-safe TypeScript SDK for Circle. Ships ESM-first with CJS fallback.
 
-The published package is **0.3.0**. This checkout contains an unreleased API refresh; v1
-qualification is in progress. See [continuous validation](https://github.com/atomimus/circleso/blob/main/docs/ci.md)
+The latest published package is **0.3.0**. This checkout prepares **1.0.0-rc.1**; it has
+not been published. See [candidate notes](docs/release-candidate.md),
+[publishing](docs/publishing.md), and [continuous validation](https://github.com/atomimus/circleso/blob/main/docs/ci.md)
 for the CI runtime matrix and local development checks.
 
 Start with the [complete API reference](docs/api-reference.md),

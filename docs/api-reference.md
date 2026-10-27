@@ -215,8 +215,8 @@ widens only 18 documented request fields. POST member search can return numeric 
 that its request schema forbids: records are yielded, then continuation fails without coercion.
 
 The committed specification hashes in the inventory identify the accepted SDK contract.
-The October 27 live comparison found two additional Admin changes: locale `de` was added
-upstream but is not yet in this checkout's locale enum, and event creation now explicitly
+The October 27 live refresh includes two additional Admin changes: locale `de` is accepted
+by this checkout's regenerated locale enum, and event creation now explicitly
 describes attendee/cohost invitations as best-effort even after 201. Do not infer atomic
 invitation success from event creation. Member/Auth live inputs match the committed inputs.
 Accepting spec changes remains a deliberate maintenance operation.

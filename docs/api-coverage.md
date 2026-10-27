@@ -36,7 +36,7 @@ These media types have no authoritative schema or use the one targeted missing-s
 
 Source: https://api-headless.circle.so/api/admin/v2/swagger.yaml
 
-Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834`
+Input SHA-256: `43b834c26737e5a6ce6b5fc7dadf2a0b5a5bc8b2fc429818fd61cda8749feec4`
 
 | Method | Path | Raw | Named facade |
 | --- | --- | --- | --- |

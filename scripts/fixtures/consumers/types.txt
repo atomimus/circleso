@@ -18,6 +18,12 @@ import type { UsageControlsConfig as AdminUsage } from "circleso/admin";
 import type { UsageControlsConfig as MemberUsage } from "circleso/headless";
 import type { UsageControlsConfig as AuthUsage } from "circleso/auth";
 
+export async function acceptedLocaleContract(admin: AdminApi) {
+  await admin.community.update({ community: { locale: "de" } });
+  // @ts-expect-error Only officially specified locale strings are accepted.
+  await admin.community.update({ community: { locale: "xx" } });
+}
+
 export function usageContracts() {
   const usage: UsageControlsConfig = { maxConcurrent: 2, maxQueueSize: 0, maxQueueWaitMs: 100, rate: { maxRequests: 2, intervalMs: 1000 }, circuitBreaker: { failureThreshold: 3, cooldownMs: 1000, failureStatuses: [429, 503] } };
   const scopes: [AdminUsage, MemberUsage, AuthUsage] = [usage, usage, usage];

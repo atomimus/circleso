@@ -23,8 +23,8 @@ See [spec generation](spec-generation.md), [CI](ci.md) and [contributing](../CON
 
 Publication is a separate, explicitly authorized operation. Candidate/stable preparation
 does not authorize npm publication, tags/releases or dist-tag changes. The current
-`prepublishOnly` regenerates from committed inputs and builds; before publication, reconcile
-that lifecycle with immutable artifact evidence and the approved publishing workflow.
+`prepublishOnly` rejects directory publication. The [publishing workflow](publishing.md)
+uses the already qualified CI tarball with lifecycle scripts disabled.
 Do not use `spec:sync` after validating an artifact and then publish it as the same candidate.
 
 For an authorized publication, verify current npm trusted-publisher/provenance requirements,
@@ -81,5 +81,5 @@ Use a supported hosted runner, constrain OIDC permission to the publication job,
 long-lived npm credentials out of the workflow. GitHub trusted publishing automatically
 generates provenance; do not disable it. Verify the resulting attestation and artifact
 against the tested source; [provenance](https://docs.npmjs.com/generating-provenance-statements/)
-does not replace code review. Preparation must reconcile lifecycle rebuilds with the
-immutable tested tarball before any authorized publication. This guide enables no publish path.
+does not replace code review. The publication workflow checks the immutable tested tarball
+before any authorized publication. See [publisher setup and recovery](publishing.md).

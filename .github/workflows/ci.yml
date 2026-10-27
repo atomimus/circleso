@@ -44,6 +44,17 @@ jobs:
         run: npm run validate:ci
       - name: Verify checks did not rewrite tracked files
         run: git diff --exit-code
+      - name: Retain the qualified source artifact
+        run: npm run release:prepare
+      - name: Store immutable tarball and source evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ github.sha }}-${{ matrix.os }}-${{ matrix.node }}
+          path: .cache/release/*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
   browsers:
     name: Browsers / Node ${{ matrix.node }} / ubuntu-24.04
     runs-on: ubuntu-24.04

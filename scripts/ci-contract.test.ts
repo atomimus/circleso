@@ -24,7 +24,9 @@ type Workflow = {
 };
 
 it("keeps validation workflows bounded, unprivileged and pinned without publishing paths", async () => {
-  const files = (await readdir(".github/workflows")).filter((file) => /\.ya?ml$/.test(file));
+  const files = (await readdir(".github/workflows")).filter(
+    (file) => /\.ya?ml$/.test(file) && file !== "publish.yml",
+  );
   expect(files.length).toBeGreaterThan(0);
   for (const file of files) {
     const source = await readFile(`.github/workflows/${file}`, "utf8");
@@ -53,7 +55,10 @@ it("keeps validation workflows bounded, unprivileged and pinned without publishi
           expect(step.with?.["persist-credentials"]).toBe(false);
         }
         expect(step.with?.["registry-url"]).toBeUndefined();
-        expect(step.run ?? "").not.toMatch(/\b(publish|release|dist-tag)\b|git\s+(push|tag)\b/);
+        if (file === "ci.yml" && step.run === "npm run release:prepare") {
+          expect(job.permissions).toBeUndefined();
+        } else
+          expect(step.run ?? "").not.toMatch(/\b(publish|release|dist-tag)\b|git\s+(push|tag)\b/);
         if (JSON.stringify(step.env ?? {}).includes("secrets.")) {
           expect(file).toBe("live-integration.yml");
           expect(step.run).toBe("npm run test:integration -- --require-live");

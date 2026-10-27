@@ -1,0 +1,127 @@
+name: Publish qualified npm artifact (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package version, 1.0.0-rc.N or 1.0.0
+        required: true
+        type: string
+      source_sha:
+        description: Full tested main SHA (must equal this workflow revision)
+        required: true
+        type: string
+      ci_run:
+        description: Successful six-job Offline CI push run for this SHA
+        required: true
+        type: string
+      integrity:
+        description: Exact sha512 integrity from that run's evidence.json
+        required: true
+        type: string
+      dist_tag:
+        description: next for RC, latest for stable
+        required: true
+        type: choice
+        options: [next, latest]
+      acknowledgement:
+        description: Type VERSION:DIST_TAG to authorize this exact publication
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: circleso-npm-publication
+  cancel-in-progress: false
+
+env:
+  RELEASE_VERSION: ${{ inputs.version }}
+  RELEASE_SOURCE: ${{ inputs.source_sha }}
+  RELEASE_CI_RUN: ${{ inputs.ci_run }}
+  RELEASE_INTEGRITY: ${{ inputs.integrity }}
+  RELEASE_DIST_TAG: ${{ inputs.dist_tag }}
+  RELEASE_ACK: ${{ inputs.acknowledgement }}
+
+jobs:
+  qualify:
+    if: github.ref == 'refs/heads/main' && github.repository == 'atomimus/circleso'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-${{ inputs.source_sha }}-ubuntu-24.04-24.x
+          path: .cache/release
+          run-id: ${{ inputs.ci_run }}
+          github-token: ${{ github.token }}
+          digest-mismatch: error
+      - name: Verify source CI tag registry and artifact
+        run: npm run release:verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/release.npmrc
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Qualify retained bytes in installed consumers
+        run: npm run test:package
+        env:
+          CIRCLE_PACKAGE_TARBALL: .cache/release/circleso-${{ inputs.version }}.tgz
+      - run: node node_modules/playwright/cli.js install --with-deps chromium firefox webkit
+      - name: Qualify retained bytes in all three browser engines
+        run: npm run test:browser
+        env:
+          CIRCLE_PACKAGE_TARBALL: .cache/release/circleso-${{ inputs.version }}.tgz
+      - run: git diff --exit-code
+  publish:
+    needs: qualify
+    if: github.ref == 'refs/heads/main' && github.repository == 'atomimus/circleso'
+    environment: npm-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-${{ inputs.source_sha }}-ubuntu-24.04-24.x
+          path: .cache/release
+          run-id: ${{ inputs.ci_run }}
+          github-token: ${{ github.token }}
+          digest-mismatch: error
+      - name: Reverify and publish the exact tarball once with OIDC
+        run: npm run release:publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/release.npmrc
+      - name: Preserve publication diagnostics without credentials
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-publication-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/release/*.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30

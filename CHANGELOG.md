@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.0.0-rc.1 (prepared, not published)
+
+- Prepare an immutable CI tarball, inventory and source/digest evidence; add manually
+  dispatched OIDC publishing with provenance and isolated artifact qualification.
+  Disable directory-publish regeneration. No release or npm publication has occurred.
+- Reconcile the official Admin spec: accept German community locale (`de`) and its
+  best-effort attendee/cohost invitation clarification. Member/Auth specs remain identical.
+
 - Patch affected development dependencies, enable verified private vulnerability reporting,
   ship SECURITY.md, document reviewed security/maintenance boundaries, and measure installed
   workflows/compiler cost with package and browser size regression budgets.
@@ -171,7 +179,7 @@ them with a major version bump under this repository's compatibility policy.
 - Upgrade to a maintained patch of Node 22 or 24. The unreleased engine range now excludes
   Node 18/20 and unqualified majors; builds target ES2022 and development Node types follow
   Node 22. TypeScript 5.9.3 is the supported minimum. This is a v1 compatibility change, not
-  a support claim for the already published 0.3.0 artifact. No package version is changed here.
+  a support claim for the already published 0.3.0 artifact. Candidate qualification begins at 1.0.0-rc.1.
 - Supply required query options for the previously optional wrappers, and body options for
   Headless reaction deletion, direct uploads and moderation. Notification update query fields
   now have their documented types. Generated Auth identity/Admin message recipient alternatives

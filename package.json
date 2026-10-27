@@ -1,6 +1,6 @@
 {
   "name": "circleso",
-  "version": "0.3.0",
+  "version": "1.0.0-rc.1",
   "description": "Circleso async client",
   "license": "MIT",
   "repository": {
@@ -105,7 +105,10 @@
     "docs:check": "tsx ./scripts/docs-reference.ts",
     "docs:write": "tsx ./scripts/docs-reference.ts --write",
     "validate:ci": "npm run lint && npm run typecheck && npm test && npm run gen:check && npm run coverage:check && npm run docs:check && npm run build && npm run pack:check && npm run test:package",
-    "prepublishOnly": "npm run gen:types && npm run build"
+    "release:prepare": "node ./scripts/release.ts prepare",
+    "release:verify": "node ./scripts/release.ts verify",
+    "release:publish": "node ./scripts/release.ts publish",
+    "prepublishOnly": "node ./scripts/release.ts guard"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
