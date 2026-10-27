@@ -1,10 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
+import { createSessionSpaceCache } from "../../examples/usage-controls";
 import { createHeadless } from "../headless";
 import { CircleConfigError, CircleHttpError, CircleNetworkError } from "./errors";
-
-vi.mock("circleso/headless", async () => import("../headless"));
-
-import { createSessionSpaceCache } from "../../examples/usage-controls";
 
 afterEach(() => vi.useRealTimers());
 
