@@ -6,7 +6,7 @@ export async function checkBrowser(consumer) {
   for (const entry of ["circleso", "circleso/headless"]) {
     const result = await build({
       stdin: {
-        contents: `import {createHeadless, CircleConfigError, richText} from ${JSON.stringify(entry)}; globalThis.probe = {createHeadless, CircleConfigError, richText};`,
+        contents: `import {createHeadless, CircleConfigError, richText, createSessionCookiesUrl} from ${JSON.stringify(entry)}; globalThis.probe = {createHeadless, CircleConfigError, richText, createSessionCookiesUrl};`,
         resolveDir: consumer,
         sourcefile: "member-consumer.js",
       },
@@ -61,6 +61,31 @@ export async function checkBrowser(consumer) {
     });
     // JSON is parsed inside the VM; compare data without cross-realm prototype identity.
     assert.equal(JSON.stringify(await member.bookmarks.list()), '{"records":[]}');
+    const cookieMember = createHeadless({
+      accessToken: "synthetic-member",
+      fetcher: async (request) => {
+        assert.equal(request.credentials, "include");
+        assert.equal(request.headers.get("authorization"), "Bearer synthetic-member");
+        // Emulates a filtered browser response; does not test real cookie storage/CORS.
+        return Response.json({ message: "synthetic-cookies" });
+      },
+    });
+    const cookieResult = await cookieMember.cookies.createWithResponse({ credentials: "include" });
+    assert.equal(cookieResult.data.message, "synthetic-cookies");
+    assert.equal(cookieResult.response.status, 200);
+    assert.deepEqual(cookieResult.response.headers.getSetCookie(), []);
+    assert.equal(
+      new URL(
+        context.probe.createSessionCookiesUrl({
+          communityUrl: "https://community.example.test",
+          accessToken: "synthetic+&?",
+        }),
+      ).searchParams.get("access_token"),
+      "synthetic+&?",
+    );
+    console.log(
+      "Browser VM auth/cookies: member credentials, filtered metadata and redirect URL pass",
+    );
     const textBody = vm.runInContext(
       'probe.richText.body([probe.richText.paragraph(probe.richText.text("Hello"), probe.richText.mention("synthetic-sgid"), probe.richText.hardBreak(), probe.richText.link("Guide", "https://example.com"))], {attachments: [probe.richText.signedAttachment("synthetic-id")]})',
       context,

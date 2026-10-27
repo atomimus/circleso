@@ -35,6 +35,7 @@ const helpers = [
   "paginateSearchAfter",
   "toAsyncIterator",
   "richText",
+  "createSessionCookiesUrl",
 ];
 assert.deepEqual(Object.keys(esm[0]).sort(), [...errors, ...helpers].sort());
 assert.deepEqual(Object.keys(cjs[0]).sort(), [...errors, ...helpers].sort());
@@ -42,7 +43,7 @@ for (const modules of [esm, cjs]) {
   for (const [index, names] of [
     [],
     ["createAdmin", "createAdminClient", "richText"],
-    ["createHeadless", "createHeadlessClient", "richText"],
+    ["createHeadless", "createHeadlessClient", "richText", "createSessionCookiesUrl"],
     ["createAuth", "createHeadlessAuthClient"],
   ].entries()) {
     if (index) assert.deepEqual(Object.keys(modules[index]).sort(), [...errors, ...names].sort());
@@ -86,6 +87,16 @@ const server = createServer((request, response) => {
     assert.equal(request.headers.authorization, "Token fixture-admin");
     response.setHeader("Content-Type", "application/json");
     response.end(JSON.stringify({ records: [] }));
+  } else if (request.url.endsWith("/cookies")) {
+    assert.equal(request.headers.authorization, "Bearer fixture-member");
+    assert.ok(["POST", "DELETE"].includes(request.method));
+    response.setHeader("Content-Type", "application/json");
+    response.setHeader("X-Request-Id", "synthetic-request");
+    response.setHeader("Set-Cookie", [
+      "synthetic_session=value; Path=/; Secure; HttpOnly",
+      "synthetic_other=value; Expires=Wed, 21 Oct 2037 07:28:00 GMT; Secure",
+    ]);
+    response.end(JSON.stringify({ message: "synthetic-cookies" }));
   } else if (request.url === "/error") {
     response.writeHead(400, { "Content-Type": "application/json" });
     response.end('{"message":"fixture"}');
@@ -149,6 +160,39 @@ try {
   assert.equal(requests, 12);
   console.log(
     "Package runtime: all 8 entries; shared errors; 12 native loopback requests; source maps pass",
+  );
+  for (const mod of [esm[0], esm[2], cjs[0], cjs[2]]) {
+    const member = mod.createHeadless({ accessToken: "fixture-member", baseUrl });
+    for (const method of ["createWithResponse", "deleteWithResponse"]) {
+      const result = await member.cookies[method]({ credentials: "include" });
+      assert.deepEqual(result.data, { message: "synthetic-cookies" });
+      assert.equal(result.response.status, 200);
+      assert.equal(result.response.headers.get("x-request-id"), "synthetic-request");
+      assert.deepEqual(result.response.headers.getSetCookie(), [
+        "synthetic_session=value; Path=/; Secure; HttpOnly",
+        "synthetic_other=value; Expires=Wed, 21 Oct 2037 07:28:00 GMT; Secure",
+      ]);
+    }
+    const url = new URL(
+      mod.createSessionCookiesUrl({
+        communityUrl: "https://community.example.test",
+        accessToken: "synthetic+&?",
+      }),
+    );
+    assert.equal(url.pathname, "/session/cookies");
+    assert.equal(url.searchParams.get("access_token"), "synthetic+&?");
+    assert.throws(
+      () =>
+        mod.createSessionCookiesUrl({
+          communityUrl: "http://example.test",
+          accessToken: "synthetic",
+        }),
+      esm[0].CircleConfigError,
+    );
+  }
+  assert.equal(requests, 20);
+  console.log(
+    "Package auth/cookies: root/Headless ESM/CJS redirect and metadata; 8 additional native cookie calls pass",
   );
 } finally {
   server.closeAllConnections();

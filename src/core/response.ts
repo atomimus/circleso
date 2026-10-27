@@ -9,6 +9,8 @@ import {
 import { HEADER_CONTENT_TYPE, HEADER_CORRELATION_ID, HEADER_REQUEST_ID } from "./headers";
 
 type BodyEvidence = { bodyText?: string; parsedJson?: unknown; cause?: unknown };
+/** Parsed data with the original response metadata. The body has already been read. */
+export type CircleResponse<Data> = { data: Data; response: Response };
 type RequestContext = { url: string; method: string; signal?: AbortSignal };
 type ResponseState = {
   request: RequestContext;
@@ -146,6 +148,15 @@ export async function unwrapResult<Data>(
 ): Promise<Data | undefined> {
   if (!result.response.ok) throw await buildHttpError(result.response, { method, url });
   return result.data;
+}
+
+/** Retain headers/status without changing the shared parsing and HTTP error contract. */
+export async function unwrapResponse<Data>(
+  result: { data?: Data; error?: unknown; response: Response },
+  method: string,
+  url: string,
+): Promise<CircleResponse<Data | undefined>> {
+  return { data: await unwrapResult(result, method, url), response: result.response };
 }
 
 /** The generic client selects by MIME; raw openapi-fetch callers retain explicit parseAs. */

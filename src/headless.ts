@@ -8,7 +8,9 @@ export {
   CircleSdkError,
   CircleTimeoutError,
 } from "./core/errors";
+export type { CircleResponse } from "./core/response";
 export * from "./core/richText";
+export { createSessionCookiesUrl, type SessionCookiesUrlOptions } from "./core/sessionCookies";
 export type {
   AuthConfig,
   ClientConfig,

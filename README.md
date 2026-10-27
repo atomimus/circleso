@@ -11,6 +11,9 @@ See [complete direct file uploads](docs/file-uploads.md) for metadata, MD5 and i
 See [rich text builders](docs/rich-text.md) for paragraphs, links, mentions, line breaks,
 signed attachments and explicit editor extensions with `richText`.
 
+See [authentication and cookies](docs/authentication.md) for all three member-token selectors,
+refresh/revoke ownership, typed cookie response metadata, server forwarding and browser recipes.
+
 ## Features
 
 - Strongly typed requests and responses from the official OpenAPI specs

@@ -10,6 +10,38 @@ import { richText } from "circleso";
 import type { RichTextBody, UncheckedRichTextBody } from "circleso";
 import { richText as adminRichText } from "circleso/admin";
 import { richText as memberRichText } from "circleso/headless";
+import { createSessionCookiesUrl } from "circleso";
+import { createSessionCookiesUrl as memberSessionUrl } from "circleso/headless";
+import type { CircleResponse, SessionCookiesUrlOptions } from "circleso/headless";
+
+export async function authCookieContracts(auth: AuthApi, member: HeadlessApi) {
+  await auth.authToken.create({ email: "synthetic@example.test" });
+  await auth.authToken.create({ community_member_id: 42 });
+  await auth.authToken.create({ sso_user_id: "synthetic-sso" });
+  // @ts-expect-error A selector is required.
+  await auth.authToken.create({});
+  // @ts-expect-error Member IDs are numbers.
+  await auth.authToken.create({ community_member_id: "42" });
+  await auth.accessToken.refresh({ refresh_token: "synthetic" });
+  await auth.accessToken.revoke({ access_token: "synthetic" });
+  await auth.refreshToken.revoke({ refresh_token: "synthetic" });
+  const result: CircleResponse<{ message?: string } | undefined> = await member.cookies.createWithResponse({ credentials: "include" });
+  const deleted: typeof result = await member.cookies.deleteWithResponse({ credentials: "omit" });
+  const data: typeof result.data = await member.cookies.create();
+  const values: string[] = deleted.response.headers.getSetCookie();
+  const options: SessionCookiesUrlOptions = { communityUrl: "https://example.test", accessToken: "synthetic" };
+  const url: string = createSessionCookiesUrl(options);
+  memberSessionUrl(options);
+  // @ts-expect-error A member access token is required.
+  createSessionCookiesUrl({ communityUrl: options.communityUrl });
+  // @ts-expect-error No cookie request body exists.
+  member.cookies.createWithResponse({ access_token: "synthetic" });
+  // @ts-expect-error Fetch credentials enum is preserved.
+  member.cookies.deleteWithResponse({ credentials: "cookies" });
+  // @ts-expect-error Named metadata method already parses JSON; use raw for parseAs.
+  member.cookies.createWithResponse({ parseAs: "stream" });
+  void [data, values, url];
+}
 
 export async function richTextContracts(admin: AdminApi, member: HeadlessApi) {
   const body: RichTextBody = richText.body([

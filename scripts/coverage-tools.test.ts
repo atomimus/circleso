@@ -46,6 +46,24 @@ describe("operation inventory", () => {
     ).rejects.toThrow("Dynamic request");
   });
 
+  it("inventories the two response-metadata requester variants without accepting arbitrary methods", async () => {
+    const metadata = `export function createItemsResource(request) {
+      return { create: () => request.postWithResponse("/items"), delete: () => request.deleteWithResponse("/items") };
+    }`;
+    expect(await wrappers(index, async () => metadata)).toEqual([
+      { method: "POST", path: "/items", name: "items.create", file: "resources/items.ts" },
+      { method: "DELETE", path: "/items", name: "items.delete", file: "resources/items.ts" },
+    ]);
+    await expect(
+      wrappers(index, async () => metadata.replace("postWithResponse", "putWithResponse")),
+    ).rejects.toThrow("Dynamic request");
+    await expect(
+      wrappers(index, async () =>
+        metadata.replace('postWithResponse("/items")', "postWithResponse(dynamicPath)"),
+      ),
+    ).rejects.toThrow("Dynamic request");
+  });
+
   it("keeps all accepted operations exposed by raw clients and named facades offline", async () => {
     const root = fileURLToPath(new URL("../", import.meta.url));
     const data = await inventory(root);

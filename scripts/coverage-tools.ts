@@ -158,7 +158,14 @@ export async function wrappers(
               ts.isPropertyAccessExpression(child.expression) &&
               child.expression.expression.getText(resourceAst) === request
             ) {
-              const method = child.expression.name.text;
+              const requesterMethod = child.expression.name.text;
+              // These two shared requester variants retain metadata for the same operations.
+              const method =
+                requesterMethod === "postWithResponse"
+                  ? "post"
+                  : requesterMethod === "deleteWithResponse"
+                    ? "delete"
+                    : requesterMethod;
               const route = child.arguments[0];
               if (
                 !(METHODS as readonly string[]).includes(method) ||

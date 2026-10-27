@@ -225,7 +225,7 @@ Input SHA-256: `0b934fce6204ac8a2664acdf39c70c8e06e9ee67a930310e1655ff439c02a6fc
 | DELETE | `/api/headless/v1/comments/{comment_id}/replies/{id}` | Yes | `comments.replies.delete` ([source](../src/headlessApi/resources/comments.ts)) |
 | DELETE | `/api/headless/v1/comments/{comment_id}/user_likes` | Yes | `comments.likes.delete` ([source](../src/headlessApi/resources/comments.ts)) |
 | DELETE | `/api/headless/v1/community_member/deactivate` | Yes | `communityMembers.deactivate` ([source](../src/headlessApi/resources/communityMembers.ts)) |
-| DELETE | `/api/headless/v1/cookies` | Yes | `cookies.delete` ([source](../src/headlessApi/resources/cookies.ts)) |
+| DELETE | `/api/headless/v1/cookies` | Yes | `cookies.delete` ([source](../src/headlessApi/resources/cookies.ts)), `cookies.deleteWithResponse` ([source](../src/headlessApi/resources/cookies.ts)) |
 | DELETE | `/api/headless/v1/events/{event_id}/event_attendees` | Yes | `events.attendees.delete` ([source](../src/headlessApi/resources/events.ts)) |
 | DELETE | `/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages/{id}` | Yes | `chatRooms.messages.delete` ([source](../src/headlessApi/resources/chatRooms.ts)) |
 | DELETE | `/api/headless/v1/notifications/{id}` | Yes | `notifications.delete` ([source](../src/headlessApi/resources/notifications.ts)) |
@@ -289,7 +289,7 @@ Input SHA-256: `0b934fce6204ac8a2664acdf39c70c8e06e9ee67a930310e1655ff439c02a6fc
 | POST | `/api/headless/v1/bookmarks` | Yes | `bookmarks.create` ([source](../src/headlessApi/resources/bookmarks.ts)) |
 | POST | `/api/headless/v1/comments/{comment_id}/replies` | Yes | `comments.replies.create` ([source](../src/headlessApi/resources/comments.ts)) |
 | POST | `/api/headless/v1/comments/{comment_id}/user_likes` | Yes | `comments.likes.create` ([source](../src/headlessApi/resources/comments.ts)) |
-| POST | `/api/headless/v1/cookies` | Yes | `cookies.create` ([source](../src/headlessApi/resources/cookies.ts)) |
+| POST | `/api/headless/v1/cookies` | Yes | `cookies.create` ([source](../src/headlessApi/resources/cookies.ts)), `cookies.createWithResponse` ([source](../src/headlessApi/resources/cookies.ts)) |
 | POST | `/api/headless/v1/direct_uploads` | Yes | `directUploads.create` ([source](../src/headlessApi/resources/directUploads.ts)), `directUploads.upload` ([source](../src/headlessApi/resources/directUploads.ts)) |
 | POST | `/api/headless/v1/events/{event_id}/event_attendees` | Yes | `events.attendees.create` ([source](../src/headlessApi/resources/events.ts)) |
 | POST | `/api/headless/v1/flagged_contents` | Yes | `flaggedContents.create` ([source](../src/headlessApi/resources/flaggedContents.ts)) |

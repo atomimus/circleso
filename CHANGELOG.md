@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add typed cookie `createWithResponse`/`deleteWithResponse` metadata and a validated
+  `createSessionCookiesUrl` helper from root/Headless. Document complete token/cookie
+  workflows, shared-refresh revocation scope and browser/server boundaries; include
+  a runnable synthetic fixture without live credentials or session changes.
+
 - Add `richText` types/builders for common Circle content and signed attachments, plus
   an explicit JSON escape hatch. Extend only named-facade rich-text request fields
   where shallow/object-only specs omit documented content; preserve raw generated types.

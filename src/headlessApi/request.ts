@@ -1,5 +1,5 @@
 import type { DualClient } from "../clients/shared";
-import { unwrapResult } from "../core/response";
+import { type CircleResponse, unwrapResponse, unwrapResult } from "../core/response";
 import { requestContracts } from "../generated/headless-client-v1.requests";
 import { buildRequestInit } from "../requestInit";
 import type { OperationResponse, RequestArguments } from "../requestTypes";
@@ -20,10 +20,10 @@ export function createHeadlessRequester(client: DualClient<HeadlessPaths>) {
     return unwrapResult(result, "GET", path);
   };
 
-  const post = async <Path extends PathsWithMethod<HeadlessPaths, "post">>(
+  const postWithResponse = async <Path extends PathsWithMethod<HeadlessPaths, "post">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["post"], RequestConfig<Path, "post">>
-  ): Promise<OperationResponse<HeadlessPaths[Path]["post"]>> => {
+  ): Promise<CircleResponse<OperationResponse<HeadlessPaths[Path]["post"]>>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["post"]>(
       requestContracts,
       path,
@@ -31,8 +31,14 @@ export function createHeadlessRequester(client: DualClient<HeadlessPaths>) {
       args[0],
     );
     const result = await client.POST(path, init);
-    return unwrapResult(result, "POST", path);
+    return unwrapResponse(result, "POST", path);
   };
+
+  const post = async <Path extends PathsWithMethod<HeadlessPaths, "post">>(
+    path: Path,
+    ...args: RequestArguments<HeadlessPaths[Path]["post"], RequestConfig<Path, "post">>
+  ): Promise<OperationResponse<HeadlessPaths[Path]["post"]>> =>
+    (await postWithResponse(path, ...args)).data;
 
   const put = async <Path extends PathsWithMethod<HeadlessPaths, "put">>(
     path: Path,
@@ -62,10 +68,10 @@ export function createHeadlessRequester(client: DualClient<HeadlessPaths>) {
     return unwrapResult(result, "PATCH", path);
   };
 
-  const del = async <Path extends PathsWithMethod<HeadlessPaths, "delete">>(
+  const deleteWithResponse = async <Path extends PathsWithMethod<HeadlessPaths, "delete">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["delete"], RequestConfig<Path, "delete">>
-  ): Promise<OperationResponse<HeadlessPaths[Path]["delete"]>> => {
+  ): Promise<CircleResponse<OperationResponse<HeadlessPaths[Path]["delete"]>>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["delete"]>(
       requestContracts,
       path,
@@ -73,10 +79,16 @@ export function createHeadlessRequester(client: DualClient<HeadlessPaths>) {
       args[0],
     );
     const result = await client.DELETE(path, init);
-    return unwrapResult(result, "DELETE", path);
+    return unwrapResponse(result, "DELETE", path);
   };
 
-  return { get, post, put, patch, delete: del };
+  const del = async <Path extends PathsWithMethod<HeadlessPaths, "delete">>(
+    path: Path,
+    ...args: RequestArguments<HeadlessPaths[Path]["delete"], RequestConfig<Path, "delete">>
+  ): Promise<OperationResponse<HeadlessPaths[Path]["delete"]>> =>
+    (await deleteWithResponse(path, ...args)).data;
+
+  return { get, post, put, patch, delete: del, postWithResponse, deleteWithResponse };
 }
 
 export type HeadlessRequester = ReturnType<typeof createHeadlessRequester>;

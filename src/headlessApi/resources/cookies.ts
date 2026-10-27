@@ -10,6 +10,9 @@ export function createCookiesResource(request: HeadlessRequester) {
      */
     create: (options?: RequestOptionsWithBody<"/api/headless/v1/cookies", "post">) =>
       request.post("/api/headless/v1/cookies", options),
+    /** Parsed data and response metadata; server callers can read headers.getSetCookie(). */
+    createWithResponse: (options?: RequestOptionsWithBody<"/api/headless/v1/cookies", "post">) =>
+      request.postWithResponse("/api/headless/v1/cookies", options),
     /**
      * Delete headless cookies.
      * @param options Body fields (flat) plus request metadata.
@@ -17,5 +20,8 @@ export function createCookiesResource(request: HeadlessRequester) {
      */
     delete: (options?: RequestOptionsWithBody<"/api/headless/v1/cookies", "delete">) =>
       request.delete("/api/headless/v1/cookies", options),
+    /** Parsed data and response metadata; browsers still filter Set-Cookie. */
+    deleteWithResponse: (options?: RequestOptionsWithBody<"/api/headless/v1/cookies", "delete">) =>
+      request.deleteWithResponse("/api/headless/v1/cookies", options),
   };
 }

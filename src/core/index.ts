@@ -36,7 +36,9 @@ export {
   type SearchAfterResponse,
   toAsyncIterator,
 } from "./pagination";
+export type { CircleResponse } from "./response";
 export * from "./richText";
+export { createSessionCookiesUrl, type SessionCookiesUrlOptions } from "./sessionCookies";
 export type { AuthConfig, ClientConfig, HttpMethod, QueryValue, RequestOptions } from "./types";
 export type { DirectUploadInput, DirectUploadOptions, DirectUploadResult } from "./uploads";
 export { joinPath, joinUrl, withQuery } from "./url";
