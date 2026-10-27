@@ -110,6 +110,7 @@ Pagination utilities live in `src/core/pagination.ts` and must:
 - Work directly on `main` and push validated commits to `origin/main`.
 - Do not create task branches or pull requests, or wait for human review or merge approval.
 - Preserve unrelated work, stage explicit task-owned files, and run the applicable checks before pushing.
+- Keep all `v1-release/` folders local-only. Never force-add or commit their contents.
 - Verify completed task commits are on `origin/main` before the authorized next-task handoff.
 
 ---
