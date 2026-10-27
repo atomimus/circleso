@@ -8,7 +8,7 @@ remain. See the [generated inventory](api-coverage.md) for every route and untyp
 Contracts checked October 27, 2026 against the
 [official Admin V2 specification](https://api-headless.circle.so/api/admin/v2/swagger.yaml).
 All methods use the existing Admin requester, auth middleware and shared networking/errors.
-Use a server runtime and the [Admin configuration contract](../README.md#configuration).
+Use a server runtime and the [Admin configuration contract](client-configuration.md#configuration).
 Options keep schema fields flat and accept `headers`, `signal` and `credentials` metadata.
 
 ## Method reference

@@ -114,7 +114,7 @@ once and replays the original request once; 403 does not refresh. Failure remain
 for that observed token generation until external token rotation or a new client. It
 does not coordinate separate processes. Browser clients should use `getAccessToken` with
 their own authenticated server refresh flow; never send `authToken` to browsers/workers.
-See the [README refresh contract](../README.md#configuration).
+See the [token refresh contract](client-configuration.md#token-refresh).
 
 ## Cookie APIs and typed metadata
 

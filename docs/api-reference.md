@@ -188,7 +188,7 @@ arguments and string body values are redacted. Body inspection is off; `logBodie
 allows only safe complete JSON/forms with default maxBodyBytes 65,536 and
 bodyReadTimeoutMs 50 (caps 1 MiB/1000 ms/1024 reads). Stream responses are never inspected.
 `redactHeaders` only adds redaction. Hook failures are config errors; callbacks must settle.
-See [README logging](../README.md#logging) for retained metadata and error precedence.
+See [logging contract](client-configuration.md#logging) for retained metadata and error precedence.
 
 `usage` is an optional local policy, with no implicit cache. Its queue defaults to four
 active attempts, 100 waiters and 30 seconds residence when enabled. Each retry/refresh
