@@ -9,7 +9,7 @@ No release date, response-time SLA or commercial Circle support is implied.
 | Admin V2 | All 172 committed operations, raw and named | Node server; Token and Host |
 | Headless Member V1 | All 102 committed operations, raw and named | Fetch runtime with Member Bearer |
 | Headless Auth V1 | All four committed operations | Server-only application Bearer |
-| Legacy Admin V1 | Separate support decision | No supported client in this package |
+| Legacy Admin V1 | [V2 migration decision](docs/admin-v1.md) | No supported legacy client or planned adapter |
 | WebSocket, MCP/webhooks, Circle Plus mobile/UI | Outside this v1 SDK scope | No integration provided |
 
 Operation counts measure exposure, not complete schema accuracy or every server behavior.

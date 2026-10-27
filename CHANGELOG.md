@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Retain Admin V2 support and document the [legacy Admin V1 migration decision](docs/admin-v1.md),
+  including endpoint mappings, identity/field gaps and maintenance boundaries. No legacy client is added.
+
 ## 1.0.0 — 2026-10-27
 
 - Publish stable v1 from the accepted 1.0.0-rc.1 runtime, declarations and dependency
