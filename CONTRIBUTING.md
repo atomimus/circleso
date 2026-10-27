@@ -7,10 +7,10 @@ Use one implementation task per checkout. Preserve unrelated work and stage expl
 
 ## Development
 
-Use a maintained Node LTS, preferably Node 24, and install the exact lockfile dependencies with
-`npm ci`. The current repository's engine and build target still reflect 0.3.0. Tasks 03 and 11
-will qualify and apply the v1 matrix before publication. Dependencies are pinned; upgrades need
-their own evidence and review.
+Use a maintained patch of Node 22 or 24, preferably Node 24, and install the exact lockfile
+dependencies with `npm ci`. The unreleased v1 checkout excludes Node 18/20 and unqualified majors,
+targets ES2022 and uses Node 22 development types. Dependencies are pinned; upgrades need their
+own evidence and review.
 
 ```sh
 npm run lint
@@ -20,6 +20,7 @@ npm run gen:check
 npm run coverage:check
 npm run build
 npm pack --dry-run --json --ignore-scripts
+npm run test:package
 ```
 
 `gen:types` is offline and must reproduce the committed declarations from `api/specs/*.yaml`.
@@ -31,7 +32,11 @@ generated types by hand. See [the tooling guide](docs/spec-generation.md) and
 The release checklist in AGENTS.md also requires a deliberate spec refresh before publication;
 tasks 24–27 must reconcile it with building from immutable, reviewed release inputs.
 
-`npm run validate:ci` runs the sequence above, including `pack:check` as the dry-run command.
+`npm run validate:ci` runs the sequence above, including `pack:check` as the dry-run command and
+`test:package` to install and exercise the actual tarball in a temporary directory outside the
+checkout. Both pack and install disable lifecycle scripts. See the consumer matrix and fixtures
+in [continuous validation](docs/ci.md). Source typechecking explicitly selects TypeScript 5.9.3;
+the package gate also executes the independently pinned current compiler, TypeScript 7.0.2.
 See [continuous validation](docs/ci.md) for the exact Node/OS matrix, trust boundaries and manual
 live-spec workflow. Ordinary checks never download mutable Circle specs.
 

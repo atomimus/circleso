@@ -1,3 +1,12 @@
+import type { FetchOptions, FetchResponse } from "openapi-fetch";
+
+/** Named resources use the raw client's default JSON parsing and preserve empty success. */
+export type OperationResponse<Op extends object> = FetchResponse<
+  Op,
+  FetchOptions<Op>,
+  `${string}/${string}`
+>["data"];
+
 /** Options implemented by the named resources; use raw clients for other fetch options. */
 export type RequestMeta = {
   headers?: HeadersInit;

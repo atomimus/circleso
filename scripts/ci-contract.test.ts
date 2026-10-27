@@ -64,6 +64,7 @@ it("keeps live spec downloads out of public validation and requires deliberate m
     "coverage:check",
     "build",
     "pack:check",
+    "test:package",
   ]) {
     expect(gate).toMatch(new RegExp(`npm (?:run )?${command}(?: &&|$)`));
   }

@@ -1,0 +1,55 @@
+import { CircleSo, createClient, createLoggerMiddleware, createSmartFetch } from "circleso";
+import type { CircleSoConfig, LoggerHooks } from "circleso";
+import { createAdmin, createAdminClient } from "circleso/admin";
+import type { AdminApi, AdminClientConfig } from "circleso/admin";
+import { createAuth, createHeadlessAuthClient } from "circleso/auth";
+import type { AuthApi, HeadlessAuthClientConfig } from "circleso/auth";
+import { createHeadless, createHeadlessClient } from "circleso/headless";
+import type { HeadlessApi, HeadlessClientConfig } from "circleso/headless";
+
+// Compile only. All values are synthetic, and this file is never executed.
+export async function contracts() {
+  const logger: LoggerHooks = { onResponse: async ({ response }) => { void response?.status; } };
+  const adminConfig: AdminClientConfig = { token: "fixture", logger };
+  const memberConfig: HeadlessClientConfig = { accessToken: "fixture", logger };
+  const authConfig: HeadlessAuthClientConfig = { token: "fixture", logger };
+  const config: CircleSoConfig = { admin: adminConfig, headless: memberConfig, auth: authConfig };
+  const sdk = new CircleSo(config);
+  const admin: AdminApi = createAdmin(adminConfig);
+  const member: HeadlessApi = createHeadless(memberConfig);
+  const auth: AuthApi = createAuth(authConfig);
+  const rawAdmin = createAdminClient(adminConfig);
+  const rawMember = createHeadlessClient(memberConfig);
+  const rawAuth = createHeadlessAuthClient(authConfig);
+  await admin.search.advanced({ query: "fixture" });
+  await member.bookmarks.list({ page: 1 });
+  await auth.authToken.create({ email: "fixture@example.test" });
+  await auth.accessToken.refresh({ refresh_token: "fixture" });
+  await rawAdmin.GET("/api/admin/v2/access_groups");
+  await rawMember.GET("/api/headless/v1/bookmarks");
+  await rawAuth.PATCH("/api/v1/headless/access_token/refresh", { body: { refresh_token: "fixture" } });
+  await member.raw["/api/headless/v1/bookmarks"].GET();
+  void [sdk, createClient, createSmartFetch, createLoggerMiddleware(logger)];
+  // @ts-expect-error required query input must remain required
+  await admin.search.advanced();
+  // @ts-expect-error unknown routes must not become any
+  await rawMember.GET("/not-a-circle-route");
+  // @ts-expect-error refresh body is required
+  await rawAuth.PATCH("/api/v1/headless/access_token/refresh");
+  // @ts-expect-error identity must be supplied
+  await auth.authToken.create({});
+  // @ts-expect-error Auth has no GET operations
+  await rawAuth.GET("/api/v1/headless/auth_token");
+  // @ts-expect-error credential type must not widen
+  createHeadless({ accessToken: 123 });
+  // @ts-expect-error exact optional properties are checked
+  createAdmin({ token: "fixture", timeoutMs: undefined });
+  const response = await auth.accessToken.refresh({ refresh_token: "fixture" });
+  const token: string | undefined = response?.access_token;
+  void token;
+  // @ts-expect-error response types must not become any
+  response?.not_a_response_field;
+  // @ts-expect-error logger contexts exclude raw client options
+  const unsafe: LoggerHooks = { onRequest: ({ options }) => { void options; } };
+  void unsafe;
+}

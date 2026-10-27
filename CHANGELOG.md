@@ -37,6 +37,12 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Select ESM/CJS declarations separately for every public entry point, fixing Node16 `.cts`
+  TS1479/TS1541 diagnostics. Emit portable named response type imports and remove impossible
+  internal Auth GET/PUT/DELETE helpers so installed declarations pass strict checking without
+  `skipLibCheck`. Preserve the generated raw client and all four specified Auth operations.
+- Share error constructors across root/subpath imports and requires, preserving mixed-entry
+  `instanceof` checks. Clean stale build outputs and verify shipped source maps and package files.
 - Preserve empty/null-body responses (including 204/205) with body logging enabled. Keep actual
   response metadata and body readability intact; give hooks detached, conservative snapshots.
   Redact opaque headers, URL arguments/query strings, JSON strings and credential subtrees;
@@ -92,6 +98,11 @@ does not add new top-level resource families.
 
 ### Development tooling
 
+- Qualify actual tarballs in isolated production consumers: all ESM/CJS entries, native Fetch,
+  strict TypeScript 5.9.3/7.0.2 with Node16/NodeNext/Bundler, browser bundling/tree shaking,
+  source maps, and compiled documentation/examples. CI runs this gate on Node 22/24 Linux and
+  Node 24 Windows/macOS. Pin compiler binaries independently so the current compiler does not
+  replace the minimum compiler used by source tooling.
 - Consolidate spec sources, validate complete download/generation batches before replacement, and
   preserve prior outputs on handled failures. Pin LF input/output bytes across checkouts.
 - Add offline `gen:check` and `coverage:check`, plus a reproducible method/path-to-wrapper inventory.
@@ -103,6 +114,10 @@ does not add new top-level resource families.
 These upstream contract changes and stricter query typing can break consumer compilation. Publish
 them with a major version bump under this repository's compatibility policy.
 
+- Upgrade to a maintained patch of Node 22 or 24. The unreleased engine range now excludes
+  Node 18/20 and unqualified majors; builds target ES2022 and development Node types follow
+  Node 22. TypeScript 5.9.3 is the supported minimum. This is a v1 compatibility change, not
+  a support claim for the already published 0.3.0 artifact. No package version is changed here.
 - Supply required query options for the previously optional wrappers, and body options for
   Headless reaction deletion, direct uploads and moderation. Notification update query fields
   now have their documented types. Generated Auth identity/Admin message recipient alternatives

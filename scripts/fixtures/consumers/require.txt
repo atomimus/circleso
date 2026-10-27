@@ -1,0 +1,14 @@
+import root = require("circleso");
+import admin = require("circleso/admin");
+import member = require("circleso/headless");
+import auth = require("circleso/auth");
+import type { CircleSoConfig } from "circleso";
+import type { AdminApi } from "circleso/admin";
+import type { HeadlessApi } from "circleso/headless";
+import type { AuthApi } from "circleso/auth";
+
+export function contracts(config: CircleSoConfig, a: AdminApi, m: HeadlessApi, t: AuthApi) {
+  void [new root.CircleSo(config), a, m, t, admin.createAdmin, member.createHeadless, auth.createAuth];
+  // @ts-expect-error missing application token
+  auth.createAuth({});
+}

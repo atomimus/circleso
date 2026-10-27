@@ -22,8 +22,9 @@ actual executed versions/results rather than treating this table as proof of exe
 
 As checked October 27, 2026, Node 22/24 are LTS and Node 26 is Current, with LTS scheduled for
 October 28. Node 26 remains unqualified; reassess before release. Node 18/20 are excluded from
-the v1 target. The current 0.3.0 package engine/build target and development Node types remain
-baseline metadata until task 11 reconciles them. This workflow does not certify all v1 behavior.
+the v1 target. The unreleased checkout's engines now select Node 22/24, builds target ES2022,
+and development types follow Node 22. Dropping older majors is a v1 breaking change; the
+published 0.3.0 artifact keeps its historical metadata. This workflow does not certify all v1 behavior.
 
 ## Local equivalent
 
@@ -45,6 +46,7 @@ npm run gen:check
 npm run coverage:check
 npm run build
 npm run pack:check
+npm run test:package
 ```
 
 `lint` passes Git-tracked working-tree files to the installed Biome CLI without a shell. New files
@@ -58,6 +60,31 @@ explicit task-owned paths when formatting in a shared dirty checkout.
 `npm pack --dry-run --json --ignore-scripts`; the build must already have passed. It inspects the
 package list without running publication/lifecycle hooks. It is not a clean-tarball consumer test.
 The final Git diff check detects accidental tracked rewrites, including dependency/lockfile drift.
+
+`test:package` then creates an actual tarball and installs it offline with lifecycle scripts and
+development dependencies disabled in an OS temporary directory outside the checkout. Public
+declarations cannot resolve through development dependencies hoisted in the source tree. Its
+fixtures verify all four ESM imports and CJS requires, exact runtime export sets, shared error
+constructor identity across both formats, 12 native loopback HTTP calls, and executable source maps.
+Package files are allowlisted; README/changelog/license match the source, and maps contain only
+relative SDK source paths and matching embedded source. Temporary consumers are removed on failure
+as well as success; a small evidence summary is written to ignored `.cache/package-check.json`.
+
+Strict type consumers run with TypeScript 5.9.3 (minimum) and 7.0.2 (current stable checked
+October 27, 2026), each with Node16, NodeNext and Bundler resolution. They include ESM, CJS,
+type-only imports, import-assignment require, positive/negative request contracts, exact optional
+properties and `skipLibCheck: false`. The minimum compiler's resolution trace must select all
+eight ESM/CJS public declaration targets. The current compiler is a development-only npm alias;
+source tooling explicitly selects 5.9.3 so executable-name collisions cannot change that version.
+README/request-guide TypeScript blocks and tracked TypeScript examples compile against the
+installed tarball with both compilers; examples are never executed. Only that documentation
+pass opts into the development Node types needed by the server examples.
+
+Root and Headless Member bundles use esbuild 0.27.2 with the browser platform, no external runtime
+imports, and tree shaking. Checks reject retained Admin/Auth factories and exercise Member calls
+in a VM with web Fetch primitives and no Node globals. The dependency's guarded Node detection
+is allowed; no Node built-in runtime dependency is allowed. This is bundle/VM evidence, not a real
+browser, worker or CORS matrix. Full browser acceptance remains a separate release requirement.
 
 ## Trust and live services
 
@@ -85,9 +112,8 @@ code. Do not add placeholder skipped tests as evidence.
 
 ## Extending the gates
 
-Tasks 11/21 add permanent strict type consumers and compiled documentation/examples; tasks 11/22
-add clean tarball consumers, browser bundles and actual browser qualification. Task 23 adds the
-dependency/security gates. Extend `validate:ci` for checks that can run publicly without secrets,
+Further documentation, real-browser and integration qualification and dependency/security gates
+remain release requirements. Extend `validate:ci` for checks that can run publicly without secrets,
 and add dedicated workflows for authorized live integrations. Task 24 separately prepares the
 publication path; none is enabled here.
 

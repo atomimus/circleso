@@ -1,0 +1,13 @@
+import type { CircleSoConfig, LoggerHooks, SmartFetchConfig } from "circleso";
+import type { AdminApi } from "circleso/admin";
+import type { HeadlessApi } from "circleso/headless";
+import type { AuthApi } from "circleso/auth";
+
+export type ConsumerTypes = {
+  config: CircleSoConfig;
+  logger: LoggerHooks;
+  transport: SmartFetchConfig;
+  admin: AdminApi;
+  member: HeadlessApi;
+  auth: AuthApi;
+};

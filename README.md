@@ -16,9 +16,13 @@ for the CI runtime matrix and local development checks.
 
 ## Requirements
 
-- The 0.3.0 package declares Node 18+, but Node 18 and 20 are end of life. Use a maintained Node LTS.
-- The v1 support target is Node 22 and 24 (latest maintained patches), with Node 24 recommended,
-  and TypeScript 5.9.3 or newer. Runtime, packaging and browser qualification are still pending.
+- This unreleased v1 checkout requires Node 22 or 24 (latest maintained patches); Node 24 is
+  recommended. Node 18/20 and unqualified newer majors are excluded. The published 0.3.0 package
+  still has its older engine contract; this runtime change requires the v1 major release.
+- TypeScript 5.9.3 is the minimum. Packaged consumers are checked with 5.9.3 and 7.0.2 using
+  strict Node16, NodeNext and Bundler resolution with `skipLibCheck: false`.
+- Fetch globals (`fetch`, `Request`, `Response`, `Headers`, `AbortController`, `ReadableStream`)
+  must exist; TypeScript callers need DOM/Fetch types. The SDK installs no global polyfills.
 - Admin, Headless Auth application-token calls, and built-in auto-refresh require a server runtime
 
 ## Installation
@@ -33,6 +37,14 @@ npm install circleso
 - `circleso/admin` - Admin API v2
 - `circleso/headless` - Headless Client API v1
 - `circleso/auth` - Headless Auth API v1
+
+All four paths support ESM `import` and CJS `require`. Conditional exports select `.d.ts`
+declarations for imports and `.d.cts` declarations for require, including `.cts` consumers using
+Node16 resolution. Shared error constructors retain identity across these paths and both formats
+within one installed package, so mixed-entry `instanceof CircleHttpError` checks work.
+Unexported source/build paths are private. Browser applications should import Member factories
+from `circleso/headless`; browser bundling and removal of unused server factories are checked.
+Full browser/CORS qualification remains separate from these package checks.
 
 ## Quick start
 

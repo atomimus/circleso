@@ -40,7 +40,7 @@ jobs:
         run: node --version && npm --version
       - name: Install lockfile dependencies
         run: npm ci --no-audit --no-fund
-      - name: Validate offline
+      - name: Validate offline and qualify the npm tarball
         run: npm run validate:ci
       - name: Verify checks did not rewrite tracked files
         run: git diff --exit-code

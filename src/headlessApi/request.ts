@@ -2,14 +2,14 @@ import type { HeadlessClient } from "../clients/headlessClient";
 import { unwrapResult } from "../core/response";
 import { requestContracts } from "../generated/headless-client-v1.requests";
 import { buildRequestInit } from "../requestInit";
-import type { RequestArguments } from "../requestTypes";
+import type { OperationResponse, RequestArguments } from "../requestTypes";
 import type { HeadlessPaths, PathsWithMethod, RequestConfig } from "./types";
 
 export function createHeadlessRequester(client: HeadlessClient) {
   const get = async <Path extends PathsWithMethod<HeadlessPaths, "get">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["get"], RequestConfig<Path, "get">>
-  ) => {
+  ): Promise<OperationResponse<HeadlessPaths[Path]["get"]>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["get"]>(
       requestContracts,
       path,
@@ -23,7 +23,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
   const post = async <Path extends PathsWithMethod<HeadlessPaths, "post">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["post"], RequestConfig<Path, "post">>
-  ) => {
+  ): Promise<OperationResponse<HeadlessPaths[Path]["post"]>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["post"]>(
       requestContracts,
       path,
@@ -37,7 +37,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
   const put = async <Path extends PathsWithMethod<HeadlessPaths, "put">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["put"], RequestConfig<Path, "put">>
-  ) => {
+  ): Promise<OperationResponse<HeadlessPaths[Path]["put"]>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["put"]>(
       requestContracts,
       path,
@@ -51,7 +51,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
   const patch = async <Path extends PathsWithMethod<HeadlessPaths, "patch">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["patch"], RequestConfig<Path, "patch">>
-  ) => {
+  ): Promise<OperationResponse<HeadlessPaths[Path]["patch"]>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["patch"]>(
       requestContracts,
       path,
@@ -65,7 +65,7 @@ export function createHeadlessRequester(client: HeadlessClient) {
   const del = async <Path extends PathsWithMethod<HeadlessPaths, "delete">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["delete"], RequestConfig<Path, "delete">>
-  ) => {
+  ): Promise<OperationResponse<HeadlessPaths[Path]["delete"]>> => {
     const init = buildRequestInit<HeadlessPaths[Path]["delete"]>(
       requestContracts,
       path,
