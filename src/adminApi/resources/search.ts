@@ -8,7 +8,7 @@ export function createSearchResource(request: AdminRequester) {
      * @param options Query params (flat) plus request metadata.
      * @returns Search response.
      */
-    advanced: (options?: RequestOptions<"/api/admin/v2/advanced_search", "get">) =>
+    advanced: (options: RequestOptions<"/api/admin/v2/advanced_search", "get">) =>
       request.get("/api/admin/v2/advanced_search", options),
   };
 }

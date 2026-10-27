@@ -77,7 +77,7 @@ export function createEventsResource(request: AdminRequester) {
        * @param options Query params (flat) plus request metadata.
        * @returns Event attendee list response.
        */
-      list: (options?: RequestOptions<"/api/admin/v2/event_attendees", "get">) =>
+      list: (options: RequestOptions<"/api/admin/v2/event_attendees", "get">) =>
         request.get("/api/admin/v2/event_attendees", options),
       /**
        * Create an event attendee.

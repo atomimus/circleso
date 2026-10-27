@@ -4,6 +4,8 @@ import path from "node:path";
 import { parseYaml } from "@redocly/openapi-core";
 import openapiTS, { astToString, COMMENT_HEADER } from "openapi-typescript";
 import { CircleConfigError } from "../src/core/errors";
+import { renderRequestContracts, requestContractFile } from "./request-contracts";
+import { normalizeRequestTypes } from "./request-type-normalization";
 import { applySpecOverrides } from "./spec-overrides";
 
 export const METHODS = [
@@ -170,7 +172,9 @@ export function parseSpec(source: string, spec: SpecEntry): JsonObject {
 export async function renderTypes(source: string, spec: SpecEntry): Promise<string> {
   try {
     parseSpec(source, spec);
-    const input = spec.name === "admin-v2" ? applySpecOverrides(source) : source;
+    const input = normalizeRequestTypes(
+      spec.name === "admin-v2" ? applySpecOverrides(source) : source,
+    );
     const ast = await openapiTS(input, { alphabetize: true });
     const result = `${COMMENT_HEADER}${astToString(ast)}`;
     if (!/export\s+(interface|type)\s+paths\b/.test(result))
@@ -251,9 +255,14 @@ export async function generate(root: string, check = false): Promise<void> {
   const outputs: Output[] = [];
   for (const spec of await loadSpecs(root)) {
     try {
+      const source = await readFile(path.join(root, specFile(spec)), "utf8");
       outputs.push({
         file: path.join(root, generatedFile(spec)),
-        contents: await renderTypes(await readFile(path.join(root, specFile(spec)), "utf8"), spec),
+        contents: await renderTypes(source, spec),
+      });
+      outputs.push({
+        file: path.join(root, requestContractFile(spec.name)),
+        contents: renderRequestContracts(parseSpec(source, spec)),
       });
     } catch (cause) {
       throw failure(`Generation failed for ${spec.name}; no outputs changed`, cause);

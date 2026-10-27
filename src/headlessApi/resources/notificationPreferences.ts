@@ -25,7 +25,7 @@ export function createNotificationPreferencesResource(request: HeadlessRequester
     /**
      * Update notification preferences by medium.
      * @param medium Notification medium.
-     * @param options Body fields (flat) plus request metadata.
+     * @param options Required type and enabled query fields (flat) plus request metadata.
      * @returns Update response.
      */
     update: (
@@ -56,7 +56,7 @@ export function createNotificationPreferencesResource(request: HeadlessRequester
     /**
      * Update notification preferences for all spaces.
      * @param medium Notification medium.
-     * @param options Body fields (flat) plus request metadata.
+     * @param options Required choice query field (flat) plus request metadata.
      * @returns Update response.
      */
     updateForSpaces: (
@@ -77,7 +77,7 @@ export function createNotificationPreferencesResource(request: HeadlessRequester
      * Update notification preferences for a space.
      * @param medium Notification medium.
      * @param id Space ID.
-     * @param options Body fields (flat) plus request metadata.
+     * @param options Required choice query field (flat) plus request metadata.
      * @returns Update response.
      */
     updateForSpace: (

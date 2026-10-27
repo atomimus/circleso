@@ -6867,7 +6867,16 @@ export interface paths {
                         rich_text_body?: components["schemas"]["rich_text_body"];
                         user_email?: string;
                         user_emails?: string[];
-                    } & (unknown | unknown | unknown);
+                    } & ({
+                        rich_text_body: components["schemas"]["rich_text_body"];
+                        user_email: string;
+                    } | {
+                        rich_text_body: components["schemas"]["rich_text_body"];
+                        user_emails: string[];
+                    } | {
+                        chat_room_uuid: string;
+                        rich_text_body: components["schemas"]["rich_text_body"];
+                    });
                 };
             };
             responses: {

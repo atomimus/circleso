@@ -8,7 +8,7 @@ export function createPageProfileFieldsResource(request: AdminRequester) {
      * @param options Query params (flat) plus request metadata.
      * @returns Page profile fields response.
      */
-    list: (options?: RequestOptions<"/api/admin/v2/page_profile_fields", "get">) =>
+    list: (options: RequestOptions<"/api/admin/v2/page_profile_fields", "get">) =>
       request.get("/api/admin/v2/page_profile_fields", options),
   };
 }

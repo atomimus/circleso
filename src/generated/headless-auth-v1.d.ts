@@ -184,7 +184,13 @@ export interface paths {
                         community_member_id?: number;
                         email?: string;
                         sso_user_id?: string;
-                    } & (unknown | unknown | unknown);
+                    } & ({
+                        sso_user_id: string;
+                    } | {
+                        community_member_id: number;
+                    } | {
+                        email: string;
+                    });
                 };
             };
             responses: {

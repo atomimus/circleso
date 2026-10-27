@@ -8,7 +8,7 @@ export function createDirectUploadsResource(request: HeadlessRequester) {
      * @param options Body fields (flat) plus request metadata.
      * @returns Direct upload response.
      */
-    create: (options?: RequestOptionsWithBody<"/api/headless/v1/direct_uploads", "post">) =>
+    create: (options: RequestOptionsWithBody<"/api/headless/v1/direct_uploads", "post">) =>
       request.post("/api/headless/v1/direct_uploads", options),
   };
 }

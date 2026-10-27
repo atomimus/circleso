@@ -48,12 +48,12 @@ export function createCommunitySegmentsResource(request: AdminRequester) {
     /**
      * Duplicate a community segment.
      * @param id Segment ID.
-     * @param options Request metadata.
+     * @param options Required title query field (flat) plus request metadata.
      * @returns Duplicate response.
      */
     duplicate: (
       id: string,
-      options?: RequestOptions<"/api/admin/v2/community_segments/{id}/duplicate", "post">,
+      options: RequestOptions<"/api/admin/v2/community_segments/{id}/duplicate", "post">,
     ) =>
       request.post("/api/admin/v2/community_segments/{id}/duplicate", {
         ...options,

@@ -8,7 +8,7 @@ export function createFlaggedContentsResource(request: HeadlessRequester) {
      * @param options Body fields (flat) plus request metadata.
      * @returns Flagged content response.
      */
-    create: (options?: RequestOptionsWithBody<"/api/headless/v1/flagged_contents", "post">) =>
+    create: (options: RequestOptionsWithBody<"/api/headless/v1/flagged_contents", "post">) =>
       request.post("/api/headless/v1/flagged_contents", options),
   };
 }

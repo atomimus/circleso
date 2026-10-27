@@ -22,7 +22,7 @@ export function createTaggedMembersResource(request: AdminRequester) {
      * @param options Request metadata.
      * @returns Delete response.
      */
-    delete: (options?: RequestOptions<"/api/admin/v2/tagged_members", "delete">) =>
+    delete: (options: RequestOptions<"/api/admin/v2/tagged_members", "delete">) =>
       request.delete("/api/admin/v2/tagged_members", options),
     /**
      * Get a tagged member by ID.

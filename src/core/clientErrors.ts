@@ -16,9 +16,19 @@ export function normalizeClientErrors<Client extends object>(client: Client): Cl
         const optionsIndex = name === "request" ? 2 : 1;
         const options = args[optionsIndex];
         if (name !== "use" && name !== "eject" && options && typeof options === "object") {
-          const middleware = (options as { middleware?: Middleware[] }).middleware;
-          if (Array.isArray(middleware)) {
-            args[optionsIndex] = { ...options, middleware: middleware.map(prepareMiddleware) };
+          const { middleware, headers } = options as {
+            middleware?: Middleware[];
+            headers?: HeadersInit;
+          };
+          // openapi-fetch 0.15.0 otherwise mistakes tuple headers for a keyed record.
+          if (Array.isArray(middleware) || Array.isArray(headers)) {
+            args[optionsIndex] = {
+              ...options,
+              ...(Array.isArray(middleware)
+                ? { middleware: middleware.map(prepareMiddleware) }
+                : {}),
+              ...(Array.isArray(headers) ? { headers: new Headers(headers) } : {}),
+            };
           }
         }
         const result: unknown = call(...args);

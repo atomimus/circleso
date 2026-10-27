@@ -37,6 +37,10 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Route named-resource fields from generated operation contracts rather than HTTP verbs. Send
+  segment duplicate/export and notification update fields in query, retain body-bearing DELETE,
+  and serialize required empty JSON as `{}`. Forward headers/signals/credentials as metadata;
+  fix tuple header forwarding in named and raw clients. Reject unknown/ambiguous schema fields.
 - Single-flight Headless recovery by token generation, including late unauthorized responses and
   failure fan-out. Refresh only HTTP 401, replay each original once with bounded upload bytes,
   preserve refresh-call error context, and bound/cancel token-hook waiting without aborting other
@@ -80,6 +84,13 @@ does not add new top-level resource families.
 These upstream contract changes and stricter query typing can break consumer compilation. Publish
 them with a major version bump under this repository's compatibility policy.
 
+- Supply required query options for the previously optional wrappers, and body options for
+  Headless reaction deletion, direct uploads and moderation. Notification update query fields
+  now have their documented types. Generated Auth identity/Admin message recipient alternatives
+  retain required fields instead of collapsing to unknown. Schema fields stay flat unless they
+  overlap query/body locations or reserved metadata: use explicit `queryParams`/`bodyParams`
+  scopes for those collisions. See [request options](https://github.com/atomimus/circleso/blob/main/docs/request-options.md),
+  including exact optional fields and the existing nested `deepObject` query limitation.
 - Headless community event responses now expose `meta.sort` and `meta.events_directory_layout`
   instead of top-level `sort`. `meta` and post/comment `reaction_summary` are required by the spec.
 - Remove `exclude_empty_profiles` from Headless member searches.

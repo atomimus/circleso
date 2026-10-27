@@ -37,9 +37,16 @@ describe("offline generation", () => {
     await expect(generate(root, true)).rejects.toThrow("Stale or missing");
     await generate(root);
     const first = await readFile(output);
+    const requests = path.join(root, "src/generated/fixture.requests.ts");
+    const firstRequests = await readFile(requests);
     await generate(root);
     expect(await readFile(output)).toEqual(first);
+    expect(await readFile(requests)).toEqual(firstRequests);
     await generate(root, true);
+    await writeFile(requests, "stale routing");
+    await expect(generate(root, true)).rejects.toThrow("fixture.requests.ts");
+    expect(await readFile(requests, "utf8")).toBe("stale routing");
+    await generate(root);
     await writeFile(output, "stale");
     await expect(generate(root, true)).rejects.toThrow("npm run gen:types");
     expect(await readFile(output, "utf8")).toBe("stale");
@@ -51,6 +58,8 @@ describe("offline generation", () => {
     await generate(root);
     const output = path.join(root, "src/generated/fixture.d.ts");
     const before = await readFile(output);
+    const requests = path.join(root, "src/generated/fixture.requests.ts");
+    const beforeRequests = await readFile(requests);
     const invalid = { ...fixtureSpec, name: "invalid" };
     // Use a distinct valid manifest URL, but an unresolved response reference.
     invalid.url = "https://api-headless.circle.so/invalid.yaml";
@@ -73,7 +82,8 @@ describe("offline generation", () => {
       errorLog.mockRestore();
     }
     expect(await readFile(output)).toEqual(before);
-    expect(await readdir(path.dirname(output))).toEqual(["fixture.d.ts"]);
+    expect(await readFile(requests)).toEqual(beforeRequests);
+    expect(await readdir(path.dirname(output))).toEqual(["fixture.d.ts", "fixture.requests.ts"]);
   });
 
   it("rejects invalid YAML, the wrong API, empty operations and external refs before resolving", () => {

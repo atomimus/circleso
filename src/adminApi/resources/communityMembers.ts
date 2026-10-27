@@ -89,7 +89,7 @@ export function createCommunityMembersResource(request: AdminRequester) {
      * @param options Query params (flat) plus request metadata.
      * @returns Search response.
      */
-    search: (options?: RequestOptions<"/api/admin/v2/community_members/search", "get">) =>
+    search: (options: RequestOptions<"/api/admin/v2/community_members/search", "get">) =>
       request.get("/api/admin/v2/community_members/search", options),
     accessGroups: {
       /**

@@ -1,172 +1,72 @@
-import type { FetchOptions } from "openapi-fetch";
 import type { AdminClient } from "../clients/adminClient";
 import { unwrapResult } from "../core/response";
-import type {
-  AdminMethod,
-  AdminPaths,
-  PathParams,
-  PathsWithMethod,
-  QueryParams,
-  RequestBody,
-  RequestConfig,
-} from "./types";
+import { requestContracts } from "../generated/admin-v2.requests";
+import { buildRequestInit } from "../requestInit";
+import type { RequestArguments } from "../requestTypes";
+import type { AdminPaths, PathsWithMethod, RequestConfig } from "./types";
 
 export function createAdminRequester(client: AdminClient) {
   const get = async <Path extends PathsWithMethod<AdminPaths, "get">>(
     path: Path,
-    options?: RequestConfig<Path, "get">,
+    ...args: RequestArguments<AdminPaths[Path]["get"], RequestConfig<Path, "get">>
   ) => {
-    const init = buildInit<Path, "get">(options, "get", path);
+    const init = buildRequestInit<AdminPaths[Path]["get"]>(requestContracts, path, "get", args[0]);
     const result = await client.GET(path, init);
     return unwrapResult(result, "GET", path);
   };
 
   const post = async <Path extends PathsWithMethod<AdminPaths, "post">>(
     path: Path,
-    options?: RequestConfig<Path, "post">,
+    ...args: RequestArguments<AdminPaths[Path]["post"], RequestConfig<Path, "post">>
   ) => {
-    const init = buildInit<Path, "post">(options, "post", path);
+    const init = buildRequestInit<AdminPaths[Path]["post"]>(
+      requestContracts,
+      path,
+      "post",
+      args[0],
+    );
     const result = await client.POST(path, init);
     return unwrapResult(result, "POST", path);
   };
 
   const put = async <Path extends PathsWithMethod<AdminPaths, "put">>(
     path: Path,
-    options?: RequestConfig<Path, "put">,
+    ...args: RequestArguments<AdminPaths[Path]["put"], RequestConfig<Path, "put">>
   ) => {
-    const init = buildInit<Path, "put">(options, "put", path);
+    const init = buildRequestInit<AdminPaths[Path]["put"]>(requestContracts, path, "put", args[0]);
     const result = await client.PUT(path, init);
     return unwrapResult(result, "PUT", path);
   };
 
   const patch = async <Path extends PathsWithMethod<AdminPaths, "patch">>(
     path: Path,
-    options?: RequestConfig<Path, "patch">,
+    ...args: RequestArguments<AdminPaths[Path]["patch"], RequestConfig<Path, "patch">>
   ) => {
-    const init = buildInit<Path, "patch">(options, "patch", path);
+    const init = buildRequestInit<AdminPaths[Path]["patch"]>(
+      requestContracts,
+      path,
+      "patch",
+      args[0],
+    );
     const result = await client.PATCH(path, init);
     return unwrapResult(result, "PATCH", path);
   };
 
   const del = async <Path extends PathsWithMethod<AdminPaths, "delete">>(
     path: Path,
-    options?: RequestConfig<Path, "delete">,
+    ...args: RequestArguments<AdminPaths[Path]["delete"], RequestConfig<Path, "delete">>
   ) => {
-    const init = buildInit<Path, "delete">(options, "delete", path);
+    const init = buildRequestInit<AdminPaths[Path]["delete"]>(
+      requestContracts,
+      path,
+      "delete",
+      args[0],
+    );
     const result = await client.DELETE(path, init);
     return unwrapResult(result, "DELETE", path);
   };
 
-  return {
-    get,
-    post,
-    put,
-    patch,
-    delete: del,
-  };
+  return { get, post, put, patch, delete: del };
 }
 
 export type AdminRequester = ReturnType<typeof createAdminRequester>;
-
-function buildInit<Path extends PathsWithMethod<AdminPaths, Method>, Method extends AdminMethod>(
-  options: RequestConfig<Path, Method> | undefined,
-  method: Method,
-  path: Path,
-): FetchOptions<AdminPaths[Path][Method]> {
-  type Init = {
-    body?: RequestBody<Path, Method>;
-    headers?: HeadersInit;
-    signal?: AbortSignal;
-    params?: {
-      path?: PathParams<Path, Method>;
-      query?: QueryParams<Path, Method>;
-    };
-  };
-  const init: Init = {};
-  const normalized = normalizeOptions<Path, Method>(options, isBodyMethod(path, method));
-
-  if (normalized.body !== undefined) {
-    init.body = normalized.body;
-  }
-
-  if (normalized.headers !== undefined) {
-    init.headers = normalized.headers;
-  }
-  if (normalized.signal !== undefined) {
-    init.signal = normalized.signal;
-  }
-
-  if (normalized.path !== undefined || normalized.query !== undefined) {
-    const paramsValue: { path?: PathParams<Path, Method>; query?: QueryParams<Path, Method> } = {};
-    if (normalized.path !== undefined) {
-      paramsValue.path = normalized.path;
-    }
-    if (normalized.query !== undefined) {
-      paramsValue.query = normalized.query;
-    }
-    init.params = paramsValue;
-  }
-
-  return init as FetchOptions<AdminPaths[Path][Method]>;
-}
-
-function isBodyMethod(path: string, method: AdminMethod) {
-  return (
-    method === "post" ||
-    method === "put" ||
-    method === "patch" ||
-    (method === "delete" && path === "/api/admin/v2/event_attendees")
-  );
-}
-
-function normalizeOptions<
-  Path extends PathsWithMethod<AdminPaths, Method>,
-  Method extends AdminMethod,
->(
-  options: RequestConfig<Path, Method> | undefined,
-  treatExtraAsBody: boolean,
-): {
-  headers?: HeadersInit;
-  signal?: AbortSignal;
-  path?: PathParams<Path, Method>;
-  query?: QueryParams<Path, Method>;
-  body?: RequestBody<Path, Method>;
-} {
-  if (!options || typeof options !== "object") {
-    return {};
-  }
-
-  const headers = (options as { headers?: HeadersInit }).headers;
-  const signal = (options as { signal?: AbortSignal }).signal;
-  const path = (options as { path?: PathParams<Path, Method> }).path;
-
-  const extra = extractExtra(options);
-
-  const query = !treatExtraAsBody ? (extra as QueryParams<Path, Method>) : undefined;
-  const body = treatExtraAsBody ? (extra as RequestBody<Path, Method>) : undefined;
-
-  return {
-    ...(headers !== undefined ? { headers } : {}),
-    ...(signal !== undefined ? { signal } : {}),
-    ...(path !== undefined ? { path } : {}),
-    ...(query !== undefined ? { query } : {}),
-    ...(body !== undefined ? { body } : {}),
-  };
-}
-
-function extractExtra(input: Record<string, unknown>) {
-  const extra: Record<string, unknown> = {};
-  let hasExtra = false;
-
-  for (const [key, value] of Object.entries(input)) {
-    if (key === "headers" || key === "signal" || key === "path") {
-      continue;
-    }
-    if (value !== undefined) {
-      extra[key] = value;
-      hasExtra = true;
-    }
-  }
-
-  return hasExtra ? extra : undefined;
-}

@@ -2,7 +2,11 @@
 
 `api/specs/sources.json` is the single source list for sync, generation and inventory. Each entry
 declares Circle's exact title/version and route prefix, the module, and the official download URL.
-Filenames follow the entry name. The Admin V2 document currently has `info.version: v1`; this is
+Filenames follow the entry name. `gen:types` also generates `src/generated/*.requests.ts`, compact
+per-operation query/body routing contracts used by named resources. `gen:check` checks these bytes
+alongside declarations; no runtime YAML parser or spec download is added. Unsupported root body
+forms fail generation visibly instead of producing a guessed routing contract.
+The Admin V2 document currently has `info.version: v1`; this is
 the upstream metadata, not a change to the Admin V2 API scope. The unused alternate
 `scripts/spec-sync.mjs` was removed; the existing npm commands keep their names.
 
@@ -57,6 +61,14 @@ the expected OpenAPI 3.0/3.1 identity, route prefix, nonempty operations and res
 uses pinned openapi-typescript with alphabetized output and no timestamps. Document-local refs
 and examples keep the resolver offline; external refs/examples/discriminator mappings fail
 explicitly rather than making hidden reads. Unresolved local refs fail generation.
+
+Request-only object schemas with `oneOf` branches containing only inherited `required` names are
+normalized in memory before declaration generation. Each branch receives those property schemas
+from its parent, preserving required Auth identities and Admin message recipients with
+openapi-typescript 7.10.1. Responses, downloaded YAML, explicit branch schemas and unrelated refs
+are untouched. The generated unions require a branch's fields; they are not runtime schema
+validation and do not establish exclusive-one matching. Fixtures and compile-only consumer calls
+exercise the normalization and required inputs with `exactOptionalPropertyTypes`.
 
 Every input is validated and every output is rendered before replacing any file. Changed outputs
 are staged beside their destinations, then renamed without deleting an existing destination to

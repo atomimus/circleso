@@ -285,6 +285,16 @@ cancel the source alone. Once the source reaches EOF, buffered clone data belong
 The core preserves backpressure and adds no whole-body buffer. A custom fetcher/source must honor
 abort/cancel to actually stop its own I/O; the SDK stops waiting without waiting for its cleanup.
 
+## Request options
+
+Named resources use flat query/body fields plus `headers`, `signal`, and `credentials` metadata.
+Required query inputs must be supplied, including segment duplication's query `title` and the
+notification update fields. Required empty JSON bodies serialize as `{}`. Raw clients retain
+openapi-fetch's explicit `params`/`body` options.
+
+See [request options and v1 migration](https://github.com/atomimus/circleso/blob/main/docs/request-options.md)
+for required inputs, collision scopes, array/object encoding, and the nested-query limitation.
+
 ## Browser vs server caveats
 
 The Admin API requires a `host` header with your community domain. Browsers cannot set the `Host` header,

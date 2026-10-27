@@ -8,14 +8,14 @@ export function createSearchResource(request: HeadlessRequester) {
      * @param options Query params (flat) plus request metadata.
      * @returns Search response.
      */
-    query: (options?: RequestOptions<"/api/headless/v1/search", "get">) =>
+    query: (options: RequestOptions<"/api/headless/v1/search", "get">) =>
       request.get("/api/headless/v1/search", options),
     /**
      * Run advanced search.
      * @param options Query params (flat) plus request metadata.
      * @returns Advanced search response.
      */
-    advanced: (options?: RequestOptions<"/api/headless/v1/advanced_search", "get">) =>
+    advanced: (options: RequestOptions<"/api/headless/v1/advanced_search", "get">) =>
       request.get("/api/headless/v1/advanced_search", options),
   };
 }
