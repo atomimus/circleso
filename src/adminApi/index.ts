@@ -17,6 +17,7 @@ import { createCoursesResource } from "./resources/courses";
 import { createDirectUploadsResource } from "./resources/directUploads";
 import { createEmbedsResource } from "./resources/embeds";
 import { createEventsResource } from "./resources/events";
+import { createFilterKitResource } from "./resources/filterKit";
 import { createFlaggedContentsResource } from "./resources/flaggedContents";
 import { createFormsResource } from "./resources/forms";
 import { createGamificationResource } from "./resources/gamification";
@@ -38,6 +39,7 @@ import { createSpaceMembersResource } from "./resources/spaceMembers";
 import { createSpacesResource } from "./resources/spaces";
 import { createTaggedMembersResource } from "./resources/taggedMembers";
 import { createTopicsResource } from "./resources/topics";
+import { createWorkflowsResource } from "./resources/workflows";
 
 export type AdminApi = {
   raw: AdminClient;
@@ -55,6 +57,7 @@ export type AdminApi = {
   embeds: ReturnType<typeof createEmbedsResource>;
   events: ReturnType<typeof createEventsResource>;
   flaggedContents: ReturnType<typeof createFlaggedContentsResource>;
+  filterKit: ReturnType<typeof createFilterKitResource>;
   forms: ReturnType<typeof createFormsResource>;
   gamification: ReturnType<typeof createGamificationResource>;
   invitationLinks: ReturnType<typeof createInvitationLinksResource>;
@@ -74,6 +77,7 @@ export type AdminApi = {
   spaces: ReturnType<typeof createSpacesResource>;
   taggedMembers: ReturnType<typeof createTaggedMembersResource>;
   topics: ReturnType<typeof createTopicsResource>;
+  workflows: ReturnType<typeof createWorkflowsResource>;
 };
 
 export type AdminApiConfig = AdminClientConfig;
@@ -103,6 +107,7 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
     embeds: createEmbedsResource(request),
     events: createEventsResource(request),
     flaggedContents: createFlaggedContentsResource(request),
+    filterKit: createFilterKitResource(request),
     forms: createFormsResource(request),
     gamification: createGamificationResource(request),
     invitationLinks: createInvitationLinksResource(request),
@@ -122,6 +127,7 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
     spaces: createSpacesResource(request),
     taggedMembers: createTaggedMembersResource(request),
     topics: createTopicsResource(request),
+    workflows: createWorkflowsResource(request),
   };
 }
 

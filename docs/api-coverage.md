@@ -5,7 +5,7 @@ Counts are method/path exposure, not runtime correctness or test coverage. `raw`
 
 | Surface | Spec operations | Raw exposure | Named facade operations | Raw-only |
 | --- | ---: | ---: | ---: | ---: |
-| admin-v2 | 172 | 172 | 148 | 24 |
+| admin-v2 | 172 | 172 | 159 | 13 |
 | headless-client-v1 | 102 | 102 | 102 | 0 |
 | headless-auth-v1 | 4 | 4 | 4 | 0 |
 
@@ -16,29 +16,18 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 | Surface | Method | Path | Task |
 | --- | --- | --- | --- |
 | admin-v2 | DELETE | `/api/admin/v2/community_leads/{id}` | 15 |
-| admin-v2 | DELETE | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
 | admin-v2 | GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
-| admin-v2 | GET | `/api/admin/v2/filter_kit_configuration` | 14 |
-| admin-v2 | GET | `/api/admin/v2/filter_kit_controls` | 14 |
-| admin-v2 | GET | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
 | admin-v2 | GET | `/api/admin/v2/live/rooms` | 15 |
 | admin-v2 | GET | `/api/admin/v2/live/rooms/{room_id}/transcripts` | 15 |
 | admin-v2 | GET | `/api/admin/v2/locations/search` | 15 |
 | admin-v2 | GET | `/api/admin/v2/payment_method_setting` | 15 |
 | admin-v2 | GET | `/api/admin/v2/settings/connect` | 15 |
 | admin-v2 | GET | `/api/admin/v2/tax_setting` | 15 |
-| admin-v2 | GET | `/api/admin/v2/workflows` | 14 |
-| admin-v2 | GET | `/api/admin/v2/workflows/{id}` | 14 |
-| admin-v2 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | 14 |
 | admin-v2 | PATCH | `/api/admin/v2/settings/connect` | 15 |
 | admin-v2 | POST | `/api/admin/v2/chat_room_message_imports` | 15 |
 | admin-v2 | POST | `/api/admin/v2/community_leads` | 15 |
 | admin-v2 | POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
-| admin-v2 | POST | `/api/admin/v2/filter_kit_controls` | 14 |
-| admin-v2 | POST | `/api/admin/v2/workflows/{id}/duplicate` | 14 |
 | admin-v2 | PUT | `/api/admin/v2/tax_setting` | 15 |
-| admin-v2 | PUT | `/api/admin/v2/workflows/{id}/activate` | 14 |
-| admin-v2 | PUT | `/api/admin/v2/workflows/{id}/deactivate` | 14 |
 
 ## Untyped success response limitations
 
@@ -74,7 +63,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | DELETE | `/api/admin/v2/course_sections/{id}` | Yes | `courses.sections.delete` ([source](../src/adminApi/resources/courses.ts)) |
 | DELETE | `/api/admin/v2/event_attendees` | Yes | `events.attendees.delete` ([source](../src/adminApi/resources/events.ts)) |
 | DELETE | `/api/admin/v2/events/{id}` | Yes | `events.events.delete` ([source](../src/adminApi/resources/events.ts)) |
-| DELETE | `/api/admin/v2/filter_kit_controls/{id}` | Yes | — |
+| DELETE | `/api/admin/v2/filter_kit_controls/{id}` | Yes | `filterKit.controls.delete` ([source](../src/adminApi/resources/filterKit.ts)) |
 | DELETE | `/api/admin/v2/forms/{id}` | Yes | `forms.delete` ([source](../src/adminApi/resources/forms.ts)) |
 | DELETE | `/api/admin/v2/invitation_links/{id}` | Yes | `invitationLinks.delete` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | DELETE | `/api/admin/v2/member_tags/{id}` | Yes | `memberTags.delete` ([source](../src/adminApi/resources/memberTags.ts)) |
@@ -114,9 +103,9 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/event_attendees` | Yes | `events.attendees.list` ([source](../src/adminApi/resources/events.ts)) |
 | GET | `/api/admin/v2/events` | Yes | `events.events.list` ([source](../src/adminApi/resources/events.ts)) |
 | GET | `/api/admin/v2/events/{id}` | Yes | `events.events.get` ([source](../src/adminApi/resources/events.ts)) |
-| GET | `/api/admin/v2/filter_kit_configuration` | Yes | — |
-| GET | `/api/admin/v2/filter_kit_controls` | Yes | — |
-| GET | `/api/admin/v2/filter_kit_controls/{id}` | Yes | — |
+| GET | `/api/admin/v2/filter_kit_configuration` | Yes | `filterKit.configuration` ([source](../src/adminApi/resources/filterKit.ts)) |
+| GET | `/api/admin/v2/filter_kit_controls` | Yes | `filterKit.controls.list` ([source](../src/adminApi/resources/filterKit.ts)) |
+| GET | `/api/admin/v2/filter_kit_controls/{id}` | Yes | `filterKit.controls.get` ([source](../src/adminApi/resources/filterKit.ts)) |
 | GET | `/api/admin/v2/flagged_contents` | Yes | `flaggedContents.list` ([source](../src/adminApi/resources/flaggedContents.ts)) |
 | GET | `/api/admin/v2/forms` | Yes | `forms.list` ([source](../src/adminApi/resources/forms.ts)) |
 | GET | `/api/admin/v2/forms/{form_id}/submissions` | Yes | `forms.submissions.list` ([source](../src/adminApi/resources/forms.ts)) |
@@ -153,13 +142,13 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/tax_setting` | Yes | — |
 | GET | `/api/admin/v2/topics` | Yes | `topics.list` ([source](../src/adminApi/resources/topics.ts)) |
 | GET | `/api/admin/v2/topics/{id}` | Yes | `topics.get` ([source](../src/adminApi/resources/topics.ts)) |
-| GET | `/api/admin/v2/workflows` | Yes | — |
-| GET | `/api/admin/v2/workflows/{id}` | Yes | — |
+| GET | `/api/admin/v2/workflows` | Yes | `workflows.list` ([source](../src/adminApi/resources/workflows.ts)) |
+| GET | `/api/admin/v2/workflows/{id}` | Yes | `workflows.get` ([source](../src/adminApi/resources/workflows.ts)) |
 | PATCH | `/api/admin/v2/access_groups/{access_group_id}/content` | Yes | `accessGroups.content.update` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | PATCH | `/api/admin/v2/access_groups/{id}/unarchive` | Yes | `accessGroups.unarchive` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | PATCH | `/api/admin/v2/community_member_subscriptions/{id}/billing_date` | Yes | `communityMemberSubscriptions.changeBillingDate` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
 | PATCH | `/api/admin/v2/course_lessons/{id}` | Yes | `courses.lessons.update` ([source](../src/adminApi/resources/courses.ts)) |
-| PATCH | `/api/admin/v2/filter_kit_controls/{id}` | Yes | — |
+| PATCH | `/api/admin/v2/filter_kit_controls/{id}` | Yes | `filterKit.controls.update` ([source](../src/adminApi/resources/filterKit.ts)) |
 | PATCH | `/api/admin/v2/invitation_links/{id}/revoke` | Yes | `invitationLinks.revoke` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | PATCH | `/api/admin/v2/paywall_affiliates/{id}` | Yes | `paywallAffiliates.update` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
 | PATCH | `/api/admin/v2/settings/connect` | Yes | — |
@@ -183,7 +172,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/embeds` | Yes | `embeds.create` ([source](../src/adminApi/resources/embeds.ts)) |
 | POST | `/api/admin/v2/event_attendees` | Yes | `events.attendees.create` ([source](../src/adminApi/resources/events.ts)) |
 | POST | `/api/admin/v2/events` | Yes | `events.events.create` ([source](../src/adminApi/resources/events.ts)) |
-| POST | `/api/admin/v2/filter_kit_controls` | Yes | — |
+| POST | `/api/admin/v2/filter_kit_controls` | Yes | `filterKit.controls.create` ([source](../src/adminApi/resources/filterKit.ts)) |
 | POST | `/api/admin/v2/flagged_contents` | Yes | `flaggedContents.report` ([source](../src/adminApi/resources/flaggedContents.ts)) |
 | POST | `/api/admin/v2/forms/{form_id}/submissions` | Yes | `forms.submissions.create` ([source](../src/adminApi/resources/forms.ts)) |
 | POST | `/api/admin/v2/forms/{id}/duplicate` | Yes | `forms.duplicate` ([source](../src/adminApi/resources/forms.ts)) |
@@ -207,7 +196,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/spaces/{space_id}/images/posts/{id}/duplicate` | Yes | `posts.images.duplicate` ([source](../src/adminApi/resources/posts.ts)) |
 | POST | `/api/admin/v2/tagged_members` | Yes | `taggedMembers.create` ([source](../src/adminApi/resources/taggedMembers.ts)) |
 | POST | `/api/admin/v2/topics` | Yes | `topics.create` ([source](../src/adminApi/resources/topics.ts)) |
-| POST | `/api/admin/v2/workflows/{id}/duplicate` | Yes | — |
+| POST | `/api/admin/v2/workflows/{id}/duplicate` | Yes | `workflows.duplicate` ([source](../src/adminApi/resources/workflows.ts)) |
 | PUT | `/api/admin/v2/access_groups/{id}` | Yes | `accessGroups.update` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | PUT | `/api/admin/v2/chat_preferences` | Yes | `chatPreferences.update` ([source](../src/adminApi/resources/chatPreferences.ts)) |
 | PUT | `/api/admin/v2/community` | Yes | `community.update` ([source](../src/adminApi/resources/community.ts)) |
@@ -234,8 +223,8 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | PUT | `/api/admin/v2/spaces/{id}` | Yes | `spaces.update` ([source](../src/adminApi/resources/spaces.ts)) |
 | PUT | `/api/admin/v2/tax_setting` | Yes | — |
 | PUT | `/api/admin/v2/topics/{id}` | Yes | `topics.update` ([source](../src/adminApi/resources/topics.ts)) |
-| PUT | `/api/admin/v2/workflows/{id}/activate` | Yes | — |
-| PUT | `/api/admin/v2/workflows/{id}/deactivate` | Yes | — |
+| PUT | `/api/admin/v2/workflows/{id}/activate` | Yes | `workflows.activate` ([source](../src/adminApi/resources/workflows.ts)) |
+| PUT | `/api/admin/v2/workflows/{id}/deactivate` | Yes | `workflows.deactivate` ([source](../src/adminApi/resources/workflows.ts)) |
 
 ## headless-client-v1
 

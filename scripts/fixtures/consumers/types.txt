@@ -87,6 +87,80 @@ export async function contracts() {
   // @ts-expect-error inline payout response must not become any
   started?.invented_response_field;
   void [invalidSync, invalidDate];
+  const workflowId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+  const workflowList = await admin.workflows.list({ status: "all", workflow_type: "dynamic" });
+  const workflowDetail = await admin.workflows.get(workflowId);
+  const activeWorkflow = await admin.workflows.activate(workflowId);
+  await admin.workflows.deactivate(workflowId);
+  const copiedWorkflow = await admin.workflows.duplicate(workflowId);
+  const filters = await admin.filterKit.configuration({ context: "member_space", space_id: 2 });
+  await admin.filterKit.controls.list({ member_directory_only: true, enabled: false });
+  const createdControl = await admin.filterKit.controls.create({ key: "profile_field", profile_field_id: 34, enabled: false });
+  await admin.filterKit.controls.get(1);
+  await admin.filterKit.controls.update(1);
+  await admin.filterKit.controls.update(1, { enabled: false, sort_key: 0 });
+  const deletedControl = await admin.filterKit.controls.delete(1);
+  const workflowName: string | null | undefined = workflowList?.records?.[0]?.name;
+  const trigger: NonNullable<typeof workflowDetail>["trigger"] | undefined = workflowDetail?.trigger;
+  const workflowState: "draft" | "active" | "inactive" | "archived" | undefined = activeWorkflow?.status;
+  const workflowUrl: string | undefined = copiedWorkflow?.url;
+  const controlId: number | null | undefined = createdControl?.id;
+  const deleted: boolean | undefined = deletedControl?.success;
+  void [workflowName, trigger, workflowState, workflowUrl, controlId, deleted];
+  type Configuration = NonNullable<typeof filters>["filter_configurations"][number];
+  type ArrayPayload = Extract<Configuration, { input_type: "array" }>["payload"];
+  const arrayPayload: ArrayPayload = { options: [{ text: "Synthetic", value: 1 }], filter_types: ["is"], mode: "inline", additional_params: { arbitrary: [1, false, null] } };
+  const presetPayload: Extract<Configuration, { input_type: "preset" }>["payload"] = { preset_params: { arbitrary: { nested: true } } };
+  for (const filter of filters?.filter_configurations ?? []) {
+    if (filter.input_type === "array") {
+      const mode: "inline" | "popover" = filter.payload.mode;
+      const value: unknown = filter.payload.additional_params?.arbitrary;
+      void [mode, value];
+      // @ts-expect-error flexible objects remain unknown rather than any
+      const unsafeValue: string = filter.payload.additional_params?.arbitrary;
+      void unsafeValue;
+    }
+    if (filter.input_type === "near_me") {
+      const source: "mapbox_v6" = filter.payload.location_search_options.source;
+      const precise: boolean = filter.payload.require_user_to_provide_more_precise_location;
+      void [source, precise];
+    }
+  }
+  // @ts-expect-error workflow IDs are UUID strings
+  await admin.workflows.get(1);
+  // @ts-expect-error status is an enum
+  await admin.workflows.list({ status: "enabled" });
+  // @ts-expect-error workflow type is an enum
+  await admin.workflows.list({ workflow_type: "Automation" });
+  // @ts-expect-error duplicate accepts no invented rename input
+  await admin.workflows.duplicate(workflowId, { name: "Renamed" });
+  // @ts-expect-error configuration requires context
+  await admin.filterKit.configuration({});
+  // @ts-expect-error context enum is exact
+  await admin.filterKit.configuration({ context: "customize_members" });
+  // @ts-expect-error control IDs are numeric
+  await admin.filterKit.controls.delete("control");
+  // @ts-expect-error enabled is required on create
+  await admin.filterKit.controls.create({ key: "online" });
+  // @ts-expect-error control key is required on create
+  await admin.filterKit.controls.create({ enabled: true });
+  // @ts-expect-error input does not allow null IDs
+  await admin.filterKit.controls.update(1, { space_id: null });
+  // @ts-expect-error no bulk replacement field
+  await admin.filterKit.controls.update(1, { filters: [] });
+  // @ts-expect-error discriminator variant requires mode and options
+  const missingArrayPayload: ArrayPayload = { filter_types: ["is"] };
+  // @ts-expect-error array operators exclude string contains
+  const invalidArrayOperator: ArrayPayload = { options: [], mode: "inline", filter_types: ["contains"] };
+  // @ts-expect-error base metadata is required
+  const incompleteFilter: Configuration = { input_type: "boolean", payload: null };
+  // @ts-expect-error summaries omit the workflow URL
+  workflowList?.records?.[0]?.url;
+  // @ts-expect-error required response fields do not permit any
+  createdControl?.invented_response_field;
+  // @ts-expect-error nullable control ID must stay nullable
+  const nonNullControlId: number = createdControl!.id;
+  void [arrayPayload, presetPayload, missingArrayPayload, invalidArrayOperator, incompleteFilter, nonNullControlId];
   await member.bookmarks.list({ page: 1 });
   await auth.authToken.create({ email: "fixture@example.test" });
   await auth.accessToken.refresh({ refresh_token: "fixture" });

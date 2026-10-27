@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add 11 typed Admin workflow and directory-filter operations via `workflows` and
+  `filterKit`. Preserve polymorphic configuration payloads, saved-control visibility
+  and scope, optional PATCH bodies and the distinction from member search predicates.
+
 - Add 15 typed Admin operations for paywalls, subscription groups, coupon deletion,
   affiliates and affiliate payouts, preserving raw clients and invitation links.
   Document irreversible offer deletion, scheduled access syncs, payout scope JSON,
@@ -42,8 +46,8 @@ flat options, client factories, and npm entry points are retained.
 - `admin.invitationLinks.create(options)` and `.update(id, options)`.
 - `admin.profileFields.create(options)`, `.update(id, options)`, and `.delete(id, options)`.
 
-Other newly documented API families are available through the generated raw clients; this update
-does not add new top-level resource families.
+The operation inventory lists the remaining Admin facade gaps; all specified operations
+remain available through the generated raw clients.
 
 ### Fixes
 

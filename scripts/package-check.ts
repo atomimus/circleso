@@ -186,7 +186,11 @@ try {
   await copyFile(path.join(fixtures, "require.txt"), path.join(consumer, "require.cts"));
   await copyFile(path.join(fixtures, "types-only.txt"), path.join(consumer, "types-only.cts"));
   const documentation: string[] = [];
-  for (const file of ["README.md", "docs/request-options.md"]) {
+  for (const file of [
+    "README.md",
+    "docs/request-options.md",
+    "docs/admin-workflows-and-filters.md",
+  ]) {
     const source = await readFile(path.join(root, file), "utf8");
     for (const [index, block] of [...source.matchAll(/```ts\r?\n([\s\S]*?)```/g)].entries()) {
       assert.ok(block[1]);

@@ -198,6 +198,43 @@ The reference explains these differences and Circle's documented eligibility err
 PUT/DELETE inherit shared retries; use `retries: { retries: 0 }` for deliberate mutations
 and reconcile uncertain outcomes. No general payment-idempotency guarantee is documented.
 
+#### Workflows and directory filters
+
+`admin.workflows` provides `list`, `get`, `activate`, `deactivate`, `duplicate` with
+UUID string IDs. `admin.filterKit.configuration` returns resolved runtime filters;
+`admin.filterKit.controls` provides `list`, `create`, `get`, `update`, `delete` for
+saved visibility/order customizations with numeric IDs.
+
+```ts
+import type { AdminApi } from "circleso/admin";
+import type { HeadlessApi } from "circleso/headless";
+
+// Compile-only recipes. Configure the server Admin client with retries: { retries: 0 }
+// and invoke saveDirectoryFilter only for an intended visibility change.
+export async function saveDirectoryFilter(admin: AdminApi) {
+  const saved = await admin.filterKit.controls.create({ key: "online", enabled: false });
+  const resolved = await admin.filterKit.configuration({ context: "members" });
+  return { saved, resolved };
+}
+
+export function searchMembers(member: HeadlessApi) {
+  return member.communityMembers.search({
+    filters: [{ key: "name", filter_type: "contains", value: "Synthetic" }],
+    per_page: 20,
+  });
+}
+```
+
+Controls change visible filters; search predicates select members for one request.
+Control edits affect one customization, without a bulk replacement list. Resolved
+configuration includes defaults, so deleting a customization does not promise to hide
+its filter. Workflow activation/deactivation take effect immediately for eligible dynamic
+automations; duplication creates a draft without running it. Omitted list status includes
+archived workflows, while `status: "all"` excludes them. PUT/DELETE inherit shared retries;
+use `retries: { retries: 0 }` for deliberate mutations and reconcile uncertain outcomes.
+See the [method reference and configuration types](https://github.com/atomimus/circleso/blob/main/docs/admin-workflows-and-filters.md)
+and [compile-only examples](https://github.com/atomimus/circleso/blob/main/examples/admin-workflows-and-filters.ts).
+
 ### Headless API (Bearer)
 
 ```ts
