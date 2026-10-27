@@ -9,32 +9,17 @@ import { CircleConfigError } from "../core/errors";
 import type { RetryConfig } from "../core/http";
 import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
-import { paginateByIdWindow, toAsyncIterator } from "../core/pagination";
-import { unwrapResult } from "../core/response";
 import { requireServerRuntime } from "../core/runtime";
 import { createTokenManager, type TokenHooks } from "../core/tokenManager";
 import type { paths as HeadlessPaths } from "../generated/headless-client-v1";
+import { createHeadlessIterators, type HeadlessIterators } from "../headlessApi/cursorIterators";
+import { createHeadlessRequester } from "../headlessApi/request";
 import { createOpenApiClient, type DualClient } from "./shared";
 
-type ChatRoomMessagesResponse =
-  HeadlessPaths["/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages"]["get"]["responses"]["200"]["content"]["application/json"];
-
-type ChatRoomMessage = NonNullable<ChatRoomMessagesResponse["records"]>[number];
-
-export type ChatRoomMessagesIteratorOptions = {
-  direction?: "previous" | "next";
-  id?: number;
-  perPage?: number;
-  maxPages?: number;
-  maxItems?: number;
-};
-
-export type HeadlessIterators = {
-  chatRoomMessages: (
-    chatRoomUuid: string,
-    options?: ChatRoomMessagesIteratorOptions,
-  ) => AsyncIterable<ChatRoomMessage>;
-};
+export type {
+  ChatRoomMessagesIteratorOptions,
+  HeadlessIterators,
+} from "../headlessApi/cursorIterators";
 
 export type HeadlessClient = DualClient<HeadlessPaths> & {
   iter: HeadlessIterators;
@@ -134,61 +119,7 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
 
   const client = createOpenApiClient<HeadlessPaths>(runtimeConfig, middleware);
 
-  const iter: HeadlessIterators = {
-    chatRoomMessages: (chatRoomUuid, options = {}) => {
-      const paginator = paginateByIdWindow<ChatRoomMessage>({
-        direction: options.direction ?? "previous",
-        ...(options.id !== undefined ? { id: options.id } : {}),
-        ...(options.perPage !== undefined ? { perPage: options.perPage } : {}),
-        ...(options.maxPages !== undefined ? { maxPages: options.maxPages } : {}),
-        ...(options.maxItems !== undefined ? { maxItems: options.maxItems } : {}),
-        fetchPage: async ({ id, previousPerPage, nextPerPage }) => {
-          const query = {
-            ...(id !== undefined ? { id } : {}),
-            ...(previousPerPage !== undefined ? { previous_per_page: previousPerPage } : {}),
-            ...(nextPerPage !== undefined ? { next_per_page: nextPerPage } : {}),
-          };
-
-          const result = await client.GET(
-            "/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages",
-            {
-              params: {
-                path: { chat_room_uuid: chatRoomUuid },
-                ...(Object.keys(query).length > 0 ? { query } : {}),
-              },
-            },
-          );
-
-          const data = await unwrapResult(
-            result,
-            "GET",
-            "/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages",
-          );
-
-          if (!data) {
-            return {
-              records: [],
-              has_previous_page: false,
-              has_next_page: false,
-            };
-          }
-
-          return {
-            records: data.records ?? [],
-            ...(data.has_previous_page !== undefined
-              ? { has_previous_page: data.has_previous_page }
-              : {}),
-            ...(data.has_next_page !== undefined ? { has_next_page: data.has_next_page } : {}),
-            ...(data.first_id !== undefined ? { first_id: data.first_id } : {}),
-            ...(data.last_id !== undefined ? { last_id: data.last_id } : {}),
-            ...(data.total_count !== undefined ? { total_count: data.total_count } : {}),
-          };
-        },
-      });
-
-      return toAsyncIterator(paginator);
-    },
-  };
+  const iter = createHeadlessIterators(createHeadlessRequester(client));
 
   return Object.assign(client, { iter });
 }

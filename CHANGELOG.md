@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add cancelable pagination with exact/zero caps, cursor-cycle detection and 62 typed
+  Admin/Member iterator adapters. Preserve chat ID windows and existing helpers; document
+  page limits, non-paged collections and the POST search cursor schema conflict.
+
 - Complete the Admin facade with 13 operations for leads, contact notes, payment-method
   preferences, tax/Connect settings, live rooms/transcripts, location search and historical
   chat imports. Inventory: 172/172 Admin, 102/102 Member, 4/4 Auth. Keep import success

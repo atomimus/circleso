@@ -25,8 +25,15 @@ export {
   type OffsetPage,
   type OffsetPaginationConfig,
   type PaginatedRecords,
+  type PaginationLimits,
+  type PaginationResponse,
   paginateByIdWindow,
   paginateOffset,
+  paginateSearchAfter,
+  type SearchAfterCursor,
+  type SearchAfterPage,
+  type SearchAfterPaginationConfig,
+  type SearchAfterResponse,
   toAsyncIterator,
 } from "./pagination";
 export type { AuthConfig, ClientConfig, HttpMethod, QueryValue, RequestOptions } from "./types";

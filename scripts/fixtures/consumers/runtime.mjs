@@ -32,6 +32,7 @@ const helpers = [
   "withQuery",
   "paginateOffset",
   "paginateByIdWindow",
+  "paginateSearchAfter",
   "toAsyncIterator",
 ];
 assert.deepEqual(Object.keys(esm[0]).sort(), [...errors, ...helpers].sort());
@@ -154,3 +155,50 @@ try {
     server.close((error) => (error ? reject(error) : resolve())),
   );
 }
+
+async function collect(iterable) {
+  const records = [];
+  for await (const row of iterable) records.push(row);
+  return records;
+}
+for (const modules of [esm, cjs]) {
+  let n = 0;
+  const admin = modules[1].createAdmin({
+    token: "synthetic",
+    fetcher: async (request) => {
+      assert.equal(new URL(request.url).searchParams.get("page"), String(++n));
+      return Response.json({ records: [{ id: n }], has_next_page: true });
+    },
+  });
+  assert.deepEqual(await collect(admin.iter.posts({ maxItems: 2 })), [{ id: 1 }, { id: 2 }]);
+  assert.equal(n, 2);
+  await assert.rejects(collect(admin.iter.posts({ per_page: 101 })), esm[0].CircleConfigError);
+  let cursorCalls = 0;
+  const member = modules[2].createHeadless({
+    token: "synthetic",
+    fetcher: async (request) => {
+      const url = new URL(request.url);
+      assert.deepEqual(url.searchParams.getAll("search_after"), cursorCalls ? ["001", "2"] : []);
+      cursorCalls++;
+      return Response.json({
+        records: [{ id: cursorCalls }],
+        next_search_after: cursorCalls === 1 ? ["001", 2] : null,
+      });
+    },
+  });
+  assert.deepEqual(await collect(member.iter.communityMembers({ maxPages: 2 })), [
+    { id: 1 },
+    { id: 2 },
+  ]);
+  assert.equal(member.iter, member.raw.iter);
+  const pages = modules[0].paginateSearchAfter({
+    maxItems: 0,
+    fetchPage: async () => {
+      throw new Error("zero budget must not fetch");
+    },
+  });
+  assert.deepEqual(await collect(pages), []);
+}
+console.log(
+  "Package pagination: ESM/CJS typed resource iterators, cursor tuples, zero/exact caps, shared config errors pass",
+);

@@ -562,7 +562,9 @@ try {
 
 ## Pagination
 
-Use the pagination helpers directly, or the headless iterator helpers for common flows.
+Use typed `admin.iter` / `headless.iter` resource adapters or the generic pagination helpers.
+See [pagination behavior and the complete operation inventory](docs/pagination.md) for limits,
+cursor schemas, cancellation, early exit and collections that need only one request.
 
 ### Offset pagination (page + per_page)
 

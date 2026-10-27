@@ -1,4 +1,4 @@
-import { CircleSo, createClient, createLoggerMiddleware, createSmartFetch } from "circleso";
+import { CircleSo, paginateSearchAfter, toAsyncIterator, createClient, createLoggerMiddleware, createSmartFetch } from "circleso";
 import type { CircleSoConfig, LoggerHooks } from "circleso";
 import { createAdmin, createAdminClient } from "circleso/admin";
 import type { AdminApi, AdminClientConfig } from "circleso/admin";
@@ -316,4 +316,125 @@ export async function adminRemainingContracts(admin: AdminApi, sdk: CircleSo) {
   // @ts-expect-error exact optional properties reject explicit undefined
   admin.taxSettings.update({ tax_setting: undefined });
   void [message, wrongState];
+}
+
+// Pagination is compile-only; no community requests are executed.
+export async function paginationContracts() {
+ const admin = createAdmin({ token: "synthetic" });
+ const member = createHeadless({ token: "synthetic" });
+ void admin.iter.accessGroupMembers(42, {"maxPages":2,"maxItems":3});
+ void admin.iter.accessGroups({"maxPages":2,"maxItems":3});
+ void admin.iter.advancedSearch({"query":"synthetic","maxPages":2,"maxItems":3});
+ void admin.iter.comments({"maxPages":2,"maxItems":3});
+ void admin.iter.communityMemberCharges({"maxPages":2,"maxItems":3});
+ void admin.iter.communityMemberSpaces({"maxPages":2,"maxItems":3});
+ void admin.iter.communityMemberSubscriptions({"maxPages":2,"maxItems":3});
+ void admin.iter.communityMemberAccessGroups(42, {"maxPages":2,"maxItems":3});
+ void admin.iter.communityMembers({"maxPages":2,"maxItems":3});
+ void admin.iter.communitySegments({"maxPages":2,"maxItems":3});
+ void admin.iter.contactNotes("synthetic", {"maxPages":2,"maxItems":3});
+ void admin.iter.courseLessons({"maxPages":2,"maxItems":3});
+ void admin.iter.courseSections({"maxPages":2,"maxItems":3});
+ void admin.iter.eventAttendees({"event_id":"42","maxPages":2,"maxItems":3});
+ void admin.iter.events({"maxPages":2,"maxItems":3});
+ void admin.iter.filterKitControls({"maxPages":2,"maxItems":3});
+ void admin.iter.flaggedContents({"maxPages":2,"maxItems":3});
+ void admin.iter.forms({"maxPages":2,"maxItems":3});
+ void admin.iter.formSubmissions(42, {"maxPages":2,"maxItems":3});
+ void admin.iter.imagePosts(42, {"maxPages":2,"maxItems":3});
+ void admin.iter.invitationLinks({"maxPages":2,"maxItems":3});
+ void admin.iter.liveRooms({"maxPages":2,"maxItems":3});
+ void admin.iter.memberTags({"maxPages":2,"maxItems":3});
+ void admin.iter.paywallAffiliates({"maxPages":2,"maxItems":3});
+ void admin.iter.paywalls({"maxPages":2,"maxItems":3});
+ void admin.iter.posts({"maxPages":2,"maxItems":3});
+ void admin.iter.profileFields({"maxPages":2,"maxItems":3});
+ void admin.iter.spaceGroupMembers({"space_group_id":42,"maxPages":2,"maxItems":3});
+ void admin.iter.spaceGroups({"maxPages":2,"maxItems":3});
+ void admin.iter.spaceMembers({"space_id":42,"maxPages":2,"maxItems":3});
+ void admin.iter.spaces({"maxPages":2,"maxItems":3});
+ void admin.iter.taggedMembers({"maxPages":2,"maxItems":3});
+ void admin.iter.topics({"maxPages":2,"maxItems":3});
+ void admin.iter.workflows({"maxPages":2,"maxItems":3});
+ void member.iter.advancedSearch({"query":"synthetic","maxPages":2,"maxItems":3});
+ void member.iter.bookmarks({"maxPages":2,"maxItems":3});
+ void member.iter.chatRoomParticipants("synthetic", {"maxPages":2,"maxItems":3});
+ void member.iter.chatRooms({"maxPages":2,"maxItems":3});
+ void member.iter.chatThreads({"maxPages":2,"maxItems":3});
+ void member.iter.postComments(42, {"maxPages":2,"maxItems":3});
+ void member.iter.events({"maxPages":2,"maxItems":3});
+ void member.iter.memberComments(42, {"maxPages":2,"maxItems":3});
+ void member.iter.memberPosts(42, {"maxPages":2,"maxItems":3});
+ void member.iter.memberSpaces(42, {"maxPages":2,"maxItems":3});
+ void member.iter.lessonFiles(42, 42, {"maxPages":2,"maxItems":3});
+ void member.iter.quizAttempts(42, {"maxPages":2,"maxItems":3});
+ void member.iter.courseTopics({"maxPages":2,"maxItems":3});
+ void member.iter.eventAttendees(42, {"maxPages":2,"maxItems":3});
+ void member.iter.home({"maxPages":2,"maxItems":3});
+ void member.iter.notifications({"maxPages":2,"maxItems":3});
+ void member.iter.pageProfileFields({"page_name":"signup","maxPages":2,"maxItems":3});
+ void member.iter.posts(42, {"maxPages":2,"maxItems":3});
+ void member.iter.recurringEvents(42, 42, {"maxPages":2,"maxItems":3});
+ void member.iter.commentReplies(42, {"maxPages":2,"maxItems":3});
+ void member.iter.search({"search_text":"synthetic","maxPages":2,"maxItems":3});
+ void member.iter.spaceBookmarks(42, {"maxPages":2,"maxItems":3});
+ void member.iter.spaceTopics(42, {"maxPages":2,"maxItems":3});
+ void member.iter.commentLikes(42, {"maxPages":2,"maxItems":3});
+ void member.iter.postLikes("synthetic", {"maxPages":2,"maxItems":3});
+ const directory = member.iter.communityMembers({ search_after: [1, "a"], maxItems: 2 });
+ const search = member.iter.communityMemberSearch({ filters: [{ key: "role" }] });
+ for await (const row of admin.iter.posts({ maxItems: 1 })) {
+ const name: string | null | undefined = row.name; void name;
+ // @ts-expect-error record responses must not become any
+ row.invented;
+ }
+ for await (const row of search) { const name: string | null | undefined = row.name; void name; }
+ for await (const row of directory) { const name: string | null | undefined = row.name; void name; }
+ void member.raw.iter.chatRoomMessages("synthetic", { direction: "next" });
+ // @ts-expect-error required advanced search query
+ admin.iter.advancedSearch();
+ // @ts-expect-error required event ID
+ admin.iter.eventAttendees({});
+ // @ts-expect-error required space ID
+ admin.iter.spaceMembers({});
+ // @ts-expect-error required space group ID
+ admin.iter.spaceGroupMembers({});
+ // @ts-expect-error page-profile fields retain their required page name
+ member.iter.pageProfileFields({});
+ // @ts-expect-error required search text
+ member.iter.search({});
+ // @ts-expect-error contact IDs are strings
+ admin.iter.contactNotes(42);
+ // @ts-expect-error form IDs are numeric
+ admin.iter.formSubmissions("synthetic");
+ // @ts-expect-error no undocumented page size on contact notes
+ admin.iter.contactNotes("synthetic", { per_page: 20 });
+ // @ts-expect-error chat directions are exact
+ member.iter.chatRoomMessages("synthetic", { direction: "left" });
+ // @ts-expect-error POST search request cursor remains string-only
+ member.iter.communityMemberSearch({ search_after: [1] });
+ // @ts-expect-error cursor scans cannot combine offset pages
+ member.iter.communityMembers({ page: 3 });
+ // @ts-expect-error invalid Member sort enum
+ member.iter.communityMembers({ sort: "random" });
+ // @ts-expect-error unknown query fields do not leak into iterator options
+ admin.iter.posts({ invented: true });
+}
+
+
+export async function cursorHelperContract() {
+ const pages = paginateSearchAfter({ maxItems: 3, searchAfter: ["first", 1], fetchPage: async ({ searchAfter, perPage, signal }) => {
+ const cursor: readonly (string | number)[] | undefined = searchAfter;
+ const size: number = perPage;
+ const canceled: boolean | undefined = signal?.aborted;
+ void [cursor, size, canceled];
+ // @ts-expect-error opaque cursor tuples are read-only to adapters
+ searchAfter?.push("mutate");
+ return { records: [{ id: 1 }], next_search_after: null };
+ } });
+ for await (const row of toAsyncIterator(pages)) {
+ const id: number = row.id; void id;
+ // @ts-expect-error generic helper must infer the record type
+ row.invented;
+ }
 }

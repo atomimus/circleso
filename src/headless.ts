@@ -1,5 +1,6 @@
 export type { HeadlessClient, HeadlessClientConfig } from "./clients/headless";
 export { createHeadlessClient } from "./clients/headless";
+export type { ChatRoomMessagesIteratorOptions, HeadlessIterators } from "./clients/headlessClient";
 export {
   CircleConfigError,
   CircleHttpError,

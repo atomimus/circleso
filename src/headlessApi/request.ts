@@ -1,11 +1,11 @@
-import type { HeadlessClient } from "../clients/headlessClient";
+import type { DualClient } from "../clients/shared";
 import { unwrapResult } from "../core/response";
 import { requestContracts } from "../generated/headless-client-v1.requests";
 import { buildRequestInit } from "../requestInit";
 import type { OperationResponse, RequestArguments } from "../requestTypes";
 import type { HeadlessPaths, PathsWithMethod, RequestConfig } from "./types";
 
-export function createHeadlessRequester(client: HeadlessClient) {
+export function createHeadlessRequester(client: DualClient<HeadlessPaths>) {
   const get = async <Path extends PathsWithMethod<HeadlessPaths, "get">>(
     path: Path,
     ...args: RequestArguments<HeadlessPaths[Path]["get"], RequestConfig<Path, "get">>

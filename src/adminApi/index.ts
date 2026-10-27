@@ -4,6 +4,7 @@ import {
   createAdminClient,
 } from "../clients/adminClient";
 import { requireServerRuntime } from "../core/runtime";
+import { createAdminOffsetIterators } from "./iterators";
 import { createAdminRequester } from "./request";
 import { createAccessGroupsResource } from "./resources/accessGroups";
 import { createChatPreferencesResource } from "./resources/chatPreferences";
@@ -51,6 +52,7 @@ import { createWorkflowsResource } from "./resources/workflows";
 
 export type AdminApi = {
   raw: AdminClient;
+  iter: ReturnType<typeof createAdminOffsetIterators>;
   accessGroups: ReturnType<typeof createAccessGroupsResource>;
   search: ReturnType<typeof createSearchResource>;
   chatPreferences: ReturnType<typeof createChatPreferencesResource>;
@@ -109,6 +111,7 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
 
   return {
     raw: client,
+    iter: createAdminOffsetIterators(request),
     accessGroups: createAccessGroupsResource(request),
     search: createSearchResource(request),
     chatPreferences: createChatPreferencesResource(request),
