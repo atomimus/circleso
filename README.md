@@ -5,15 +5,15 @@ Typed requests and responses, ESM/CJS exports, retries, timeouts, pagination and
 
 ## Installation
 
-Install the v1 release candidate when available:
+Install v1 after its stable publication:
 
 ```sh
-npm install circleso@1.0.0-rc.1
+npm install circleso@1.0.0
 ```
 
-See [candidate notes](docs/release-candidate.md) for release status and
+See [v1 release notes](docs/release-v1.md) for release status and
 [migration from 0.3.0](docs/migration-v1.md) for breaking changes.
-`npm install circleso` selects the stable release, currently 0.3.0.
+`1.0.0` is prepared for publication; `next` currently selects `1.0.0-rc.1`.
 
 Requires Node.js 22 or 24. TypeScript users need 5.9.3 or newer and DOM/Fetch types.
 The Member client also supports browsers and browser workers with Fetch and CORS support.

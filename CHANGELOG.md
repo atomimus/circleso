@@ -2,11 +2,21 @@
 
 ## Unreleased
 
-## 1.0.0-rc.1 (prepared, not published)
+## 1.0.0 (prepared, not published)
+
+- Prepare stable v1 from the accepted 1.0.0-rc.1 runtime, declarations and dependency
+  graph, with matching package/lockfile versions and updated release documentation.
+  See [release notes](docs/release-v1.md) and [migration from 0.3.0](docs/migration-v1.md).
+- The candidate is published at `next`; `latest` remains 0.3.0 until stable publication.
+  Installed candidate signatures, provenance and consumer acceptance were verified.
+  No live Circle qualification or timed customer-deployment soak is claimed.
+
+## 1.0.0-rc.1 — 2026-10-27
 
 - Prepare an immutable CI tarball, inventory and source/digest evidence; add manually
   dispatched OIDC publishing with provenance and isolated artifact qualification.
-  Disable directory-publish regeneration. No release or npm publication has occurred.
+  Disable directory-publish regeneration. Publish the qualified candidate at `next`
+  with signed provenance, preserving `latest` at 0.3.0.
 - Reconcile the official Admin spec: accept German community locale (`de`) and its
   best-effort attendee/cohost invitation clarification. Member/Auth specs remain identical.
 

@@ -1,6 +1,6 @@
 # 1.0.0-rc.1 candidate notes
 
-Prepared October 27, 2026. This version is not yet published. The registry's current
+Published October 27, 2026 at `next`. The registry's current
 `latest` remains 0.3.0. Read the [migration guide](migration-v1.md) and
 [changelog](../CHANGELOG.md) before adopting the candidate.
 
@@ -28,7 +28,12 @@ matrix; Windows Playwright WebKit cookie isolation is unqualified. See
 [security boundaries](security-review.md). No installed Safari or universal deployment-cookie
 claim is made.
 
-Candidate publication must use `next`, preserve `latest`, verify installed registry consumers
-and attestations, and record concrete soak/rollout findings before a stable decision. A failing
-candidate requires a forward fix and new unused RC version. Preparation creates no release,
-tag, publication or dist-tag change.
+The registry tarball matches the retained, qualified CI bytes. A fresh registry installation,
+signature/provenance verification and synthetic consumer checks passed. All three Ubuntu
+browser engines passed against those identical bytes before publication. No timed customer
+rollout or live Circle validation was performed; no SDK defect appeared in the exercised flows.
+
+The publishing command succeeded, but the workflow failed on an immediate stale registry
+metadata read. Read-only registry reconciliation verified the version, digest, signatures,
+provenance and tags; publication was never repeated. Follow the [recovery procedure](publishing.md#recovery)
+if a later publication has an uncertain result. See [stable release notes](release-v1.md).
