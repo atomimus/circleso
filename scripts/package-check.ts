@@ -77,12 +77,32 @@ try {
       type: "module",
     }),
   );
+  // npm ci can cache tarballs without registry metadata. Seed a fresh, isolated cache
+  // explicitly so offline consumer resolution never relies on a developer's cache history.
+  const cache = path.join(temp, "npm-cache");
+  run(
+    process.execPath,
+    [
+      npmCli,
+      "cache",
+      "add",
+      "openapi-fetch@0.15.0",
+      "openapi-typescript-helpers@0.0.15",
+      "--cache",
+      cache,
+      "--ignore-scripts",
+    ],
+    consumer,
+  );
+  console.log("Package cache: two pinned public runtime packages seeded in a fresh isolated cache");
   run(
     process.execPath,
     [
       npmCli,
       "install",
       "--offline",
+      "--cache",
+      cache,
       "--ignore-scripts",
       "--omit=dev",
       "--no-audit",

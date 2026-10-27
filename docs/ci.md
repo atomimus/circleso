@@ -61,9 +61,12 @@ explicit task-owned paths when formatting in a shared dirty checkout.
 package list without running publication/lifecycle hooks. It is not a clean-tarball consumer test.
 The final Git diff check detects accidental tracked rewrites, including dependency/lockfile drift.
 
-`test:package` then creates an actual tarball and installs it offline with lifecycle scripts and
-development dependencies disabled in an OS temporary directory outside the checkout. Public
-declarations cannot resolve through development dependencies hoisted in the source tree. Its
+`test:package` first seeds a fresh isolated npm cache with the two pinned public runtime packages
+using `npm cache add`. This preparation downloads public npm metadata/tarballs; it makes no Circle
+requests. `npm ci` alone can cache tarballs without the metadata needed for offline resolution.
+The gate then creates an actual tarball and installs it offline from that cache with lifecycle
+scripts and development dependencies disabled in an OS temporary directory outside the checkout.
+Public declarations cannot resolve through development dependencies hoisted in the source tree. Its
 fixtures verify all four ESM imports and CJS requires, exact runtime export sets, shared error
 constructor identity across both formats, 12 native loopback HTTP calls, and executable source maps.
 Package files are allowlisted; README/changelog/license match the source, and maps contain only
