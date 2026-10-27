@@ -2,15 +2,27 @@
   "specs": [
     {
       "name": "admin-v2",
-      "url": "https://api-headless.circle.so/api/admin/v2/swagger.yaml"
+      "url": "https://api-headless.circle.so/api/admin/v2/swagger.yaml",
+      "title": "Admin API V2",
+      "version": "v1",
+      "pathPrefix": "/api/admin/v2",
+      "module": "adminApi"
     },
     {
       "name": "headless-client-v1",
-      "url": "https://api-headless.circle.so/api/headless_client/v1/swagger.yaml"
+      "url": "https://api-headless.circle.so/api/headless_client/v1/swagger.yaml",
+      "title": "Headless Member API V1",
+      "version": "v1",
+      "pathPrefix": "/api/headless/v1",
+      "module": "headlessApi"
     },
     {
       "name": "headless-auth-v1",
-      "url": "https://api-headless.circle.so/api/headless_auth/swagger.yaml"
+      "url": "https://api-headless.circle.so/api/headless_auth/swagger.yaml",
+      "title": "Headless Auth API",
+      "version": "v1",
+      "pathPrefix": "/api/v1/headless",
+      "module": "authApi"
     }
   ]
 }

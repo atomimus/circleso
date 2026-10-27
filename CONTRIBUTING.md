@@ -16,14 +16,18 @@ their own evidence and review.
 npm run lint
 npm run typecheck
 npm test
-npm run gen:types
+npm run gen:check
+npm run coverage:check
 npm run build
 npm pack --dry-run --json --ignore-scripts
 ```
 
 `gen:types` is offline and must reproduce the committed declarations from `api/specs/*.yaml`.
-Review any generated diff. Run `npm run spec:sync` only when deliberately refreshing upstream
-inputs, then regenerate and review both specs and declarations. Never edit generated types by hand.
+Review any generated diff. Use `npm run spec:check` for a deliberate, read-only live comparison
+with inspectable candidate files/patches. Run `npm run spec:sync` only when deliberately refreshing
+upstream inputs, then regenerate, run `npm run coverage:write`, and inspect all diffs. Never edit
+generated types by hand. See [the tooling guide](docs/spec-generation.md) and
+[the generated inventory](docs/api-coverage.md).
 The release checklist in AGENTS.md also requires a deliberate spec refresh before publication;
 tasks 24–27 must reconcile it with building from immutable, reviewed release inputs.
 

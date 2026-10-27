@@ -328,15 +328,32 @@ await headless.chatRooms.reactions.delete({ chat_room_message: 789, unicode: "1f
 
 See [CHANGELOG.md](./CHANGELOG.md) for the updated contracts and migration notes.
 
-Run the sync and generation scripts together:
+Check the committed declarations and operation inventory offline:
+
+```bash
+npm run gen:check
+npm run coverage:check
+npm run coverage:api
+```
+
+The [operation inventory](https://github.com/atomimus/circleso/blob/main/docs/api-coverage.md)
+separates raw routes, named resources, and upstream schema limitations. It currently lists
+47 Admin operations awaiting named wrappers; all 278 operations are available through raw clients.
+
+Check upstream deliberately with `npm run spec:check`. It saves changed candidate specs, generated
+types and unified patches in `.cache/spec-refresh-*`, exits with status 1 on drift, and leaves
+tracked inputs unchanged. Accept a refresh explicitly, then inspect both inputs and outputs:
 
 ```bash
 npm run spec:sync && npm run gen:types
+npm run coverage:write
 ```
 
 Circle's current Admin spec references an undefined `admin_v2_chat_room_message` response schema.
 Generation applies a targeted override in `scripts/spec-overrides.ts` so that response is `unknown`.
 The downloaded spec stays intact, and the override stops applying when Circle defines the schema.
+See the [spec tooling guide](https://github.com/atomimus/circleso/blob/main/docs/spec-generation.md)
+for failure handling and command details. Installation and ordinary builds do not download specs.
 
 ## License
 

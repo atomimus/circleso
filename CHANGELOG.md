@@ -45,6 +45,14 @@ does not add new top-level resource families.
   generation-only override leaves that response `unknown`, preserves the downloaded spec, and
   defers to the official schema once it exists. Other unresolved references still fail generation.
 
+### Development tooling
+
+- Consolidate spec sources, validate complete download/generation batches before replacement, and
+  preserve prior outputs on handled failures. Pin LF input/output bytes across checkouts.
+- Add offline `gen:check` and `coverage:check`, plus a reproducible method/path-to-wrapper inventory.
+- Add deliberate `spec:check` with candidate files and unified diffs; it does not accept upstream
+  changes. Existing `spec:sync` and `gen:types` commands remain available.
+
 ### Type migration notes
 
 These upstream contract changes and stricter query typing can break consumer compilation. Publish
