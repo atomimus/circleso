@@ -3,6 +3,7 @@ import {
   type AdminClientConfig,
   createAdminClient,
 } from "../clients/adminClient";
+import { requireServerRuntime } from "../core/runtime";
 import { createAdminRequester } from "./request";
 import { createAccessGroupsResource } from "./resources/accessGroups";
 import { createChatPreferencesResource } from "./resources/chatPreferences";
@@ -66,6 +67,9 @@ export type AdminApiConfig = AdminClientConfig;
 export function createAdmin(config: AdminApiConfig): AdminApi;
 export function createAdmin(client: AdminClient): AdminApi;
 export function createAdmin(configOrClient: AdminApiConfig | AdminClient): AdminApi {
+  requireServerRuntime(
+    "Admin API requires 'host' header; use server-side runtime or proxy. Browser/worker callers should use createHeadless with member access tokens.",
+  );
   const client = isAdminClient(configOrClient) ? configOrClient : createAdminClient(configOrClient);
   const request = createAdminRequester(client);
 
@@ -102,6 +106,8 @@ export function createAdmin(configOrClient: AdminApiConfig | AdminClient): Admin
 
 function isAdminClient(value: AdminApiConfig | AdminClient): value is AdminClient {
   return (
+    value !== null &&
+    typeof value === "object" &&
     typeof (value as AdminClient).GET === "function" &&
     typeof (value as AdminClient).POST === "function"
   );

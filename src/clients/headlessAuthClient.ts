@@ -1,8 +1,13 @@
-import { DEFAULT_COMMUNITY_HOST } from "../core/constants";
-import { CircleConfigError } from "../core/errors";
+import {
+  requireToken,
+  resolveBaseUrl,
+  resolveCommunityHost,
+  validateConfigObject,
+} from "../core/config";
 import type { RetryConfig } from "../core/http";
 import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
+import { requireServerRuntime } from "../core/runtime";
 import type { paths as HeadlessAuthPaths } from "../generated/headless-auth-v1";
 import { createOpenApiClient, type DualClient } from "./shared";
 
@@ -11,6 +16,7 @@ export type HeadlessAuthClient = DualClient<HeadlessAuthPaths>;
 export type HeadlessAuthClientConfig = {
   baseUrl?: string;
   communityHost?: string;
+  /** Server-only Headless Auth application token, not a member access or refresh token. */
   token: string;
   timeoutMs?: number;
   retries?: RetryConfig;
@@ -20,13 +26,15 @@ export type HeadlessAuthClientConfig = {
 };
 
 export function createHeadlessAuthClient(config: HeadlessAuthClientConfig): HeadlessAuthClient {
-  if (!config.token) {
-    throw new CircleConfigError("auth token is required.");
-  }
+  validateConfigObject(config);
+  const token = requireToken(config.token, "auth.token (Headless Auth application token)");
+  requireServerRuntime(
+    "Headless Auth uses a secret application token. Keep createAuth/createHeadlessAuthClient on your server; use createHeadless with member access tokens in browsers and workers.",
+  );
 
-  const communityHost = config.communityHost ?? DEFAULT_COMMUNITY_HOST;
-  const baseUrl = config.baseUrl ?? `https://${communityHost}`;
-  const middleware = [createBearerAuthMiddleware({ token: config.token })];
+  resolveCommunityHost(config.communityHost);
+  const baseUrl = resolveBaseUrl(config.baseUrl);
+  const middleware = [createBearerAuthMiddleware({ token })];
 
   const runtimeConfig = {
     baseUrl,

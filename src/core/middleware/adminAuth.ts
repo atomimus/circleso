@@ -1,6 +1,5 @@
 import type { Middleware } from "openapi-fetch";
-import { DEFAULT_COMMUNITY_HOST } from "../constants";
-import { CircleConfigError } from "../errors";
+import { requireToken, resolveCommunityHost, validateConfigObject } from "../config";
 import { HEADER_AUTHORIZATION } from "../headers";
 import { BodySourceRequest } from "../requestBody";
 import { createHostHeaderMiddleware } from "./hostHeader";
@@ -11,12 +10,10 @@ export type AdminAuthConfig = {
 };
 
 export function createAdminAuthMiddleware(config: AdminAuthConfig): Middleware {
-  const token = config.token?.trim();
-  if (!token) {
-    throw new CircleConfigError("token is required for admin authentication.");
-  }
+  validateConfigObject(config);
+  const token = requireToken(config.token, "admin token");
 
-  const host = config.host?.trim() || DEFAULT_COMMUNITY_HOST;
+  const host = resolveCommunityHost(config.host);
   const hostMiddleware = createHostHeaderMiddleware({ host });
 
   return {

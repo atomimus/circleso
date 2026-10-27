@@ -94,6 +94,8 @@ export function createHeadless(configOrClient: HeadlessApiConfig | HeadlessClien
 
 function isHeadlessClient(value: HeadlessApiConfig | HeadlessClient): value is HeadlessClient {
   return (
+    value !== null &&
+    typeof value === "object" &&
     typeof (value as HeadlessClient).GET === "function" &&
     typeof (value as HeadlessClient).POST === "function"
   );

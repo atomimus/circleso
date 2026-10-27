@@ -1,4 +1,9 @@
-import { DEFAULT_COMMUNITY_HOST } from "../core/constants";
+import {
+  requireToken,
+  resolveBaseUrl,
+  resolveCommunityHost,
+  validateConfigObject,
+} from "../core/config";
 import { CircleConfigError } from "../core/errors";
 import type { RetryConfig } from "../core/http";
 import { createAdminAuthMiddleware } from "../core/middleware/adminAuth";
@@ -21,16 +26,23 @@ export type AdminClientConfig = {
 };
 
 export function createAdminClient(config: AdminClientConfig): AdminClient {
-  if (!config.token) {
-    throw new CircleConfigError("admin token is required.");
-  }
-  const communityHost = config.communityHost ?? DEFAULT_COMMUNITY_HOST;
+  validateConfigObject(config);
+  const token = requireToken(config.token, "admin.token");
+  const communityHost = resolveCommunityHost(config.communityHost);
 
-  const baseUrl = config.baseUrl ?? `https://${communityHost}`;
+  const baseUrl = resolveBaseUrl(config.baseUrl);
   const middleware = [
-    createAdminAuthMiddleware({ token: config.token, host: communityHost }),
+    createAdminAuthMiddleware({ token, host: communityHost }),
     createAdminQueryMiddleware(),
   ];
+  if (
+    communityHost !== new URL(baseUrl).host.toLowerCase() &&
+    (config.fetcher === undefined || config.fetcher === globalThis.fetch)
+  ) {
+    throw new CircleConfigError(
+      "Admin communityHost differs from the baseUrl authority. Default Fetch cannot preserve a Host override. Supply a custom server fetcher that preserves Host, or explicitly configure a destination/Host pair supported by your server or proxy.",
+    );
+  }
 
   const runtimeConfig = {
     baseUrl,

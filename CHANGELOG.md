@@ -37,6 +37,18 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Default every client to `https://app.circle.so` independently of `communityHost`; use that
+  option only for Admin's Host header. Migration: set `baseUrl` explicitly if you previously
+  relied on `communityHost` selecting the destination. Validate URLs, hosts, credentials,
+  hooks, conflicting member token aliases, fetchers and deadlines before use. Preserve token
+  hook causes and support independent Auth URL prefixes for auto-refresh.
+- Require a custom server fetcher that preserves Host when Admin's `communityHost` differs
+  from its destination authority. Default/native Fetch removes Host overrides, so mismatched
+  configurations now fail early with transport/proxy guidance.
+- Reject Admin, Headless Auth application-token clients, and built-in auto-refresh in browser
+  windows and workers. Use a standalone Member factory with member tokens and server-backed
+  token rotation there. The unified client remains server-only. Retain Admin Token auth per
+  the specification and repository policy; document Circle's conflicting Bearer quick start.
 - Route named-resource fields from generated operation contracts rather than HTTP verbs. Send
   segment duplicate/export and notification update fields in query, retain body-bearing DELETE,
   and serialize required empty JSON as `{}`. Forward headers/signals/credentials as metadata;

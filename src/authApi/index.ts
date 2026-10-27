@@ -3,6 +3,7 @@ import {
   type HeadlessAuthClient,
   type HeadlessAuthClientConfig,
 } from "../clients/headlessAuthClient";
+import { requireServerRuntime } from "../core/runtime";
 import { createAuthRequester } from "./request";
 import { createAccessTokenResource } from "./resources/accessToken";
 import { createAuthTokenResource } from "./resources/authToken";
@@ -20,6 +21,9 @@ export type AuthApiConfig = HeadlessAuthClientConfig;
 export function createAuth(config: AuthApiConfig): AuthApi;
 export function createAuth(client: HeadlessAuthClient): AuthApi;
 export function createAuth(configOrClient: AuthApiConfig | HeadlessAuthClient): AuthApi {
+  requireServerRuntime(
+    "Headless Auth uses a secret application token. Keep createAuth on your server; use createHeadless with member access tokens in browsers and workers.",
+  );
   const client = isAuthClient(configOrClient)
     ? configOrClient
     : createHeadlessAuthClient(configOrClient);
@@ -35,6 +39,8 @@ export function createAuth(configOrClient: AuthApiConfig | HeadlessAuthClient): 
 
 function isAuthClient(value: AuthApiConfig | HeadlessAuthClient): value is HeadlessAuthClient {
   return (
+    value !== null &&
+    typeof value === "object" &&
     typeof (value as HeadlessAuthClient).GET === "function" &&
     typeof (value as HeadlessAuthClient).POST === "function"
   );

@@ -1,3 +1,4 @@
+import { resolveBaseUrl, validateConfigObject, validateTimeout } from "./config";
 import { CircleConfigError, CircleHttpError, CircleNetworkError, CircleSdkError } from "./errors";
 import { HEADER_CONTENT_LENGTH, HEADER_RETRY_AFTER, HEADER_USER_AGENT } from "./headers";
 import {
@@ -55,14 +56,26 @@ export function createRecoveringFetch(config: SmartFetchConfig) {
 }
 
 function createFetch(config: SmartFetchConfig) {
-  const fetcher = config.fetcher ?? globalThis.fetch;
-  if (!fetcher) {
+  validateConfigObject(config);
+  if (config.baseUrl === undefined) throw new CircleConfigError("baseUrl is required.");
+  validateTimeout(config.timeoutMs);
+  const fetcher = config.fetcher !== undefined ? config.fetcher : globalThis.fetch;
+  if (typeof fetcher !== "function") {
     throw new CircleConfigError("A fetch implementation is required.");
   }
 
-  const baseUrl = resolveBaseUrl(config.baseUrl);
+  const baseUrl = new URL(resolveBaseUrl(config.baseUrl));
   const defaultHeaders = config.defaultHeaders;
   const userAgent = config.userAgent;
+  if (userAgent !== undefined) {
+    if (typeof userAgent !== "string" || !userAgent.trim())
+      throw new CircleConfigError("userAgent must be a non-empty header value.");
+    try {
+      new Headers({ [HEADER_USER_AGENT]: userAgent });
+    } catch (cause) {
+      throw new CircleConfigError("userAgent must be a valid header value.", cause);
+    }
+  }
   const throwOnHttpError = config.throwOnHttpError ?? true;
   const baseRetryConfig = normalizeRetryConfig(config.retries);
 
@@ -73,6 +86,7 @@ function createFetch(config: SmartFetchConfig) {
   ) {
     const request = input instanceof Request ? input : undefined;
     const { timeoutMs, retries, bodyFactory, body: initBody, ...requestInit } = init;
+    validateTimeout(timeoutMs);
     const method = resolveMethod(request, requestInit.method);
     const url = resolveUrl(baseUrl, request, input);
     const headers = mergeHeaders(defaultHeaders, request?.headers, requestInit.headers, userAgent);
@@ -268,18 +282,6 @@ function createFetch(config: SmartFetchConfig) {
       throw new CircleConfigError("Could not prepare HTTP request.", cause);
     }
   };
-}
-
-function resolveBaseUrl(baseUrl: string) {
-  if (!baseUrl) {
-    throw new CircleConfigError("baseUrl is required.");
-  }
-
-  try {
-    return new URL(baseUrl);
-  } catch (cause) {
-    throw new CircleConfigError(`Invalid baseUrl: ${baseUrl}`, cause);
-  }
 }
 
 function resolveUrl(baseUrl: URL, request: Request | undefined, input: RequestInfo | URL) {

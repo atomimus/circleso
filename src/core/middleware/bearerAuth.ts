@@ -1,4 +1,5 @@
 import type { Middleware } from "openapi-fetch";
+import { requireToken, validateConfigObject, validateTimeout } from "../config";
 import { CircleConfigError, CircleSdkError } from "../errors";
 import { HEADER_AUTHORIZATION } from "../headers";
 import { createHttpLifetime } from "../httpLifetime";
@@ -12,9 +13,9 @@ export type BearerAuthConfig = {
 };
 
 export function createBearerAuthMiddleware(config: BearerAuthConfig): Middleware {
-  if (!config.token) {
-    throw new CircleConfigError("token is required for bearer authentication.");
-  }
+  validateConfigObject(config);
+  validateTimeout(config.timeoutMs);
+  if (typeof config.token !== "function") requireToken(config.token, "bearer token");
 
   return {
     async onRequest({ request }) {
@@ -29,7 +30,7 @@ export function createBearerAuthMiddleware(config: BearerAuthConfig): Middleware
           if (cause instanceof CircleSdkError) throw cause;
           throw new CircleConfigError("Could not read the bearer token.", cause);
         }
-        if (!token) throw new CircleConfigError("token is required for bearer authentication.");
+        token = requireToken(token, "bearer token");
         const headers = new Headers(request.headers);
         headers.set(HEADER_AUTHORIZATION, `Bearer ${token}`);
         return new BodySourceRequest(request, { headers });

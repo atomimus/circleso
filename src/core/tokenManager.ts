@@ -1,8 +1,17 @@
+import {
+  requireToken,
+  resolveBaseUrl,
+  validateConfigObject,
+  validateOptionalToken,
+  validateTimeout,
+  validateTokenHooks,
+} from "./config";
 import { CircleConfigError, CircleHttpError, CircleSdkError } from "./errors";
 import { HEADER_ACCEPT, HEADER_AUTHORIZATION, HEADER_CONTENT_TYPE } from "./headers";
 import { createRecoveringFetch, createSmartFetch, type RetryConfig } from "./http";
 import { createHttpLifetime } from "./httpLifetime";
 import { readResponseBody, responseContext } from "./response";
+import { requireServerRuntime } from "./runtime";
 
 const REFRESH_PATH = "/api/v1/headless/access_token/refresh";
 
@@ -37,6 +46,10 @@ export type TokenManager = {
 };
 
 export function createTokenManager(config: TokenManagerConfig): TokenManager {
+  validateConfigObject(config);
+  validateTokenHooks(config);
+  validateOptionalToken(config.accessToken, "accessToken");
+  validateOptionalToken(config.refreshToken, "refreshToken");
   type Generation = { token: string | undefined; recovery?: Promise<string> };
   let generation: Generation = { token: config.accessToken };
   let refreshInFlight: Promise<string> | undefined;
@@ -75,11 +88,17 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
   }
 
   function createAutoRefreshFetch(options: AutoRefreshFetchConfig) {
-    if (!options.authToken) throw new CircleConfigError("authToken is required for auto-refresh.");
-    validateToken(options.authToken);
-    const authBaseUrl = options.authBaseUrl ?? options.baseUrl;
+    validateConfigObject(options);
+    requireToken(options.authToken, "authToken (Headless Auth application token)");
+    requireToken(refreshToken, "refreshToken for auto-refresh");
+    validateTimeout(options.timeoutMs);
+    requireServerRuntime(
+      "Headless auto-refresh uses a secret Auth application token. Run it on your server; browser/worker Member clients should refresh through their server.",
+    );
+    const baseUrl = resolveBaseUrl(options.baseUrl);
+    const authBaseUrl = resolveBaseUrl(options.authBaseUrl ?? baseUrl);
     const requestFetch = createRecoveringFetch({
-      baseUrl: options.baseUrl,
+      baseUrl,
       throwOnHttpError: false,
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
@@ -148,7 +167,7 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
     }
 
     async function refreshAccessToken(sent: Generation): Promise<string> {
-      const refreshUrl = new URL(REFRESH_PATH, authBaseUrl).toString();
+      const refreshUrl = new URL(`${authBaseUrl.replace(/\/$/, "")}${REFRESH_PATH}`).toString();
       const context = { url: refreshUrl, method: "PATCH" };
       // Also bound caller-owned hooks. A hook must cooperate to stop its own side effects.
       const lifetime = createHttpLifetime([], options.timeoutMs);
@@ -229,11 +248,7 @@ function extractAccessToken(parsedJson: unknown) {
 }
 
 function validateToken(token: string | undefined): void {
-  if (token !== undefined && (typeof token !== "string" || !isHeaderSafeToken(token))) {
-    throw new CircleConfigError(
-      "Access token must be a non-empty header-safe string or undefined.",
-    );
-  }
+  validateOptionalToken(token, "Access token");
 }
 
 function isHeaderSafeToken(value: string): boolean {

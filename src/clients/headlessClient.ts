@@ -1,10 +1,17 @@
-import { DEFAULT_COMMUNITY_HOST } from "../core/constants";
+import {
+  resolveBaseUrl,
+  resolveCommunityHost,
+  validateConfigObject,
+  validateOptionalToken,
+  validateTokenHooks,
+} from "../core/config";
 import { CircleConfigError } from "../core/errors";
 import type { RetryConfig } from "../core/http";
 import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
 import { paginateByIdWindow, toAsyncIterator } from "../core/pagination";
 import { unwrapResult } from "../core/response";
+import { requireServerRuntime } from "../core/runtime";
 import { createTokenManager, type TokenHooks } from "../core/tokenManager";
 import type { paths as HeadlessPaths } from "../generated/headless-client-v1";
 import { createOpenApiClient, type DualClient } from "./shared";
@@ -53,6 +60,26 @@ export type HeadlessClientConfig = {
 };
 
 export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClient {
+  validateConfigObject(config);
+  validateTokenHooks(config);
+  for (const name of ["token", "accessToken", "refreshToken", "authToken"] as const)
+    validateOptionalToken(config[name], name);
+  if (
+    config.token !== undefined &&
+    config.accessToken !== undefined &&
+    config.token !== config.accessToken
+  ) {
+    throw new CircleConfigError(
+      "token and accessToken are aliases; supply only one or the same value for both.",
+    );
+  }
+  if (config.autoRefresh !== undefined && typeof config.autoRefresh !== "boolean")
+    throw new CircleConfigError("autoRefresh must be a boolean.");
+  if (config.authBaseUrl !== undefined) resolveBaseUrl(config.authBaseUrl);
+  if (config.authToken !== undefined || config.autoRefresh)
+    requireServerRuntime(
+      "Headless auto-refresh uses a secret Auth application token. Keep authToken and autoRefresh on your server; browser/worker Member clients should use getAccessToken with your own server refresh flow.",
+    );
   const accessToken = config.accessToken ?? config.token;
   if (!accessToken && !config.getAccessToken) {
     throw new CircleConfigError("headless access token is required.");
@@ -66,8 +93,8 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
     );
   }
 
-  const communityHost = config.communityHost ?? DEFAULT_COMMUNITY_HOST;
-  const baseUrl = config.baseUrl ?? `https://${communityHost}`;
+  resolveCommunityHost(config.communityHost);
+  const baseUrl = resolveBaseUrl(config.baseUrl);
   const tokenManager = createTokenManager({
     ...(accessToken !== undefined ? { accessToken } : {}),
     ...(config.refreshToken !== undefined ? { refreshToken: config.refreshToken } : {}),

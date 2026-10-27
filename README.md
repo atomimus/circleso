@@ -19,7 +19,7 @@ for the CI runtime matrix and local development checks.
 - The 0.3.0 package declares Node 18+, but Node 18 and 20 are end of life. Use a maintained Node LTS.
 - The v1 support target is Node 22 and 24 (latest maintained patches), with Node 24 recommended,
   and TypeScript 5.9.3 or newer. Runtime, packaging and browser qualification are still pending.
-- Admin API usage must run on a server runtime (see browser caveats below)
+- Admin, Headless Auth application-token calls, and built-in auto-refresh require a server runtime
 
 ## Installation
 
@@ -200,8 +200,25 @@ Need the low-level OpenAPI client? Use `auth.raw` or `createHeadlessAuthClient`.
 
 ## Configuration
 
-Default base URL for all clients is `https://app.circle.so`. `communityHost` is optional and defaults to
-`app.circle.so` if omitted.
+Default base URL for all clients is `https://app.circle.so`. `communityHost` defaults to
+`app.circle.so` and controls only Admin's Host header; it never changes the network destination.
+Member and Auth accept this shared option for compatibility but do not send a Host header.
+To use another destination, supply `baseUrl` explicitly. In `CircleSo`, per-surface values override
+the top-level `baseUrl` and `communityHost` independently.
+
+`baseUrl` must be an absolute HTTP(S) URL without credentials, whitespace, backslashes, query or
+fragment. Path prefixes are supported; HTTP is available for local development/proxies.
+`communityHost` must be a DNS name, IPv4 or bracketed IPv6 address with an optional port
+(1–65535), without a scheme or path. Invalid settings throw `CircleConfigError` at creation.
+Do not use `communityHost` as a substitute for a trusted network destination.
+
+Admin configurations where the Host differs from the `baseUrl` authority require an explicit
+custom server `fetcher` that preserves Host. The default Fetch transport (including Node's native
+Fetch) removes Host overrides before sending; passing `globalThis.fetch` directly does the same.
+These configurations throw `CircleConfigError` at creation instead of silently using another Host.
+A wrapper that merely calls native Fetch still cannot preserve the override. Use a server HTTP
+adapter or proxy that supports the intended routing; the SDK never rewrites the destination for
+you. With the defaults, both authorities are `app.circle.so` and native Fetch works.
 
 Common options across all clients:
 
@@ -214,17 +231,56 @@ Common options across all clients:
 Per-surface options:
 
 - `admin`: `token`, `communityHost`, `baseUrl`
-- `headless`: `accessToken` or `token`, `refreshToken`, `authToken`, `autoRefresh`, `authBaseUrl`, `communityHost`
+- `headless`: `accessToken` or `token`, `refreshToken`, `authToken`, `autoRefresh`, `authBaseUrl`, `communityHost`, `baseUrl`, token hooks
 - `auth`: `token`, `communityHost`, `baseUrl`
 
-Note: the unified `CircleSo` class constructs all three surfaces, so it requires
-an Admin token, member access token, and Headless Auth application token. Auto-refresh also requires
+The unified `CircleSo` class constructs all three surfaces and is server-only. It requires
+an Admin token, a member access token (or `getAccessToken`), and a Headless Auth application token. Auto-refresh also requires
 the member refresh token and explicit `headless.authToken`. If you only need
 one surface, use `createAdmin`, `createHeadless`, or `createAuth` directly.
 
+Credentials must be non-empty ASCII strings without whitespace or control characters. `token`
+and `accessToken` are aliases on Member clients; supplying different values is a configuration
+error. A token getter takes precedence over an initial static member token. Hooks must be
+functions and are first invoked when a request needs a token, never during construction.
+Invalid getter results or hook failures throw `CircleConfigError` before fetching, retaining
+the original failure as `cause`. A custom `fetcher` must implement Fetch and works with or without
+auto-refresh. It must be accompanied by standard Fetch globals (`Request`, `Response`, `Headers`,
+`AbortController`, `ReadableStream`); supplying it does not install polyfills.
+
+Credential roles are separate:
+
+| Client | Credential and header | Runtime |
+| --- | --- | --- |
+| Admin | Admin V2 token → `Authorization: Token …`, plus Host | Server |
+| Member | Member access token → `Authorization: Bearer …` | Server, browser or browser worker with Fetch/CORS support |
+| Auth | Headless Auth application token → `Authorization: Bearer …` | Server |
+| Member auto-refresh | Application `authToken` in Bearer; member `refreshToken` only in JSON | Server |
+
+The SDK cannot infer a token's privileges from its string. Keep application credentials on your
+server and authorize the signed-in member before using Auth to issue tokens. Browser Member
+clients should obtain access tokens from their own server and use `getAccessToken` for rotation.
+Creating Admin/Auth clients or supplying `authToken`/enabling auto-refresh in a browser or browser
+worker throws with server/proxy guidance, including with custom fetchers.
+
+Authentication sources checked October 27, 2026: Circle's
+[Admin V2 specification](https://api-headless.circle.so/api/admin/v2/swagger.yaml) defines Token
+and Host, while its [Admin quick start](https://api.circle.so/apis/admin-api/quick-start) shows
+Bearer. This upstream discrepancy remains; this SDK follows the specification and repository
+policy and continues sending Token. It does not try an alternative scheme after failure.
+The [Headless quick start](https://api.circle.so/apis/headless/quick-start) and
+[server Auth SDK](https://api.circle.so/apis/headless/auth-sdk/node.js) distinguish application
+credentials from member access/refresh tokens. The
+[Fetch standard](https://fetch.spec.whatwg.org/#forbidden-request-header) forbids setting Host in
+browser requests, including workers. Runtime detection is a configuration guard, not a secret
+security boundary or a guarantee of CORS support in every runtime.
+Node's bundled [Undici Fetch implementation](https://github.com/nodejs/undici/blob/v7.16.0/lib/web/fetch/index.js)
+also removes Host overrides; this was verified with Node 24.10.0/Undici 7.16.0 against a local server.
+
 `timeoutMs` starts before each attempt's body preparation and fetch, and remains active until the response body reaches
-EOF or is canceled. It does not reset when headers or chunks arrive. Omit it or set it to `0` to
-disable the deadline. Retry waits (including `Retry-After`) are outside this per-attempt budget;
+EOF or is canceled. It does not reset when headers or chunks arrive. It must be finite and from
+0 through 2,147,483,647. Omit it or set it to `0` to disable the deadline.
+Retry waits (including `Retry-After`) are outside this per-attempt budget;
 each retry gets a fresh deadline. There is no built-in total request budget. Pass a caller-managed
 `AbortSignal` via the flat per-call `signal` option to cancel across attempts and retry waits.
 At the `createSmartFetch` boundary, both an input `Request.signal` and an `init.signal` are honored;
@@ -434,7 +490,7 @@ Required environment variables:
 
 - Admin example: `CIRCLE_ADMIN_TOKEN`, optional `CIRCLE_COMMUNITY_HOST` (defaults to `app.circle.so`)
 - Headless bookmark example: `CIRCLE_HEADLESS_TOKEN`, `CIRCLE_BOOKMARK_RECORD_ID`, optional `CIRCLE_BOOKMARK_TYPE`
-- Refresh example: `CIRCLE_HEADLESS_REFRESH_TOKEN`
+- Refresh example (server only): `CIRCLE_HEADLESS_REFRESH_TOKEN`, `CIRCLE_HEADLESS_AUTH_TOKEN`
 
 ## Update API specs
 
