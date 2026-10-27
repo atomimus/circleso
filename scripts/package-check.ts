@@ -190,6 +190,7 @@ try {
     "README.md",
     "docs/request-options.md",
     "docs/admin-workflows-and-filters.md",
+    "docs/admin-remaining-resources.md",
   ]) {
     const source = await readFile(path.join(root, file), "utf8");
     for (const [index, block] of [...source.matchAll(/```ts\r?\n([\s\S]*?)```/g)].entries()) {

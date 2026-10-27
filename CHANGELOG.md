@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Complete the Admin facade with 13 operations for leads, contact notes, payment-method
+  preferences, tax/Connect settings, live rooms/transcripts, location search and historical
+  chat imports. Inventory: 172/172 Admin, 102/102 Member, 4/4 Auth. Keep import success
+  unknown while its upstream schema is missing; document opaque rich-text inputs.
+
 - Add 11 typed Admin workflow and directory-filter operations via `workflows` and
   `filterKit`. Preserve polymorphic configuration payloads, saved-control visibility
   and scope, optional PATCH bodies and the distinction from member search predicates.
@@ -46,8 +51,8 @@ flat options, client factories, and npm entry points are retained.
 - `admin.invitationLinks.create(options)` and `.update(id, options)`.
 - `admin.profileFields.create(options)`, `.update(id, options)`, and `.delete(id, options)`.
 
-The operation inventory lists the remaining Admin facade gaps; all specified operations
-remain available through the generated raw clients.
+The operation inventory now maps every specified operation to a named facade and raw client;
+upstream untyped success schemas remain listed separately.
 
 ### Fixes
 

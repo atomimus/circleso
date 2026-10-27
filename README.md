@@ -235,6 +235,27 @@ use `retries: { retries: 0 }` for deliberate mutations and reconcile uncertain o
 See the [method reference and configuration types](https://github.com/atomimus/circleso/blob/main/docs/admin-workflows-and-filters.md)
 and [compile-only examples](https://github.com/atomimus/circleso/blob/main/examples/admin-workflows-and-filters.ts).
 
+#### Contacts, settings, live rooms and historical imports
+
+The remaining Admin resources are `communityLeads.create/delete`, `contactNotes.list/create`,
+`paymentMethodPreferences.get`, `taxSettings.get/update`, `connectSettings.get/update`,
+`liveRooms.list/transcripts`, `locations.search` and `chatRoomMessageImports.create`.
+These complete the current named facade: 172/172 Admin, 102/102 Member and 4/4 Auth operations.
+See the [method reference and schema limitations](https://github.com/atomimus/circleso/blob/main/docs/admin-remaining-resources.md)
+and [compile-only recipes](https://github.com/atomimus/circleso/blob/main/examples/admin-remaining-resources.ts).
+
+Leads are non-member contacts without community access; deletion soft-deletes the contact.
+Contact notes use string IDs or sqids, while lead and live-room IDs are numeric. Payment
+preferences return an array; transcripts return JSON containing raw VTT strings. Tax and
+Connect updates accept optional nested bodies and preserve partial fields, including `false`.
+PUT/DELETE retain shared retries; use `retries: { retries: 0 }` for deliberate mutations.
+
+Historical chat imports require a non-future `sent_at` and send no notifications; Circle
+adds missing space membership/participation. The upstream `admin_v2_chat_room_message`
+response schema is absent, so import success remains **unknown**, including through the raw
+client. Rich-text inputs also lack nested property schemas; the reference explains their
+generated-type limitation. Operation coverage does not imply complete response schemas.
+
 ### Headless API (Bearer)
 
 ```ts

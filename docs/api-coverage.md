@@ -5,7 +5,7 @@ Counts are method/path exposure, not runtime correctness or test coverage. `raw`
 
 | Surface | Spec operations | Raw exposure | Named facade operations | Raw-only |
 | --- | ---: | ---: | ---: | ---: |
-| admin-v2 | 172 | 172 | 159 | 13 |
+| admin-v2 | 172 | 172 | 172 | 0 |
 | headless-client-v1 | 102 | 102 | 102 | 0 |
 | headless-auth-v1 | 4 | 4 | 4 | 0 |
 
@@ -15,19 +15,6 @@ Release task ownership follows the saved v1 plan; unassigned new routes need exp
 
 | Surface | Method | Path | Task |
 | --- | --- | --- | --- |
-| admin-v2 | DELETE | `/api/admin/v2/community_leads/{id}` | 15 |
-| admin-v2 | GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
-| admin-v2 | GET | `/api/admin/v2/live/rooms` | 15 |
-| admin-v2 | GET | `/api/admin/v2/live/rooms/{room_id}/transcripts` | 15 |
-| admin-v2 | GET | `/api/admin/v2/locations/search` | 15 |
-| admin-v2 | GET | `/api/admin/v2/payment_method_setting` | 15 |
-| admin-v2 | GET | `/api/admin/v2/settings/connect` | 15 |
-| admin-v2 | GET | `/api/admin/v2/tax_setting` | 15 |
-| admin-v2 | PATCH | `/api/admin/v2/settings/connect` | 15 |
-| admin-v2 | POST | `/api/admin/v2/chat_room_message_imports` | 15 |
-| admin-v2 | POST | `/api/admin/v2/community_leads` | 15 |
-| admin-v2 | POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | 15 |
-| admin-v2 | PUT | `/api/admin/v2/tax_setting` | 15 |
 
 ## Untyped success response limitations
 
@@ -56,7 +43,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | DELETE | `/api/admin/v2/access_groups/{access_group_id}/community_members` | Yes | `accessGroups.members.remove` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | DELETE | `/api/admin/v2/access_groups/{id}` | Yes | `accessGroups.archive` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | DELETE | `/api/admin/v2/comments/{id}` | Yes | `comments.delete` ([source](../src/adminApi/resources/comments.ts)) |
-| DELETE | `/api/admin/v2/community_leads/{id}` | Yes | — |
+| DELETE | `/api/admin/v2/community_leads/{id}` | Yes | `communityLeads.delete` ([source](../src/adminApi/resources/communityLeads.ts)) |
 | DELETE | `/api/admin/v2/community_members/{id}` | Yes | `communityMembers.deactivate` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | DELETE | `/api/admin/v2/community_segments/{id}` | Yes | `communitySegments.delete` ([source](../src/adminApi/resources/communitySegments.ts)) |
 | DELETE | `/api/admin/v2/course_lessons/{id}` | Yes | `courses.lessons.delete` ([source](../src/adminApi/resources/courses.ts)) |
@@ -94,7 +81,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/community_members/{community_member_id}/access_groups` | Yes | `communityMembers.accessGroups.list` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | GET | `/api/admin/v2/community_members/{id}` | Yes | `communityMembers.get` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | GET | `/api/admin/v2/community_segments` | Yes | `communitySegments.list` ([source](../src/adminApi/resources/communitySegments.ts)) |
-| GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | Yes | — |
+| GET | `/api/admin/v2/contacts/{contact_id}/contact_notes` | Yes | `contactNotes.list` ([source](../src/adminApi/resources/contactNotes.ts)) |
 | GET | `/api/admin/v2/course_lessons` | Yes | `courses.lessons.list` ([source](../src/adminApi/resources/courses.ts)) |
 | GET | `/api/admin/v2/course_lessons/{id}` | Yes | `courses.lessons.get` ([source](../src/adminApi/resources/courses.ts)) |
 | GET | `/api/admin/v2/course_sections` | Yes | `courses.sections.list` ([source](../src/adminApi/resources/courses.ts)) |
@@ -112,20 +99,20 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/forms/{id}` | Yes | `forms.get` ([source](../src/adminApi/resources/forms.ts)) |
 | GET | `/api/admin/v2/gamification/leaderboard` | Yes | `gamification.leaderboard` ([source](../src/adminApi/resources/gamification.ts)) |
 | GET | `/api/admin/v2/invitation_links` | Yes | `invitationLinks.list` ([source](../src/adminApi/resources/invitationLinks.ts)) |
-| GET | `/api/admin/v2/live/rooms` | Yes | — |
-| GET | `/api/admin/v2/live/rooms/{room_id}/transcripts` | Yes | — |
-| GET | `/api/admin/v2/locations/search` | Yes | — |
+| GET | `/api/admin/v2/live/rooms` | Yes | `liveRooms.list` ([source](../src/adminApi/resources/liveRooms.ts)) |
+| GET | `/api/admin/v2/live/rooms/{room_id}/transcripts` | Yes | `liveRooms.transcripts` ([source](../src/adminApi/resources/liveRooms.ts)) |
+| GET | `/api/admin/v2/locations/search` | Yes | `locations.search` ([source](../src/adminApi/resources/locations.ts)) |
 | GET | `/api/admin/v2/member_tags` | Yes | `memberTags.list` ([source](../src/adminApi/resources/memberTags.ts)) |
 | GET | `/api/admin/v2/member_tags/{id}` | Yes | `memberTags.get` ([source](../src/adminApi/resources/memberTags.ts)) |
 | GET | `/api/admin/v2/page_profile_fields` | Yes | `pageProfileFields.list` ([source](../src/adminApi/resources/pageProfileFields.ts)) |
-| GET | `/api/admin/v2/payment_method_setting` | Yes | — |
+| GET | `/api/admin/v2/payment_method_setting` | Yes | `paymentMethodPreferences.get` ([source](../src/adminApi/resources/paymentMethodPreferences.ts)) |
 | GET | `/api/admin/v2/paywall_affiliates` | Yes | `paywallAffiliates.list` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
 | GET | `/api/admin/v2/paywalls/search` | Yes | `paywalls.search` ([source](../src/adminApi/resources/paywalls.ts)) |
 | GET | `/api/admin/v2/posts` | Yes | `posts.list` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/posts/{id}` | Yes | `posts.get` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/posts/{post_id}/summary` | Yes | `posts.summary` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/profile_fields` | Yes | `profileFields.list` ([source](../src/adminApi/resources/profileFields.ts)) |
-| GET | `/api/admin/v2/settings/connect` | Yes | — |
+| GET | `/api/admin/v2/settings/connect` | Yes | `connectSettings.get` ([source](../src/adminApi/resources/connectSettings.ts)) |
 | GET | `/api/admin/v2/space_group_member` | Yes | `spaceGroupMembers.get` ([source](../src/adminApi/resources/spaceGroupMembers.ts)) |
 | GET | `/api/admin/v2/space_group_members` | Yes | `spaceGroupMembers.list` ([source](../src/adminApi/resources/spaceGroupMembers.ts)) |
 | GET | `/api/admin/v2/space_groups` | Yes | `spaceGroups.list` ([source](../src/adminApi/resources/spaceGroups.ts)) |
@@ -139,7 +126,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | GET | `/api/admin/v2/spaces/{space_id}/images/posts/{id}` | Yes | `posts.images.get` ([source](../src/adminApi/resources/posts.ts)) |
 | GET | `/api/admin/v2/tagged_members` | Yes | `taggedMembers.list` ([source](../src/adminApi/resources/taggedMembers.ts)) |
 | GET | `/api/admin/v2/tagged_members/{id}` | Yes | `taggedMembers.get` ([source](../src/adminApi/resources/taggedMembers.ts)) |
-| GET | `/api/admin/v2/tax_setting` | Yes | — |
+| GET | `/api/admin/v2/tax_setting` | Yes | `taxSettings.get` ([source](../src/adminApi/resources/taxSettings.ts)) |
 | GET | `/api/admin/v2/topics` | Yes | `topics.list` ([source](../src/adminApi/resources/topics.ts)) |
 | GET | `/api/admin/v2/topics/{id}` | Yes | `topics.get` ([source](../src/adminApi/resources/topics.ts)) |
 | GET | `/api/admin/v2/workflows` | Yes | `workflows.list` ([source](../src/adminApi/resources/workflows.ts)) |
@@ -151,12 +138,12 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | PATCH | `/api/admin/v2/filter_kit_controls/{id}` | Yes | `filterKit.controls.update` ([source](../src/adminApi/resources/filterKit.ts)) |
 | PATCH | `/api/admin/v2/invitation_links/{id}/revoke` | Yes | `invitationLinks.revoke` ([source](../src/adminApi/resources/invitationLinks.ts)) |
 | PATCH | `/api/admin/v2/paywall_affiliates/{id}` | Yes | `paywallAffiliates.update` ([source](../src/adminApi/resources/paywallAffiliates.ts)) |
-| PATCH | `/api/admin/v2/settings/connect` | Yes | — |
+| PATCH | `/api/admin/v2/settings/connect` | Yes | `connectSettings.update` ([source](../src/adminApi/resources/connectSettings.ts)) |
 | POST | `/api/admin/v2/access_groups` | Yes | `accessGroups.create` ([source](../src/adminApi/resources/accessGroups.ts)) |
 | POST | `/api/admin/v2/access_groups/{access_group_id}/community_members` | Yes | `accessGroups.members.add` ([source](../src/adminApi/resources/accessGroups.ts)) |
-| POST | `/api/admin/v2/chat_room_message_imports` | Yes | — |
+| POST | `/api/admin/v2/chat_room_message_imports` | Yes | `chatRoomMessageImports.create` ([source](../src/adminApi/resources/chatRoomMessageImports.ts)) |
 | POST | `/api/admin/v2/comments` | Yes | `comments.create` ([source](../src/adminApi/resources/comments.ts)) |
-| POST | `/api/admin/v2/community_leads` | Yes | — |
+| POST | `/api/admin/v2/community_leads` | Yes | `communityLeads.create` ([source](../src/adminApi/resources/communityLeads.ts)) |
 | POST | `/api/admin/v2/community_member_charges/export` | Yes | `communityMemberCharges.export` ([source](../src/adminApi/resources/communityMemberCharges.ts)) |
 | POST | `/api/admin/v2/community_member_charges/{id}/refund` | Yes | `communityMemberCharges.refund` ([source](../src/adminApi/resources/communityMemberCharges.ts)) |
 | POST | `/api/admin/v2/community_member_subscriptions/export` | Yes | `communityMemberSubscriptions.export` ([source](../src/adminApi/resources/communityMemberSubscriptions.ts)) |
@@ -165,7 +152,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/community_members` | Yes | `communityMembers.create` ([source](../src/adminApi/resources/communityMembers.ts)) |
 | POST | `/api/admin/v2/community_segments` | Yes | `communitySegments.create` ([source](../src/adminApi/resources/communitySegments.ts)) |
 | POST | `/api/admin/v2/community_segments/{id}/duplicate` | Yes | `communitySegments.duplicate` ([source](../src/adminApi/resources/communitySegments.ts)) |
-| POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | Yes | — |
+| POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | Yes | `contactNotes.create` ([source](../src/adminApi/resources/contactNotes.ts)) |
 | POST | `/api/admin/v2/course_lessons` | Yes | `courses.lessons.create` ([source](../src/adminApi/resources/courses.ts)) |
 | POST | `/api/admin/v2/course_sections` | Yes | `courses.sections.create` ([source](../src/adminApi/resources/courses.ts)) |
 | POST | `/api/admin/v2/direct_uploads` | Yes | `directUploads.create` ([source](../src/adminApi/resources/directUploads.ts)) |
@@ -221,7 +208,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | PUT | `/api/admin/v2/profile_fields/{id}/unarchive` | Yes | `profileFields.unarchive` ([source](../src/adminApi/resources/profileFields.ts)) |
 | PUT | `/api/admin/v2/space_groups/{id}` | Yes | `spaceGroups.update` ([source](../src/adminApi/resources/spaceGroups.ts)) |
 | PUT | `/api/admin/v2/spaces/{id}` | Yes | `spaces.update` ([source](../src/adminApi/resources/spaces.ts)) |
-| PUT | `/api/admin/v2/tax_setting` | Yes | — |
+| PUT | `/api/admin/v2/tax_setting` | Yes | `taxSettings.update` ([source](../src/adminApi/resources/taxSettings.ts)) |
 | PUT | `/api/admin/v2/topics/{id}` | Yes | `topics.update` ([source](../src/adminApi/resources/topics.ts)) |
 | PUT | `/api/admin/v2/workflows/{id}/activate` | Yes | `workflows.activate` ([source](../src/adminApi/resources/workflows.ts)) |
 | PUT | `/api/admin/v2/workflows/{id}/deactivate` | Yes | `workflows.deactivate` ([source](../src/adminApi/resources/workflows.ts)) |

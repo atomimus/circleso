@@ -46,7 +46,7 @@ describe("operation inventory", () => {
     ).rejects.toThrow("Dynamic request");
   });
 
-  it("reproduces the committed repository inventory and assigns every accepted gap offline", async () => {
+  it("keeps all accepted operations exposed by raw clients and named facades offline", async () => {
     const root = fileURLToPath(new URL("../", import.meta.url));
     const data = await inventory(root);
     expect(
@@ -54,8 +54,14 @@ describe("operation inventory", () => {
         (surface) => surface.operations.length > 0 && surface.operations.every((op) => op.raw),
       ),
     ).toBe(true);
-    const gaps = data[0]?.operations.filter((op) => !op.wrappers.length) ?? [];
-    expect(gaps.filter((op) => op.task === null)).toEqual([]);
+    expect(data.map((surface) => [surface.name, surface.operations.length])).toEqual([
+      ["admin-v2", 172],
+      ["headless-client-v1", 102],
+      ["headless-auth-v1", 4],
+    ]);
+    expect(
+      data.flatMap((surface) => surface.operations.filter((op) => !op.wrappers.length)),
+    ).toEqual([]);
     expect(report(data)).toBe(await readFile(path.join(root, "docs/api-coverage.md"), "utf8"));
   });
 });
