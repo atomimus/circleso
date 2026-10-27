@@ -5,13 +5,20 @@ export class CircleSdkError extends Error {
   }
 }
 
-export type CircleHttpErrorDetails = {
-  status: number;
-  url: string;
-  method: string;
+export type CircleResponseContext = {
+  status?: number;
+  url?: string;
+  method?: string;
   requestId?: string;
   bodyText?: string;
   parsedJson?: unknown;
+};
+
+export type CircleHttpErrorDetails = CircleResponseContext & {
+  status: number;
+  url: string;
+  method: string;
+  cause?: unknown;
 };
 
 export class CircleHttpError extends CircleSdkError {
@@ -21,6 +28,7 @@ export class CircleHttpError extends CircleSdkError {
   readonly requestId?: string;
   readonly bodyText?: string;
   readonly parsedJson?: unknown;
+  readonly cause: unknown;
 
   constructor(message: string, details: CircleHttpErrorDetails) {
     super(message);
@@ -28,6 +36,7 @@ export class CircleHttpError extends CircleSdkError {
     this.status = details.status;
     this.url = details.url;
     this.method = details.method;
+    this.cause = details.cause;
     if (details.requestId !== undefined) {
       this.requestId = details.requestId;
     }
@@ -42,17 +51,30 @@ export class CircleHttpError extends CircleSdkError {
 
 export class CircleNetworkError extends CircleSdkError {
   readonly cause: unknown;
+  declare readonly status?: number;
+  declare readonly url?: string;
+  declare readonly method?: string;
+  declare readonly requestId?: string;
+  declare readonly bodyText?: string;
+  declare readonly parsedJson?: unknown;
 
-  constructor(message: string, cause: unknown) {
+  constructor(message: string, cause: unknown, context?: CircleResponseContext) {
     super(message);
     this.name = "CircleNetworkError";
     this.cause = cause;
+    Object.assign(this, context);
   }
 }
 
 export class CircleTimeoutError extends CircleSdkError {
   readonly timeoutMs?: number;
   readonly cause: unknown;
+  declare readonly status?: number;
+  declare readonly url?: string;
+  declare readonly method?: string;
+  declare readonly requestId?: string;
+  declare readonly bodyText?: string;
+  declare readonly parsedJson?: unknown;
 
   constructor(message: string, timeoutMs?: number, cause?: unknown) {
     super(message);
@@ -65,8 +87,11 @@ export class CircleTimeoutError extends CircleSdkError {
 }
 
 export class CircleConfigError extends CircleSdkError {
-  constructor(message: string) {
+  readonly cause: unknown;
+
+  constructor(message: string, cause?: unknown) {
     super(message);
     this.name = "CircleConfigError";
+    this.cause = cause;
   }
 }

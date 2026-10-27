@@ -1,7 +1,6 @@
 import type { FetchOptions } from "openapi-fetch";
 import type { AdminClient } from "../clients/adminClient";
-import { CircleHttpError } from "../core/errors";
-import { HEADER_CONTENT_TYPE, HEADER_CORRELATION_ID, HEADER_REQUEST_ID } from "../core/headers";
+import { unwrapResult } from "../core/response";
 import type {
   AdminMethod,
   AdminPaths,
@@ -12,12 +11,6 @@ import type {
   RequestConfig,
 } from "./types";
 
-type OpenApiResult<Data> = {
-  data?: Data;
-  error?: unknown;
-  response: Response;
-};
-
 export function createAdminRequester(client: AdminClient) {
   const get = async <Path extends PathsWithMethod<AdminPaths, "get">>(
     path: Path,
@@ -25,7 +18,7 @@ export function createAdminRequester(client: AdminClient) {
   ) => {
     const init = buildInit<Path, "get">(options, "get", path);
     const result = await client.GET(path, init);
-    return handleResult(result, "GET", path);
+    return unwrapResult(result, "GET", path);
   };
 
   const post = async <Path extends PathsWithMethod<AdminPaths, "post">>(
@@ -34,7 +27,7 @@ export function createAdminRequester(client: AdminClient) {
   ) => {
     const init = buildInit<Path, "post">(options, "post", path);
     const result = await client.POST(path, init);
-    return handleResult(result, "POST", path);
+    return unwrapResult(result, "POST", path);
   };
 
   const put = async <Path extends PathsWithMethod<AdminPaths, "put">>(
@@ -43,7 +36,7 @@ export function createAdminRequester(client: AdminClient) {
   ) => {
     const init = buildInit<Path, "put">(options, "put", path);
     const result = await client.PUT(path, init);
-    return handleResult(result, "PUT", path);
+    return unwrapResult(result, "PUT", path);
   };
 
   const patch = async <Path extends PathsWithMethod<AdminPaths, "patch">>(
@@ -52,7 +45,7 @@ export function createAdminRequester(client: AdminClient) {
   ) => {
     const init = buildInit<Path, "patch">(options, "patch", path);
     const result = await client.PATCH(path, init);
-    return handleResult(result, "PATCH", path);
+    return unwrapResult(result, "PATCH", path);
   };
 
   const del = async <Path extends PathsWithMethod<AdminPaths, "delete">>(
@@ -61,7 +54,7 @@ export function createAdminRequester(client: AdminClient) {
   ) => {
     const init = buildInit<Path, "delete">(options, "delete", path);
     const result = await client.DELETE(path, init);
-    return handleResult(result, "DELETE", path);
+    return unwrapResult(result, "DELETE", path);
   };
 
   return {
@@ -176,83 +169,4 @@ function extractExtra(input: Record<string, unknown>) {
   }
 
   return hasExtra ? extra : undefined;
-}
-
-async function handleResult<Data>(
-  result: OpenApiResult<Data>,
-  method: string,
-  fallbackPath: string,
-): Promise<Data | undefined> {
-  if (!result.error) {
-    return result.data;
-  }
-
-  const response = result.response;
-  const status = response?.status ?? 0;
-  const url = response?.url ?? fallbackPath;
-  const requestId = response ? getRequestId(response.headers) : undefined;
-
-  let parsedJson: unknown;
-  let bodyText: string | undefined;
-
-  const errorData = getErrorData(result.error);
-  if (typeof errorData !== "undefined") {
-    if (typeof errorData === "string") {
-      bodyText = errorData;
-    } else {
-      parsedJson = errorData;
-    }
-  }
-
-  if (!bodyText && parsedJson === undefined && response) {
-    const text = await safeReadText(response);
-    if (text) {
-      bodyText = text;
-      if (isJsonContentType(response.headers.get(HEADER_CONTENT_TYPE) ?? "")) {
-        try {
-          parsedJson = JSON.parse(text);
-        } catch {
-          // ignore parse errors
-        }
-      }
-    }
-  }
-
-  const details = {
-    status,
-    url,
-    method,
-    ...(requestId !== undefined ? { requestId } : {}),
-    ...(bodyText !== undefined ? { bodyText } : {}),
-    ...(parsedJson !== undefined ? { parsedJson } : {}),
-  };
-
-  throw new CircleHttpError(`Request failed with status ${status}`, details);
-}
-
-function isJsonContentType(contentType: string) {
-  const normalized = contentType.toLowerCase();
-  return normalized.includes("application/json") || normalized.includes("+json");
-}
-
-function getRequestId(headers: Headers) {
-  return headers.get(HEADER_REQUEST_ID) ?? headers.get(HEADER_CORRELATION_ID) ?? undefined;
-}
-
-function getErrorData(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return undefined;
-  }
-  if ("data" in error) {
-    return (error as { data?: unknown }).data;
-  }
-  return error;
-}
-
-async function safeReadText(response: Response) {
-  try {
-    return await response.text();
-  } catch {
-    return undefined;
-  }
 }

@@ -1,8 +1,10 @@
 import type { Client, Middleware, PathBasedClient } from "openapi-fetch";
 import * as openapiFetch from "openapi-fetch";
+import { normalizeClientErrors } from "../core/clientErrors";
 import { CircleConfigError } from "../core/errors";
 import { createSmartFetch, type RetryConfig } from "../core/http";
 import { createLoggerMiddleware, type LoggerHooks } from "../core/middleware/logger";
+import { createResponseMiddleware } from "../core/response";
 
 export type ClientRuntimeConfig = {
   baseUrl: string;
@@ -37,10 +39,15 @@ export function createOpenApiClient<Paths extends object>(
     ...(config.fetcher !== undefined ? { fetcher: config.fetcher } : {}),
   });
 
-  const client = createClient<Paths>({
-    baseUrl: config.baseUrl,
-    fetch: config.fetch ?? ((request) => smartFetch(request)),
-  });
+  const client = normalizeClientErrors(
+    createClient<Paths>({
+      baseUrl: config.baseUrl,
+      fetch: config.fetch ?? ((request) => smartFetch(request)),
+    }),
+  );
+
+  // Response middleware run in reverse order. Normalize the final response after other hooks.
+  client.use(createResponseMiddleware());
 
   const loggerMiddleware = createLoggerMiddleware(config.logger);
   const allMiddleware = loggerMiddleware ? [...middleware, loggerMiddleware] : middleware;

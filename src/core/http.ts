@@ -1,18 +1,12 @@
 import { CircleConfigError, CircleHttpError, CircleNetworkError, CircleSdkError } from "./errors";
-import {
-  HEADER_CONTENT_LENGTH,
-  HEADER_CONTENT_TYPE,
-  HEADER_CORRELATION_ID,
-  HEADER_REQUEST_ID,
-  HEADER_RETRY_AFTER,
-  HEADER_USER_AGENT,
-} from "./headers";
+import { HEADER_CONTENT_LENGTH, HEADER_RETRY_AFTER, HEADER_USER_AGENT } from "./headers";
 import {
   bindResponseLifetime,
   createHttpLifetime,
   discardResponse,
   waitForRetry,
 } from "./httpLifetime";
+import { buildHttpError, prepareResponse, responseContext } from "./response";
 
 const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]);
 
@@ -52,7 +46,7 @@ export function createSmartFetch(config: SmartFetchConfig) {
   const userAgent = config.userAgent;
   const throwOnHttpError = config.throwOnHttpError ?? true;
 
-  return async function smartFetch(input: RequestInfo | URL, init: SmartFetchInit = {}) {
+  async function smartFetch(input: RequestInfo | URL, init: SmartFetchInit = {}) {
     const request = input instanceof Request ? input : undefined;
     const { timeoutMs, retries, body: initBody, ...requestInit } = init;
     const method = resolveMethod(request, requestInit.method);
@@ -117,25 +111,25 @@ export function createSmartFetch(config: SmartFetchConfig) {
           discardResponse(received);
           lifetime.cleanup();
         }
-        const response = skipsBody ? received : bindResponseLifetime(received, lifetime);
+        const response = prepareResponse(
+          skipsBody ? received : bindResponseLifetime(received, lifetime),
+          { url, method, signal: lifetime.signal },
+        );
         bodyOwnsLifetime = true;
 
         if (!response.ok && throwOnHttpError) {
-          const { bodyText, parsedJson } = await readErrorBody(response);
-          const requestId = getRequestId(response.headers);
-          const details = {
-            status: response.status,
-            url,
-            method,
-            ...(requestId !== undefined ? { requestId } : {}),
-            ...(bodyText !== undefined ? { bodyText } : {}),
-            ...(parsedJson !== undefined ? { parsedJson } : {}),
-          };
-          throw new CircleHttpError(`Request failed with status ${response.status}`, details);
+          throw await buildHttpError(response);
         }
 
         return response;
       } catch (error) {
+        if (lifetime.signal.aborted) {
+          Object.assign(lifetime.signal.reason, {
+            url,
+            method,
+            ...(pendingResponse ? responseContext(pendingResponse, { url, method }) : {}),
+          });
+        }
         lifetime.throwIfAborted();
 
         if (isAbortError(error)) {
@@ -150,9 +144,18 @@ export function createSmartFetch(config: SmartFetchConfig) {
           continue;
         }
 
-        throw error instanceof CircleSdkError
-          ? error
-          : new CircleNetworkError("Network request failed.", error);
+        if (error instanceof CircleSdkError) throw error;
+        if (pendingResponse && !pendingResponse.ok) {
+          throw new CircleHttpError(`Request failed with status ${pendingResponse.status}`, {
+            ...responseContext(pendingResponse, { url, method }),
+            cause: error,
+          });
+        }
+        throw new CircleNetworkError("Network request failed.", error, {
+          url,
+          method,
+          ...(pendingResponse ? responseContext(pendingResponse, { url, method }) : {}),
+        });
       } finally {
         if (!bodyOwnsLifetime) {
           if (pendingResponse && lifetime.signal.aborted) {
@@ -161,6 +164,15 @@ export function createSmartFetch(config: SmartFetchConfig) {
           lifetime.cleanup();
         }
       }
+    }
+  }
+
+  return async (input: RequestInfo | URL, init?: SmartFetchInit) => {
+    try {
+      return await smartFetch(input, init);
+    } catch (cause) {
+      if (cause instanceof CircleSdkError) throw cause;
+      throw new CircleConfigError("Could not prepare HTTP request.", cause);
     }
   };
 }
@@ -172,8 +184,8 @@ function resolveBaseUrl(baseUrl: string) {
 
   try {
     return new URL(baseUrl);
-  } catch {
-    throw new CircleConfigError(`Invalid baseUrl: ${baseUrl}`);
+  } catch (cause) {
+    throw new CircleConfigError(`Invalid baseUrl: ${baseUrl}`, cause);
   }
 }
 
@@ -357,48 +369,9 @@ function isRetryableNetworkError(error: unknown) {
   return error instanceof TypeError;
 }
 
-async function readErrorBody(response: Response) {
-  if (response.status === 204 || response.status === 205) {
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  let bodyText: string | undefined;
-  try {
-    bodyText = await response.text();
-  } catch (error) {
-    if (error instanceof CircleSdkError) throw error;
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  if (!bodyText) {
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  const contentType = response.headers.get(HEADER_CONTENT_TYPE) ?? "";
-  if (isJsonContentType(contentType)) {
-    try {
-      const parsedJson = JSON.parse(bodyText);
-      return { bodyText, parsedJson };
-    } catch {
-      return { bodyText, parsedJson: undefined };
-    }
-  }
-
-  return { bodyText, parsedJson: undefined };
-}
-
-function isJsonContentType(contentType: string) {
-  const normalized = contentType.toLowerCase();
-  return normalized.includes("application/json") || normalized.includes("+json");
-}
-
 function isNodeStream(value: unknown): value is { pipe: (...args: unknown[]) => unknown } {
   if (!value || typeof value !== "object") {
     return false;
   }
   return typeof (value as { pipe?: unknown }).pipe === "function";
-}
-
-function getRequestId(headers: Headers) {
-  return headers.get(HEADER_REQUEST_ID) ?? headers.get(HEADER_CORRELATION_ID) ?? undefined;
 }

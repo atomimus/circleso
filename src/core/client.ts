@@ -1,4 +1,4 @@
-import { CircleConfigError } from "./errors";
+import { CircleConfigError, CircleSdkError } from "./errors";
 import {
   HEADER_ACCEPT,
   HEADER_API_KEY,
@@ -6,6 +6,7 @@ import {
   HEADER_CONTENT_TYPE,
 } from "./headers";
 import { createSmartFetch } from "./http";
+import { parseResponse } from "./response";
 import type { AuthConfig, ClientConfig, HttpMethod, RequestOptions } from "./types";
 import { joinUrl, withQuery } from "./url";
 
@@ -23,20 +24,25 @@ export function createClient(config: ClientConfig) {
     path: string,
     options: RequestOptions = {},
   ): Promise<T> {
-    const url = withQuery(joinUrl(baseUrl, basePath, path), options.query);
-    const headers = buildHeaders(defaultHeaders, options.headers, auth);
-    const body = prepareBody(options.body, headers);
+    try {
+      const url = withQuery(joinUrl(baseUrl, basePath, path), options.query);
+      const headers = buildHeaders(defaultHeaders, options.headers, auth);
+      const body = prepareBody(options.body, headers);
 
-    const requestInit = {
-      method,
-      headers,
-      ...(body !== undefined ? { body } : {}),
-      ...(options.signal !== undefined ? { signal: options.signal } : {}),
-    };
+      const requestInit = {
+        method,
+        headers,
+        ...(body !== undefined ? { body } : {}),
+        ...(options.signal !== undefined ? { signal: options.signal } : {}),
+      };
 
-    const response = await smartFetch(url, requestInit);
+      const response = await smartFetch(url, requestInit);
 
-    return (await parseResponse(response)) as T;
+      return (await parseResponse(response)) as T;
+    } catch (cause) {
+      if (cause instanceof CircleSdkError) throw cause;
+      throw new CircleConfigError("Could not prepare API request.", cause);
+    }
   }
 
   return {
@@ -129,17 +135,4 @@ function isJsonBody(body: unknown): body is Record<string, unknown> | unknown[] 
   }
 
   return typeof body === "object";
-}
-
-async function parseResponse(response: Response): Promise<unknown> {
-  if (response.status === 204 || response.status === 205) {
-    return undefined;
-  }
-
-  const contentType = response.headers.get(HEADER_CONTENT_TYPE) ?? "";
-  if (contentType.includes("application/json") || contentType.includes("+json")) {
-    return response.json();
-  }
-
-  return response.text();
 }

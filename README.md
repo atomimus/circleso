@@ -213,8 +213,27 @@ it defaults to `app.circle.so`.
 
 ## Error handling
 
-The low-level fetch utilities throw rich error objects when HTTP responses are not OK. Catch
-`CircleHttpError` to inspect status, request ID, and error bodies.
+Named resources, iterators, `createClient`, and `createSmartFetch` (unless
+`throwOnHttpError: false`) throw `CircleHttpError` for non-2xx responses, including empty,
+`false`, `null`, and string error bodies. Inspect `status`, `method`, `url`, `requestId`,
+`bodyText`, `parsedJson`, and `cause`. The request ID falls back to `x-correlation-id`.
+Error bodies are best-effort: malformed JSON retains the original text and parsing cause;
+unreadable or already consumed bodies retain the status and read failure cause.
+
+Raw OpenAPI clients retain openapi-fetch's `{ data, error, response }` contract. Check
+`response.ok` to detect HTTP failure: `error` can be `undefined`, `false`, `null`, or an empty
+string. Raw HTTP payloads are preserved without unwrapping a nested `data` field. Raw calls
+default to JSON; use `parseAs: "text"` for successful text responses or another supported
+`parseAs` mode for binary/stream data. The generic `createClient` instead selects JSON for
+`application/json` and `+json` MIME types, and text otherwise.
+
+Successful 204/205 and empty JSON bodies return `undefined`; JSON primitives are preserved.
+Malformed successful JSON throws `CircleNetworkError` with the `SyntaxError` cause, original
+text, status, URL, method, and request ID. Body transport failures also use this class.
+HTTP body-read failures retain `CircleHttpError`; caller cancellation and SDK deadlines keep
+their `CircleNetworkError`/`CircleTimeoutError` identity and original causes. SDK-owned response
+readers and clones normalize read/decode errors too, while retaining single-consumption and
+stream ownership. Request preparation and middleware failures use `CircleConfigError` with a cause.
 
 ```ts
 import { CircleHttpError, createSmartFetch } from "circleso";

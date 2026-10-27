@@ -1,18 +1,8 @@
-import {
-  CircleConfigError,
-  CircleHttpError,
-  CircleNetworkError,
-  CircleTimeoutError,
-} from "./errors";
-import {
-  HEADER_ACCEPT,
-  HEADER_AUTHORIZATION,
-  HEADER_CONTENT_TYPE,
-  HEADER_CORRELATION_ID,
-  HEADER_REQUEST_ID,
-} from "./headers";
+import { CircleConfigError, CircleHttpError } from "./errors";
+import { HEADER_ACCEPT, HEADER_AUTHORIZATION, HEADER_CONTENT_TYPE } from "./headers";
 import { createSmartFetch, type RetryConfig } from "./http";
 import { createHttpLifetime, discardResponse } from "./httpLifetime";
+import { buildHttpError, readResponseBody, responseContext } from "./response";
 
 const REFRESH_PATH = "/api/v1/headless/access_token/refresh";
 
@@ -120,7 +110,7 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
 
       const newAccessToken = await getAccessToken();
       if (!newAccessToken) {
-        throw await buildHttpError(request, response);
+        throw await buildHttpError(response, request);
       }
 
       const retryRequest = cloneRequestWithAuth(retryBase, newAccessToken);
@@ -151,31 +141,16 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
       });
 
       const response = await refreshFetch(refreshRequest);
-      const { bodyText, parsedJson } = await readBody(response);
-      const requestId = getRequestId(response.headers);
+      const evidence = await readBody(response);
+      const { parsedJson } = evidence;
+      const details = { ...responseContext(response, refreshRequest), ...evidence };
 
       if (!response.ok) {
-        const details = {
-          status: response.status,
-          url: refreshUrl,
-          method: "PATCH",
-          ...(requestId !== undefined ? { requestId } : {}),
-          ...(bodyText !== undefined ? { bodyText } : {}),
-          ...(parsedJson !== undefined ? { parsedJson } : {}),
-        };
         throw new CircleHttpError(`Token refresh failed with status ${response.status}`, details);
       }
 
       const nextToken = extractAccessToken(parsedJson);
       if (!nextToken) {
-        const details = {
-          status: response.status,
-          url: refreshUrl,
-          method: "PATCH",
-          ...(requestId !== undefined ? { requestId } : {}),
-          ...(bodyText !== undefined ? { bodyText } : {}),
-          ...(parsedJson !== undefined ? { parsedJson } : {}),
-        };
         throw new CircleHttpError("Token refresh response missing access_token.", details);
       }
 
@@ -209,20 +184,6 @@ async function shouldAttemptRefresh(response: Response) {
   return message?.toLowerCase().includes("expired") ?? false;
 }
 
-async function buildHttpError(request: Request, response: Response) {
-  const { bodyText, parsedJson } = await readBody(response);
-  const requestId = getRequestId(response.headers);
-  const details = {
-    status: response.status,
-    url: request.url,
-    method: request.method,
-    ...(requestId !== undefined ? { requestId } : {}),
-    ...(bodyText !== undefined ? { bodyText } : {}),
-    ...(parsedJson !== undefined ? { parsedJson } : {}),
-  };
-  return new CircleHttpError(`Request failed with status ${response.status}`, details);
-}
-
 function cloneRequestWithAuth(request: Request, accessToken: string) {
   const headers = new Headers(request.headers);
   headers.set(HEADER_AUTHORIZATION, `Bearer ${accessToken}`);
@@ -230,43 +191,11 @@ function cloneRequestWithAuth(request: Request, accessToken: string) {
 }
 
 async function readBody(response: Response) {
-  if (response.status === 204 || response.status === 205) {
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  let bodyText: string | undefined;
-  try {
-    bodyText = await response.clone().text();
-  } catch (error) {
-    if (error instanceof CircleNetworkError || error instanceof CircleTimeoutError) throw error;
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  if (!bodyText) {
-    return { bodyText: undefined, parsedJson: undefined };
-  }
-
-  const contentType = response.headers.get(HEADER_CONTENT_TYPE) ?? "";
-  if (isJsonContentType(contentType)) {
-    try {
-      const parsedJson = JSON.parse(bodyText);
-      return { bodyText, parsedJson };
-    } catch {
-      return { bodyText, parsedJson: undefined };
-    }
-  }
-
-  const trimmed = bodyText.trim();
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    try {
-      const parsedJson = JSON.parse(bodyText);
-      return { bodyText, parsedJson };
-    } catch {
-      return { bodyText, parsedJson: undefined };
-    }
-  }
-
-  return { bodyText, parsedJson: undefined };
+  const copy = response.clone();
+  // Preserve transport/deadline failures; the shared parser supplies best-effort JSON evidence.
+  if (copy.ok) await copy.json();
+  else await copy.text();
+  return readResponseBody(copy);
 }
 
 function extractAccessToken(parsedJson: unknown) {
@@ -292,13 +221,4 @@ function extractMessage(parsedJson: unknown, bodyText?: string) {
   }
 
   return bodyText;
-}
-
-function isJsonContentType(contentType: string) {
-  const normalized = contentType.toLowerCase();
-  return normalized.includes("application/json") || normalized.includes("+json");
-}
-
-function getRequestId(headers: Headers) {
-  return headers.get(HEADER_REQUEST_ID) ?? headers.get(HEADER_CORRELATION_ID) ?? undefined;
 }

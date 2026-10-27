@@ -4,6 +4,7 @@ import type { RetryConfig } from "../core/http";
 import { createBearerAuthMiddleware } from "../core/middleware/bearerAuth";
 import type { LoggerHooks } from "../core/middleware/logger";
 import { paginateByIdWindow, toAsyncIterator } from "../core/pagination";
+import { unwrapResult } from "../core/response";
 import { createTokenManager, type TokenHooks } from "../core/tokenManager";
 import type { paths as HeadlessPaths } from "../generated/headless-client-v1";
 import { createOpenApiClient, type DualClient } from "./shared";
@@ -107,7 +108,7 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
             ...(nextPerPage !== undefined ? { next_per_page: nextPerPage } : {}),
           };
 
-          const { data, error } = await client.GET(
+          const result = await client.GET(
             "/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages",
             {
               params: {
@@ -117,9 +118,11 @@ export function createHeadlessClient(config: HeadlessClientConfig): HeadlessClie
             },
           );
 
-          if (error) {
-            throw error;
-          }
+          const data = await unwrapResult(
+            result,
+            "GET",
+            "/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages",
+          );
 
           if (!data) {
             return {

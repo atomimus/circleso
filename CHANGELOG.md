@@ -37,6 +37,12 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Centralize response parsing across resources, raw clients, generic helpers and iterators.
+  Detect HTTP failures by status even for empty/false/null bodies, retain exact error text and
+  nested payloads, and expose original parsing/read causes with request/response context.
+- Return `undefined` for empty successful JSON and 205 responses. Normalize malformed successful
+  JSON and consumed/unreadable bodies into SDK errors; retain the raw `{data,error,response}`
+  contract, explicit parse modes, and cancellation/deadline error identity.
 - Honor caller cancellation through Admin, Headless and Auth resources, including pre-aborted
   calls and retry waits. Preserve the original abort reason as `CircleNetworkError.cause`.
 - Keep each `timeoutMs` deadline active through response body reads. Release timers, signal
