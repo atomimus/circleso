@@ -34,14 +34,15 @@ const helpers = [
   "paginateByIdWindow",
   "paginateSearchAfter",
   "toAsyncIterator",
+  "richText",
 ];
 assert.deepEqual(Object.keys(esm[0]).sort(), [...errors, ...helpers].sort());
 assert.deepEqual(Object.keys(cjs[0]).sort(), [...errors, ...helpers].sort());
 for (const modules of [esm, cjs]) {
   for (const [index, names] of [
     [],
-    ["createAdmin", "createAdminClient"],
-    ["createHeadless", "createHeadlessClient"],
+    ["createAdmin", "createAdminClient", "richText"],
+    ["createHeadless", "createHeadlessClient", "richText"],
     ["createAuth", "createHeadlessAuthClient"],
   ].entries()) {
     if (index) assert.deepEqual(Object.keys(modules[index]).sort(), [...errors, ...names].sort());
@@ -247,4 +248,55 @@ for (const modules of [esm, cjs]) {
 }
 console.log(
   "Package uploads: root/Admin/Member ESM/CJS end-to-end, bundled MD5 and storage isolation pass",
+);
+
+for (const modules of [esm, cjs]) {
+  for (const index of [0, 1, 2]) {
+    const { richText, CircleConfigError } = modules[index];
+    const content = richText.body(
+      [
+        richText.paragraph(
+          richText.text("Hello "),
+          richText.mention("synthetic-sgid"),
+          richText.hardBreak(),
+          richText.link("Guide", "https://example.com"),
+        ),
+      ],
+      { attachments: [richText.signedAttachment("synthetic-id")] },
+    );
+    assert.equal(content.body.content[0].content[3].marks[0].attrs.target, "_blank");
+    assert.throws(() => richText.mention("bad id"), CircleConfigError);
+    assert.throws(() => richText.paragraph({ type: "future" }), CircleConfigError);
+    const extension = richText.unchecked({
+      body: { type: "doc", content: [{ type: "future", attrs: { value: null } }] },
+    });
+    let calls = 0;
+    const config = {
+      token: "synthetic",
+      fetcher: async (request) => {
+        calls++;
+        const body = await request.json();
+        assert.deepEqual(body.rich_text_body, calls === 1 ? content : extension);
+        return Response.json({});
+      },
+    };
+    if (index === 1) {
+      const admin = modules[index].createAdmin(config);
+      await admin.messages.create({ chat_room_uuid: "room", rich_text_body: content });
+      await admin.chatRoomMessageImports.create({
+        chat_room_uuid: "room",
+        user_email: "synthetic@example.com",
+        sent_at: "2020-01-01T00:00:00Z",
+        rich_text_body: extension,
+      });
+    } else {
+      const member = modules[index].createHeadless(config);
+      await member.chatRooms.messages.create("room", { rich_text_body: content });
+      await member.chatRooms.messages.update("room", "2", { rich_text_body: extension });
+    }
+    assert.equal(calls, 2);
+  }
+}
+console.log(
+  "Package rich text: root/Admin/Member ESM/CJS builders, validation and public writes pass",
 );

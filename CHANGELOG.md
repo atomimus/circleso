@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `richText` types/builders for common Circle content and signed attachments, plus
+  an explicit JSON escape hatch. Extend only named-facade rich-text request fields
+  where shallow/object-only specs omit documented content; preserve raw generated types.
+
 - Add Admin/Member `directUploads.upload` for bounded file preparation, base64 MD5,
   Circle registration and isolated signed storage PUTs with cancellation and deadlines.
   Preserve `create`; document supported inputs, storage headers and failure recovery.

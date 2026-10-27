@@ -1,4 +1,4 @@
-import type { AdminApi } from "circleso/admin";
+import { type AdminApi, richText } from "circleso/admin";
 
 // Compile-only recipes. Configure the server client with retries: { retries: 0 }.
 // Invoke writes only for an intended audience, settings or historical-message change.
@@ -22,23 +22,14 @@ export async function changeAudienceAndSettings(admin: AdminApi, leadId: number)
 }
 
 export async function writeRichText(admin: AdminApi, contactId: string, chatRoomUuid: string) {
-  // These are the forms in Circle's official TipTap and import documentation.
-  const document = {
-    type: "doc",
-    content: [{ type: "paragraph", content: [{ type: "text", text: "Synthetic history" }] }],
-  };
-  // Upstream objects have no property schema and generate Record<string, never>.
-  // Localized assertions preserve the generated API; they perform no validation.
-  // Validate caller-supplied content before making equivalent assertions.
-  type NoteBody = Parameters<AdminApi["contactNotes"]["create"]>[1]["tiptap_body"]["body"];
-  type ImportBody = Parameters<AdminApi["chatRoomMessageImports"]["create"]>[0]["rich_text_body"];
+  const content = richText.body([richText.paragraph(richText.text("Synthetic history"))]);
   const note = await admin.contactNotes.create(contactId, {
-    tiptap_body: { body: document as unknown as NoteBody },
+    tiptap_body: content,
   });
   const imported: unknown = await admin.chatRoomMessageImports.create({
     chat_room_uuid: chatRoomUuid,
     user_email: "synthetic@example.test",
-    rich_text_body: { body: document } as unknown as ImportBody,
+    rich_text_body: content,
     sent_at: "2024-01-01T12:00:00Z",
     parent_message_id: null,
   });

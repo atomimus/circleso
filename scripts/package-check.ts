@@ -212,6 +212,7 @@ try {
     "docs/admin-remaining-resources.md",
     "docs/pagination.md",
     "docs/file-uploads.md",
+    "docs/rich-text.md",
   ]) {
     const source = await readFile(path.join(root, file), "utf8");
     for (const [index, block] of [...source.matchAll(/```ts\r?\n([\s\S]*?)```/g)].entries()) {

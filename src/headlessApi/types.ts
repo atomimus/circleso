@@ -8,6 +8,7 @@ import type {
   OperationPath,
   OperationQuery,
 } from "../requestTypes";
+import type { HeadlessRichTextOperation } from "../richTextCompatibility";
 
 export type { HeadlessPaths, PathsWithMethod };
 export type { RequestMeta } from "../requestTypes";
@@ -21,13 +22,15 @@ export type QueryParams<Path extends HeadlessPath, Method extends HeadlessMethod
   Operation<HeadlessPaths, Path, Method>
 >;
 export type RequestBody<Path extends HeadlessPath, Method extends HeadlessMethod> = OperationBody<
-  Operation<HeadlessPaths, Path, Method>
+  HeadlessRichTextOperation<Path, Method, Operation<HeadlessPaths, Path, Method>>
 >;
 /** Flat schema fields and request metadata; collisions use queryParams/bodyParams. */
 export type RequestOptions<
   Path extends HeadlessPath,
   Method extends HeadlessMethod,
-> = OperationOptions<Operation<HeadlessPaths, Path, Method>>;
+> = OperationOptions<
+  HeadlessRichTextOperation<Path, Method, Operation<HeadlessPaths, Path, Method>>
+>;
 export type RequestOptionsWithBody<
   Path extends HeadlessPath,
   Method extends HeadlessMethod,
@@ -35,4 +38,6 @@ export type RequestOptionsWithBody<
 export type RequestConfig<
   Path extends HeadlessPath,
   Method extends HeadlessMethod,
-> = OperationConfig<Operation<HeadlessPaths, Path, Method>>;
+> = OperationConfig<
+  HeadlessRichTextOperation<Path, Method, Operation<HeadlessPaths, Path, Method>>
+>;

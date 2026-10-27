@@ -6,6 +6,44 @@ import { createAuth, createHeadlessAuthClient } from "circleso/auth";
 import type { AuthApi, HeadlessAuthClientConfig } from "circleso/auth";
 import { createHeadless, createHeadlessClient } from "circleso/headless";
 import type { HeadlessApi, HeadlessClientConfig } from "circleso/headless";
+import { richText } from "circleso";
+import type { RichTextBody, UncheckedRichTextBody } from "circleso";
+import { richText as adminRichText } from "circleso/admin";
+import { richText as memberRichText } from "circleso/headless";
+
+export async function richTextContracts(admin: AdminApi, member: HeadlessApi) {
+  const body: RichTextBody = richText.body([
+    adminRichText.paragraph(memberRichText.text("Hello "), richText.mention("synthetic-sgid"), richText.hardBreak(), richText.link("Guide", "https://example.com")),
+  ], { attachments: [richText.signedAttachment("synthetic-id")] });
+  await admin.posts.create({ name: "Example", space_id: 1, tiptap_body: body });
+  await admin.messages.create({ user_email: "synthetic@example.com", rich_text_body: body });
+  await member.comments.create(1, { comment: { tiptap_body: body } });
+  await member.chatRooms.messages.create("room", { rich_text_body: body });
+  await member.chatRooms.messages.update("room", "2", { rich_text_body: body });
+  await admin.contactNotes.create("contact", { tiptap_body: body });
+  await admin.chatRoomMessageImports.create({ chat_room_uuid: "room", user_email: "synthetic@example.com", sent_at: "2020-01-01T00:00:00Z", rich_text_body: body });
+  const extension: UncheckedRichTextBody = richText.unchecked({ body: { type: "doc", content: [{ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Example" }] }] } });
+  await admin.posts.create({ name: "Example", space_id: 1, tiptap_body: extension });
+  await member.comments.create(1, { comment: { tiptap_body: extension } });
+  await member.chatRooms.messages.update("room", "2", { rich_text_body: extension });
+  // @ts-expect-error extensions do not claim validated common nodes
+  const common: RichTextBody = extension;
+  void common;
+  // @ts-expect-error attachments require explicit signedAttachment construction
+  richText.body([], { attachments: ["synthetic-id"] });
+  // @ts-expect-error document content must be paragraphs
+  richText.body([richText.text("Inline")]);
+  // @ts-expect-error paragraphs accept only inline nodes
+  richText.paragraph(richText.paragraph());
+  // @ts-expect-error JSON escape hatch rejects undefined values at compile time
+  richText.unchecked({ body: { type: "doc", content: [] }, future: undefined });
+  // @ts-expect-error unrelated required recipient is preserved
+  await admin.messages.create({ rich_text_body: body });
+  // @ts-expect-error unrelated required import fields are preserved
+  await admin.chatRoomMessageImports.create({ rich_text_body: body });
+  // @ts-expect-error raw generated object-only request is unchanged
+  await member.raw.PUT("/api/headless/v1/messages/{chat_room_uuid}/chat_room_messages/{id}", { params: { path: { chat_room_uuid: "room", id: "2" } }, body: { rich_text_body: body } });
+}
 
 // Compile only. All values are synthetic, and this file is never executed.
 export async function contracts() {

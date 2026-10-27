@@ -9,6 +9,7 @@ export {
   CircleSdkError,
   CircleTimeoutError,
 } from "./core/errors";
+export * from "./core/richText";
 export type {
   AuthConfig,
   ClientConfig,

@@ -8,6 +8,7 @@ import type {
   OperationPath,
   OperationQuery,
 } from "../requestTypes";
+import type { AdminRichTextOperation } from "../richTextCompatibility";
 
 export type { AdminPaths, PathsWithMethod };
 export type { RequestMeta } from "../requestTypes";
@@ -21,16 +22,16 @@ export type QueryParams<Path extends AdminPath, Method extends AdminMethod> = Op
   Operation<AdminPaths, Path, Method>
 >;
 export type RequestBody<Path extends AdminPath, Method extends AdminMethod> = OperationBody<
-  Operation<AdminPaths, Path, Method>
+  AdminRichTextOperation<Path, Method, Operation<AdminPaths, Path, Method>>
 >;
 /** Flat schema fields and request metadata; collisions use queryParams/bodyParams. */
 export type RequestOptions<Path extends AdminPath, Method extends AdminMethod> = OperationOptions<
-  Operation<AdminPaths, Path, Method>
+  AdminRichTextOperation<Path, Method, Operation<AdminPaths, Path, Method>>
 >;
 export type RequestOptionsWithBody<
   Path extends AdminPath,
   Method extends AdminMethod,
 > = RequestOptions<Path, Method>;
 export type RequestConfig<Path extends AdminPath, Method extends AdminMethod> = OperationConfig<
-  Operation<AdminPaths, Path, Method>
+  AdminRichTextOperation<Path, Method, Operation<AdminPaths, Path, Method>>
 >;

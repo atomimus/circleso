@@ -6,7 +6,7 @@ export async function checkBrowser(consumer) {
   for (const entry of ["circleso", "circleso/headless"]) {
     const result = await build({
       stdin: {
-        contents: `import {createHeadless, CircleConfigError} from ${JSON.stringify(entry)}; globalThis.probe = {createHeadless, CircleConfigError};`,
+        contents: `import {createHeadless, CircleConfigError, richText} from ${JSON.stringify(entry)}; globalThis.probe = {createHeadless, CircleConfigError, richText};`,
         resolveDir: consumer,
         sourcefile: "member-consumer.js",
       },
@@ -61,6 +61,24 @@ export async function checkBrowser(consumer) {
     });
     // JSON is parsed inside the VM; compare data without cross-realm prototype identity.
     assert.equal(JSON.stringify(await member.bookmarks.list()), '{"records":[]}');
+    const textBody = vm.runInContext(
+      'probe.richText.body([probe.richText.paragraph(probe.richText.text("Hello"), probe.richText.mention("synthetic-sgid"), probe.richText.hardBreak(), probe.richText.link("Guide", "https://example.com"))], {attachments: [probe.richText.signedAttachment("synthetic-id")]})',
+      context,
+    );
+    assert.throws(
+      () => context.probe.richText.link("Link", "javascript:alert(1)"),
+      CircleConfigError,
+    );
+    const richTextMember = createHeadless({
+      accessToken: "synthetic",
+      fetcher: async (request) => {
+        const body = await request.json();
+        assert.equal(JSON.stringify(body.rich_text_body), JSON.stringify(textBody));
+        return Response.json({});
+      },
+    });
+    await richTextMember.chatRooms.messages.update("room", "2", { rich_text_body: textBody });
+    console.log("Browser VM rich text: common builders and Member update JSON pass");
     let circleCalls = 0;
     let storageCalls = 0;
     const uploads = createHeadless({

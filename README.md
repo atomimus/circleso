@@ -8,6 +8,9 @@ for the CI runtime matrix and local development checks.
 
 See [complete direct file uploads](docs/file-uploads.md) for metadata, MD5 and isolated storage PUTs via `directUploads.upload`.
 
+See [rich text builders](docs/rich-text.md) for paragraphs, links, mentions, line breaks,
+signed attachments and explicit editor extensions with `richText`.
+
 ## Features
 
 - Strongly typed requests and responses from the official OpenAPI specs

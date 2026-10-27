@@ -59,9 +59,11 @@ export async function addLead(admin: AdminApi) {
 The note schema requires the wrapper `tiptap_body: { body: ... }`. Its `body` object has
 no declared properties, so the pinned generator emits `Record<string, never>`. The same
 limitation affects import `rich_text_body`, and note responses have an opaque nullable
-`tiptap_body`. The SDK preserves these generated contracts and does not validate arbitrary
-rich text. The [compile-only recipe](../examples/admin-remaining-resources.ts) shows localized
-assertions for documented content; callers must validate their own content before asserting.
+`tiptap_body`. Raw clients and responses preserve these generated contracts. Named writes
+additionally accept the [rich text builders](rich-text.md) through a narrow request-only
+compatibility layer. The [compile-only recipe](../examples/admin-remaining-resources.ts)
+uses common builders without assertions; arbitrary editor extensions need the explicit
+JSON escape hatch and remain the caller's responsibility.
 See Circle's [TipTap documentation](https://api.circle.so/get-started/concepts/tiptap-editor)
 and [rich-text wrapper](https://api.circle.so/get-started/concepts/rich-text-body).
 
