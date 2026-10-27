@@ -1,6 +1,7 @@
 import type { Middleware } from "openapi-fetch";
 import { CircleConfigError } from "../errors";
 import { HEADER_AUTHORIZATION } from "../headers";
+import { BodySourceRequest } from "../requestBody";
 
 export type BearerTokenProvider = string | (() => string | undefined | Promise<string | undefined>);
 
@@ -22,7 +23,7 @@ export function createBearerAuthMiddleware(config: BearerAuthConfig): Middleware
 
       const headers = new Headers(request.headers);
       headers.set(HEADER_AUTHORIZATION, `Bearer ${token}`);
-      return new Request(request, { headers });
+      return new BodySourceRequest(request, { headers });
     },
   };
 }

@@ -4,6 +4,7 @@ import { normalizeClientErrors } from "../core/clientErrors";
 import { CircleConfigError } from "../core/errors";
 import { createSmartFetch, type RetryConfig } from "../core/http";
 import { createLoggerMiddleware, type LoggerHooks } from "../core/middleware/logger";
+import { BodySourceRequest } from "../core/requestBody";
 import { createResponseMiddleware } from "../core/response";
 
 export type ClientRuntimeConfig = {
@@ -42,6 +43,7 @@ export function createOpenApiClient<Paths extends object>(
   const client = normalizeClientErrors(
     createClient<Paths>({
       baseUrl: config.baseUrl,
+      Request: BodySourceRequest,
       fetch: config.fetch ?? ((request) => smartFetch(request)),
     }),
   );

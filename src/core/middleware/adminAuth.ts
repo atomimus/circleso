@@ -2,6 +2,7 @@ import type { Middleware } from "openapi-fetch";
 import { DEFAULT_COMMUNITY_HOST } from "../constants";
 import { CircleConfigError } from "../errors";
 import { HEADER_AUTHORIZATION } from "../headers";
+import { BodySourceRequest } from "../requestBody";
 import { createHostHeaderMiddleware } from "./hostHeader";
 
 export type AdminAuthConfig = {
@@ -22,7 +23,7 @@ export function createAdminAuthMiddleware(config: AdminAuthConfig): Middleware {
     async onRequest(context) {
       const headers = new Headers(context.request.headers);
       headers.set(HEADER_AUTHORIZATION, `Token ${token}`);
-      const request = new Request(context.request, { headers });
+      const request = new BodySourceRequest(context.request, { headers });
 
       const next = await hostMiddleware.onRequest?.({ ...context, request });
       if (next instanceof Request) {

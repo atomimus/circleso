@@ -37,6 +37,10 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Retry serialized JSON PUT/DELETE requests through public clients using bounded byte snapshots.
+  Keep unknown streams single-attempt and offer an explicit per-call smart-fetch body factory.
+  Validate retry options, cap jittered backoff, honor Retry-After dates/seconds and stop retries
+  when a server delay exceeds the configured cap. Preserve cancellation and per-attempt deadlines.
 - Centralize response parsing across resources, raw clients, generic helpers and iterators.
   Detect HTTP failures by status even for empty/false/null bodies, retain exact error text and
   nested payloads, and expose original parsing/read causes with request/response context.

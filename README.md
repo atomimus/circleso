@@ -166,7 +166,7 @@ Default base URL for all clients is `https://app.circle.so`. `communityHost` is 
 Common options across all clients:
 
 - `timeoutMs`: per-attempt deadline in milliseconds, covering fetch and response body reads
-- `retries`: `{ retries, baseDelayMs, maxDelayMs, jitterRatio, retryNonIdempotent }`
+- `retries`: `{ retries, baseDelayMs, maxDelayMs, jitterRatio, retryNonIdempotent, maxReplayBodyBytes, maxRetryAfterMs }`
 - `userAgent`: custom user-agent value
 - `logger`: hooks for request/response logging with redaction
 - `fetcher`: custom fetch implementation
@@ -181,7 +181,7 @@ Note: the unified `CircleSo` class constructs all three surfaces, so it requires
 an Admin token, Headless token, and Headless refresh token. If you only need
 one surface, use `createAdmin`, `createHeadless`, or `createAuth` directly.
 
-`timeoutMs` starts immediately before each fetch attempt and remains active until the body reaches
+`timeoutMs` starts before each attempt's body preparation and fetch, and remains active until the response body reaches
 EOF or is canceled. It does not reset when headers or chunks arrive. Omit it or set it to `0` to
 disable the deadline. Retry waits (including `Retry-After`) are outside this per-attempt budget;
 each retry gets a fresh deadline. There is no built-in total request budget. Pass a caller-managed
@@ -193,6 +193,45 @@ SDK deadlines throw `CircleTimeoutError` with `timeoutMs` and a `TimeoutError` c
 cancellation throws `CircleNetworkError` whose `cause` is the original signal reason (even if
 that reason is itself a `TimeoutError`). Neither cancellation nor an SDK deadline is retried.
 Timers and SDK signal listeners are released on completion, failure, cancellation and body disposal.
+
+Retries default to two additional attempts for GET, HEAD, PUT, DELETE, OPTIONS and TRACE, on HTTP
+408, 429 and 5xx or a fetch `TypeError` (network failure). POST and PATCH require
+`retryNonIdempotent: true`; enabling it is the caller's assertion that repeating the operation is safe.
+Payments, refunds, invitations and imports must not be opted in without an upstream guarantee.
+The SDK does not infer Circle endpoint idempotency or add an idempotency key. Response body read or
+parse failures are never retried. Superseded responses are canceled before waiting.
+
+Backoff defaults to `baseDelayMs: 200`, `maxDelayMs: 2000` and `jitterRatio: 0.2`.
+For zero-based retry index n, the delay is `min(baseDelayMs * 2**n, maxDelayMs)`, randomized
+by plus/minus `jitterRatio`, rounded and capped again at `maxDelayMs`. A valid `Retry-After`
+(integer seconds or HTTP-date) replaces backoff without jitter; past dates mean zero delay.
+Invalid values fall back to backoff. `maxRetryAfterMs` defaults to 60,000: if the server requests
+a longer wait, retries stop and the current HTTP failure is returned. The SDK never shortens that
+server delay to retry early. Retry counts must be integers from 0 through 10, delay settings must be
+finite from 0 through 2,147,483,647, jitter must be from 0 through 1, and `retryNonIdempotent` must be
+boolean. At `createSmartFetch`, per-call retry fields override client fields individually; omitted
+fields inherit defaults. Invalid retry configuration throws `CircleConfigError` before fetching.
+
+SDK resource/raw clients preserve the provenance of serialized JSON and other finite BodyInit
+sources (strings, buffers, Blob, URLSearchParams and FormData) through built-in auth middleware.
+Before the first eligible attempt, the core snapshots the encoded bytes up to `maxReplayBodyBytes`
+(default 1 MiB, a non-negative safe integer). Retries use fresh Requests with the same bytes and
+Content-Type, including multipart boundaries. An oversized body still uploads intact, once;
+`maxReplayBodyBytes: 0` disables body snapshots. This limit bounds extra replay buffering, not upload
+size. There is no tee or eager snapshot of arbitrary streams. Native Request construction can pull
+from a stream according to the runtime's own buffering behavior.
+
+Opaque body-bearing Requests supplied directly to `createSmartFetch`, streamed raw body serializers,
+and custom middleware that replaces a body-bearing Request with a native Request are single-attempt.
+Content-Type and Content-Length do not prove replayability. At `createSmartFetch` you can instead
+pass `body` as a finite BodyInit, or supply per-call `bodyFactory(attempt, signal)` to produce a fresh
+BodyInit for every attempt, including attempt 0. The factory overrides the input body, runs inside
+each attempt's deadline, and must preserve equivalent bytes and headers (including any multipart
+boundary). It receives only the zero-based attempt and attempt signal; it does not receive headers
+or credentials. Factories do not enable POST/PATCH retries by themselves. Factory failures throw
+`CircleConfigError` with the original cause. Per-call factories are available at this core boundary;
+resource clients use the bounded automatic snapshots. Cancellation or deadlines stop waiting for
+an asynchronous factory; callers should honor its signal to stop their own work.
 For auto-refresh, a canceled caller stops waiting for the shared refresh; the refresh keeps its own
 per-attempt deadline so other callers can still use its result.
 

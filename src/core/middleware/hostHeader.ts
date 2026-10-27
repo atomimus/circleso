@@ -1,6 +1,7 @@
 import type { Middleware } from "openapi-fetch";
 import { CircleConfigError } from "../errors";
 import { HEADER_HOST } from "../headers";
+import { BodySourceRequest } from "../requestBody";
 
 export type HostHeaderConfig = {
   host: string;
@@ -22,7 +23,7 @@ export function createHostHeaderMiddleware(config: HostHeaderConfig): Middleware
     onRequest({ request }) {
       const headers = new Headers(request.headers);
       headers.set(HEADER_HOST, host);
-      return new Request(request, { headers });
+      return new BodySourceRequest(request, { headers });
     },
   };
 }
