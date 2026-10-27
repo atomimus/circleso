@@ -58,8 +58,12 @@ describe("public client cancellation", () => {
 
     it(`cancels stalled response reads with the original reason (surface ${index})`, async () => {
       const cancel = vi.fn();
-      const body = new ReadableStream<Uint8Array>({ cancel });
-      const fetcher = vi.fn(async () => new Response(body));
+      let reading!: () => void;
+      const readStarted = new Promise<void>((resolve) => {
+        reading = resolve;
+      });
+      const body = new ReadableStream<Uint8Array>({ pull: reading, cancel }, { highWaterMark: 0 });
+      const fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(body));
       const controller = new AbortController();
       const cause = new DOMException("caller deadline", "TimeoutError");
       let failure: unknown;
@@ -68,8 +72,12 @@ describe("public client cancellation", () => {
         .catch((error: unknown) => {
           failure = error;
         });
-      await vi.advanceTimersByTimeAsync(0);
+      // Rendezvous with the actual body read, independent of native Request scheduling.
+      await readStarted;
       controller.abort(cause);
+      expect((fetcher.mock.calls[0]?.[0] as Request).signal.aborted).toBe(true);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(failure).toBeInstanceOf(CircleNetworkError);
       await promise;
       expect(failure).toBeInstanceOf(CircleNetworkError);
       expect((failure as CircleNetworkError).cause).toBe(cause);
