@@ -69,7 +69,9 @@ The gate then creates an actual tarball and installs it offline from that cache 
 scripts and development dependencies disabled in an OS temporary directory outside the checkout.
 Public declarations cannot resolve through development dependencies hoisted in the source tree. Its
 fixtures verify all four ESM imports and CJS requires, exact runtime export sets, shared error
-constructor identity across both formats, 12 native loopback HTTP calls, and executable source maps.
+constructor identity across both formats, native loopback HTTP calls, and executable source maps.
+Each strict compiler/resolution pair also executes composed ESM/CJS applications with native
+Auth/Member recovery, HTTPS storage, rich text, cookie metadata and error/cancellation behavior.
 Package files are allowlisted; README/changelog/license match the source, and maps contain only
 relative SDK source paths and matching embedded source. Temporary consumers are removed on failure
 as well as success; a small evidence summary is written to ignored `.cache/package-check.json`.
@@ -88,14 +90,18 @@ Root and Headless Member bundles use esbuild 0.27.2 with the browser platform, n
 imports, and tree shaking. Checks reject retained Admin/Auth factories and exercise Member calls
 in a VM with web Fetch primitives and no Node globals. The dependency's guarded Node detection
 is allowed; no Node built-in runtime dependency is allowed. This is bundle/VM evidence, not a real
-browser, worker or CORS matrix. Full browser acceptance remains a separate release requirement.
+browser, worker or CORS matrix. Separate real-browser jobs now qualify the installed tarball
+in Chromium/Firefox/WebKit on Ubuntu for Node 22/24. See [acceptance](acceptance.md) for
+cookie/worker/upload coverage, platform exclusions and the opt-in live test prerequisites.
 
 ## Trust and live services
 
-Both workflows grant only `contents: read`, pin reviewed official actions to full commit SHAs,
+All workflows grant only `contents: read`, pin reviewed official actions to full commit SHAs,
 disable persisted checkout credentials and automatic package caching, cancel superseded runs, and
 limit job durations. Public validation uses `pull_request`, never privileged `pull_request_target`
-or `workflow_run`. No protected environment or repository secret is referenced.
+or `workflow_run`. Public validation references no environment or community secret. Only the
+main-only manual integration workflow uses the dedicated `circle-integration` environment,
+with its member token confined to the explicit live step.
 
 Reviewed pins on October 27, 2026:
 
@@ -110,9 +116,11 @@ specs without accepting changes. It needs no community credentials and does not 
 pull requests. Drift is a failure, not a passing skip; reproduce locally for the saved candidate
 files/patches described in [spec generation](spec-generation.md).
 
-No integration workflow exists yet: task 22 owns live tests against a separately authorized test
-community. Keep those jobs separate from public checks, without forwarding credentials to untrusted
-code. Do not add placeholder skipped tests as evidence.
+The manual integration workflow tests only a separately authorized dedicated community.
+It stays separate from public checks and never forwards credentials to untrusted PR code.
+See [acceptance](acceptance.md); unconfigured local live checks explicitly report
+SKIPPED/UNVERIFIED, while the manually dispatched main-only integration job requires its
+dedicated environment configuration and fails if that configuration is absent.
 
 ## Documentation checks
 
@@ -127,10 +135,10 @@ examples are never automatically run. Packaged public guides/support files are b
 
 ## Extending the gates
 
-Further documentation, real-browser and integration qualification and dependency/security gates
-remain release requirements. Extend `validate:ci` for checks that can run publicly without secrets,
-and add dedicated workflows for authorized live integrations. Task 24 separately prepares the
-publication path; none is enabled here.
+Dependency/security review and release publication evidence remain release requirements.
+Real-browser jobs run separately from `validate:ci`, which also supports machines without
+installed browsers. Authorized live integration remains a separate manual run; its absence
+does not count as a passing external check. No publication path is enabled here.
 
 Primary sources checked October 27, 2026: [Node releases](https://nodejs.org/en/about/previous-releases),
 [release schedule](https://github.com/nodejs/Release/blob/main/schedule.json),

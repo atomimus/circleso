@@ -85,6 +85,13 @@ export function discardResponse(response: Response, reason?: unknown): void {
 
 /** Transfer the attempt's lifetime to a backpressure-preserving response body. */
 export function bindResponseLifetime(response: Response, lifetime: HttpLifetime): Response {
+  // Some browsers expose an empty stream for null-body statuses. Wrapping that
+  // stream in Response would throw; preserve metadata with an actual null body.
+  if ([204, 205, 304].includes(response.status) && response.body) {
+    discardResponse(response);
+    lifetime.cleanup();
+    return copyResponseMetadata(new Response(null, response), response);
+  }
   if (!response.body) {
     lifetime.cleanup();
     return response;

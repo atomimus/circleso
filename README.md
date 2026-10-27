@@ -65,7 +65,8 @@ Node16 resolution. Shared error constructors retain identity across these paths 
 within one installed package, so mixed-entry `instanceof CircleHttpError` checks work.
 Unexported source/build paths are private. Browser applications should import Member factories
 from `circleso/headless`; browser bundling and removal of unused server factories are checked.
-Full browser/CORS qualification remains separate from these package checks.
+Real-browser and live-service qualification boundaries are described in
+[acceptance testing](docs/acceptance.md).
 
 ## Quick start
 

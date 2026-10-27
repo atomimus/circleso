@@ -2,7 +2,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { parseYaml } from "@redocly/openapi-core";
 import { expect, it } from "vitest";
 
-type Step = { uses?: string; run?: string; with?: Record<string, unknown> };
+type Step = {
+  uses?: string;
+  run?: string;
+  with?: Record<string, unknown>;
+  env?: Record<string, unknown>;
+};
 type Workflow = {
   on: Record<string, unknown>;
   permissions: Record<string, string>;
@@ -28,12 +33,20 @@ it("keeps validation workflows bounded, unprivileged and pinned without publishi
     expect(workflow.concurrency["cancel-in-progress"]).toBe(true);
     expect(Object.keys(workflow.on)).not.toEqual(expect.arrayContaining(["pull_request_target"]));
     expect(Object.keys(workflow.on)).not.toEqual(expect.arrayContaining(["workflow_run"]));
-    expect(source).not.toMatch(/secrets\s*[.[]|id-token:|NODE_AUTH_TOKEN|NPM_TOKEN/);
+    expect(source).not.toMatch(/id-token:|NODE_AUTH_TOKEN|NPM_TOKEN/);
+    if (file !== "live-integration.yml") expect(source).not.toMatch(/secrets\s*[.[]/);
+    else {
+      expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
+      expect(Object.keys(workflow.jobs)).toEqual(["integration"]);
+      expect(workflow.jobs.integration).toHaveProperty("if", "github.ref == 'refs/heads/main'");
+      expect(source.match(/secrets\.[\w]+/g)).toEqual(["secrets.CIRCLE_TEST_MEMBER_TOKEN"]);
+    }
     for (const job of Object.values(workflow.jobs)) {
       expect(job["timeout-minutes"]).toBeGreaterThan(0);
       expect(job["timeout-minutes"]).toBeLessThanOrEqual(20);
       expect(job.permissions).toBeUndefined();
-      expect(job.environment).toBeUndefined();
+      if (file === "live-integration.yml") expect(job.environment).toBe("circle-integration");
+      else expect(job.environment).toBeUndefined();
       for (const step of job.steps) {
         if (step.uses) expect(step.uses).toMatch(/^actions\/[\w-]+@[a-f0-9]{40}$/);
         if (step.uses?.startsWith("actions/checkout@")) {
@@ -41,6 +54,17 @@ it("keeps validation workflows bounded, unprivileged and pinned without publishi
         }
         expect(step.with?.["registry-url"]).toBeUndefined();
         expect(step.run ?? "").not.toMatch(/\b(publish|release|dist-tag)\b|git\s+(push|tag)\b/);
+        if (JSON.stringify(step.env ?? {}).includes("secrets.")) {
+          expect(file).toBe("live-integration.yml");
+          expect(step.run).toBe("npm run test:integration -- --require-live");
+          expect(step.env?.CIRCLE_LIVE_TESTS).toBe("read-only");
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: literal GitHub expression
+          expect(step.env?.CIRCLE_TEST_COMMUNITY_ACK).toBe("${{ inputs.community_ack }}");
+          expect(step.env?.CIRCLE_TEST_MEMBER_TOKEN).toBe(
+            // biome-ignore lint/suspicious/noTemplateCurlyInString: literal GitHub expression
+            "${{ secrets.CIRCLE_TEST_MEMBER_TOKEN }}",
+          );
+        }
       }
     }
   }
@@ -77,4 +101,15 @@ it("keeps live spec downloads out of public validation and requires deliberate m
       .flatMap((job) => job.steps)
       .some((step) => step.run === "npm run validate:ci"),
   ).toBe(true);
+  expect(offline.jobs.browsers).toHaveProperty("strategy.matrix.node", ["22.x", "24.x"]);
+  expect(
+    offline.jobs.browsers?.steps.some(
+      (step) =>
+        step.run ===
+        "node node_modules/playwright/cli.js install --with-deps chromium firefox webkit",
+    ),
+  ).toBe(true);
+  expect(offline.jobs.browsers?.steps.some((step) => step.run === "npm run test:browser")).toBe(
+    true,
+  );
 });

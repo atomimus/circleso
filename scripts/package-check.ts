@@ -7,11 +7,14 @@ import os from "node:os";
 import path from "node:path";
 import { transform } from "esbuild";
 import { documentationFiles, markdownLinks, typescriptBlocks } from "./documentation";
+import { liveConfig } from "./integration-policy";
 
 const root = process.cwd();
 const require = createRequire(import.meta.url);
 const fixtures = path.join(root, "scripts/fixtures/consumers");
 const npmCli = process.env.npm_execpath;
+if (process.argv.includes("--live"))
+  assert.ok(liveConfig(process.env), "Explicit live configuration required");
 assert.ok(npmCli && path.isAbsolute(npmCli), "Run through npm run test:package");
 const temp = await mkdtemp(path.join(os.tmpdir(), "circleso-package-"));
 type Packed = { filename: string; integrity: string; files: { path: string }[] };
@@ -24,13 +27,18 @@ type Manifest = {
   exports: Record<string, Record<"import" | "require", { types: string; default: string }>>;
 };
 
-function run(file: string, args: string[], cwd: string): string {
+function run(
+  file: string,
+  args: string[],
+  cwd: string,
+  environment: NodeJS.ProcessEnv = {},
+): string {
   const result = spawnSync(file, args, {
     cwd,
     encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
-    timeout: 120_000,
-    env: { ...process.env, NODE_PATH: "" },
+    timeout: 240_000,
+    env: { ...process.env, NODE_PATH: "", ...environment },
     stdio: ["ignore", "pipe", "pipe"],
   });
   assert.ifError(result.error);
@@ -228,8 +236,17 @@ try {
   process.stdout.write(run(process.execPath, [path.join(fixtures, "browser.mjs"), consumer], root));
 
   const types = await readFile(path.join(fixtures, "types.txt"), "utf8");
-  for (const extension of ["mts", "cts"])
+  for (const extension of ["mts", "cts"]) {
     await writeFile(path.join(consumer, `types.${extension}`), types);
+    await copyFile(
+      path.join(fixtures, "workflow.txt"),
+      path.join(consumer, `workflow.${extension}`),
+    );
+  }
+  await copyFile(
+    path.join(root, "scripts/fixtures/acceptance/native.mjs"),
+    path.join(consumer, "native.mjs"),
+  );
   await copyFile(path.join(fixtures, "require.txt"), path.join(consumer, "require.cts"));
   await copyFile(path.join(fixtures, "types-only.txt"), path.join(consumer, "types-only.cts"));
   const documentation: string[] = [];
@@ -273,9 +290,16 @@ try {
             exactOptionalPropertyTypes: true,
             noUncheckedIndexedAccess: true,
             skipLibCheck: false,
-            noEmit: true,
+            outDir: `workflow-${compiler}-${resolution}`,
           },
-          files: ["types.mts", "types.cts", "require.cts", "types-only.cts"],
+          files: [
+            "types.mts",
+            "types.cts",
+            "require.cts",
+            "types-only.cts",
+            "workflow.mts",
+            "workflow.cts",
+          ],
         }),
       );
       const trace = compiler === "typescript" && resolution === "Node16";
@@ -294,6 +318,40 @@ try {
           }
         }
       }
+      const outputDirectory = `workflow-${compiler}-${resolution}`;
+      if (resolution === "Bundler") {
+        // module:Preserve intentionally leaves imports for the application's build step.
+        // Transform only; actual installed package imports/requires remain external.
+        for (const [extension, format] of [
+          ["mjs", "esm"],
+          ["cjs", "cjs"],
+        ] as const) {
+          const emitted = path.join(consumer, outputDirectory, `workflow.${extension}`);
+          const result = await transform(await readFile(emitted, "utf8"), {
+            format,
+            target: "es2022",
+            sourcefile: emitted,
+          });
+          await writeFile(emitted, result.code);
+        }
+      }
+      await writeFile(
+        path.join(consumer, "app.mjs"),
+        `import {compose} from './${outputDirectory}/workflow.mjs'; import {fixture} from './native.mjs'; await fixture(compose);`,
+      );
+      await writeFile(
+        path.join(consumer, "app.cjs"),
+        `const {compose} = require('./${outputDirectory}/workflow.cjs'); import('./native.mjs').then(({fixture})=>fixture(compose)).catch(error=>{console.error(error);process.exitCode=1;});`,
+      );
+      for (const app of ["app.mjs", "app.cjs"])
+        run(process.execPath, [path.join(consumer, app)], consumer, {
+          NODE_EXTRA_CA_CERTS: path.join(root, "scripts/fixtures/acceptance/test-cert.pem"),
+          CIRCLE_FIXTURE_CERT: path.join(root, "scripts/fixtures/acceptance/test-cert.pem"),
+          CIRCLE_FIXTURE_KEY: path.join(root, "scripts/fixtures/acceptance/test-key.pem"),
+        });
+      console.log(
+        `Package composition: TS ${compilerPackage.version}/${resolution}; actual ESM and CJS applications; native auth/refresh/iterators/HTTPS upload/rich-text/cookies/errors/cancel pass`,
+      );
       matrices.push(`${compilerPackage.version}/${resolution}`);
       console.log(
         `Package types: TS ${compilerPackage.version}; ${resolution}; ESM/CJS; strict; skipLibCheck=false pass`,
@@ -334,6 +392,28 @@ try {
     });
     await writeFile(output, transformed.code);
     process.stdout.write(run(process.execPath, [output], consumer));
+  }
+  if (process.argv.includes("--browser")) {
+    const vitestCli = path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs");
+    process.stdout.write(
+      run(process.execPath, [vitestCli, "run", "--config", "vitest.browser.config.ts"], root, {
+        CIRCLE_ACCEPTANCE_CONSUMER: consumer,
+      }),
+    );
+  }
+  if (process.argv.includes("--live")) {
+    await copyFile(
+      path.join(root, "scripts/fixtures/acceptance/live.mjs"),
+      path.join(consumer, "live.mjs"),
+    );
+    for (const name of ["integration-policy", "integration-workflow"]) {
+      const result = await transform(
+        await readFile(path.join(root, `scripts/${name}.ts`), "utf8"),
+        { loader: "ts", format: "esm", target: "es2022" },
+      );
+      await writeFile(path.join(consumer, `${name}.mjs`), result.code);
+    }
+    process.stdout.write(run(process.execPath, [path.join(consumer, "live.mjs")], consumer));
   }
   const evidence = {
     version: manifest.version,

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add real-browser/worker/CORS/cookie/upload acceptance from installed tarballs, composed
+  ESM/CJS applications across the compiler/runtime matrix, and explicitly scoped manual
+  live integration with owned disposable fixtures. Preserve native finite request bodies,
+  SDK cancellation identity through browser body-error translation and empty 204 streams.
+
 - Add the complete v1 public API/call-shape reference, migration from the actual published
   0.3.0 artifact, support and release-maintenance guidance, and environment-driven workflow
   recipes. Ship public guides in the tarball; permanently check all public Markdown links,

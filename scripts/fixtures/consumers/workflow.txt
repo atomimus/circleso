@@ -1,0 +1,29 @@
+import { CircleHttpError, CircleNetworkError, richText } from "circleso";
+import { createAdmin } from "circleso/admin";
+import { createAuth } from "circleso/auth";
+import { createHeadless } from "circleso/headless";
+
+// Compiled and executed as .mts AND .cts under every strict compiler/resolution pair.
+export async function compose(baseUrl: string) {
+  const admin = createAdmin({ baseUrl, communityHost: new URL(baseUrl).host, token: "synthetic-admin", retries: { retries: 0 } });
+  const spaces = await admin.accessGroups.list({ per_page: 1 });
+  const auth = createAuth({ baseUrl, token: "synthetic-application", retries: { retries: 0 } });
+  const issued = await auth.authToken.create({ community_member_id: 2 });
+  if (!issued?.access_token || !issued.refresh_token) throw new Error("Synthetic token fixture missing");
+  let token: string | undefined = issued.access_token;
+  const member = createHeadless({ baseUrl, accessToken: token, refreshToken: issued.refresh_token, authToken: "synthetic-application", autoRefresh: true, getAccessToken: () => token, setAccessToken: value => { token = value; }, timeoutMs: 3000, retries: { retries: 0 }, usage: { maxConcurrent: 1 } });
+  await Promise.all([member.bookmarks.list(), member.bookmarks.list()]);
+  const ids: (number | undefined)[] = [];
+  for await (const item of member.iter.bookmarks({ maxItems: 2, maxPages: 2, per_page: 1 })) ids.push(item.id);
+  const upload = await member.directUploads.upload(new Uint8Array([97, 98, 99]), { key: "", filename: "fixture.txt", contentType: "text/plain", timeoutMs: 3000 });
+  const post = await member.posts.create(4, { name: "Synthetic", tiptap_body: richText.body([richText.paragraph(richText.text("Synthetic"))], { attachments: [richText.signedAttachment(upload.signed_id)] }) });
+  const cookies = await member.cookies.createWithResponse({ credentials: "include" });
+  const abort = new AbortController();
+  const reason = new Error("Synthetic cancellation"); abort.abort(reason);
+  let canceled = false;
+  try { await member.bookmarks.list({ signal: abort.signal }); } catch (error) { canceled = error instanceof CircleNetworkError && error.cause === reason; }
+  const raw = await member.raw.GET("/api/headless/v1/bookmarks", { params: { query: { page: 99 } } });
+  let http = false;
+  try { await member.bookmarks.list({ page: 99 }); } catch (error) { http = error instanceof CircleHttpError && error.status === 400; }
+  return { spaces: spaces?.records?.length, ids, token, postId: post?.id, cookieCount: cookies.response.headers.getSetCookie().length, canceled, http, rawFailed: !raw.response.ok && raw.error === false };
+}

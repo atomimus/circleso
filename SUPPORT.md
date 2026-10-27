@@ -24,8 +24,10 @@ checked; strict Node16/NodeNext/Bundler consumers use real installed ESM/CJS exp
 `skipLibCheck: false`. Standard Fetch/AbortController/ReadableStream globals are required;
 no polyfills are installed. See the [CI matrix](docs/ci.md) for exact hosted targets.
 
-Browser bundles and web-global VM fixtures pass package checks; actual browser/worker/CORS
-and authorized live-community acceptance are separate qualification work. Do not interpret
+Browser acceptance uses actual Chromium, Firefox and WebKit with local HTTPS fixtures on
+Ubuntu; Windows Playwright WebKit 27.2 is unqualified because native Fetch ignores cookie
+omission there. See [acceptance testing](docs/acceptance.md) for targets, commands and limits.
+Authorized live-community checks require separate explicit configuration. Do not interpret
 the Member runtime design as certification for every browser, edge runtime, Deno or Bun.
 The browser enforces Set-Cookie visibility, cookie domain/SameSite, third-party restrictions
 and storage upload CORS. Admin/Auth/application refresh remain server-only even with a

@@ -102,7 +102,8 @@ export async function readResponseBody(response: Response): Promise<BodyEvidence
     const text = await response.text();
     return states.get(response)?.evidence ?? parseBodyText(text);
   } catch (cause) {
-    if (isLifetimeFailure(response, cause)) throw withContext(cause, responseContext(response));
+    const failure = lifetimeFailure(response, cause);
+    if (failure) throw withContext(failure, responseContext(response));
     return states.get(response)?.evidence ?? { cause };
   }
 }
@@ -175,7 +176,8 @@ function responseError(response: Response, cause: unknown) {
     ...(bodyText !== undefined ? { bodyText } : {}),
     ...(parsedJson !== undefined ? { parsedJson } : {}),
   };
-  if (isLifetimeFailure(response, cause)) return withContext(cause, context);
+  const failure = lifetimeFailure(response, cause);
+  if (failure) return withContext(failure, context);
   if (!response.ok) {
     return new CircleHttpError(`Request failed with status ${response.status}`, {
       ...context,
@@ -186,14 +188,22 @@ function responseError(response: Response, cause: unknown) {
   return new CircleNetworkError("Response body could not be decoded or read.", cause, context);
 }
 
-function isLifetimeFailure(
+function lifetimeFailure(
   response: Response,
   cause: unknown,
-): cause is CircleNetworkError | CircleTimeoutError {
-  return (
-    cause instanceof CircleTimeoutError ||
-    (cause instanceof CircleNetworkError && states.get(response)?.request.signal?.aborted === true)
-  );
+): CircleNetworkError | CircleTimeoutError | undefined {
+  const signal = states.get(response)?.request.signal;
+  // Browser body readers can translate a stream's error into a native TypeError or
+  // AbortError. The SDK lifetime remains authoritative about who canceled the read.
+  if (
+    signal?.aborted &&
+    (signal.reason instanceof CircleNetworkError || signal.reason instanceof CircleTimeoutError)
+  )
+    return signal.reason;
+  return cause instanceof CircleTimeoutError ||
+    (cause instanceof CircleNetworkError && signal?.aborted === true)
+    ? cause
+    : undefined;
 }
 
 function originalCause(cause: unknown): unknown {

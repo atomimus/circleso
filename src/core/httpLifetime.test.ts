@@ -6,6 +6,36 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe("smart fetch lifetimes", () => {
+  it.each([
+    204, 205, 304,
+  ])("normalizes browser empty streams on null-body status %s", async (status) => {
+    const cancel = vi.fn();
+    const native = new Response(new ReadableStream({ cancel }), {
+      headers: { "x-request-id": "synthetic" },
+    });
+    Object.defineProperties(native, {
+      status: { value: status },
+      statusText: { value: "" },
+      url: { value: "https://example.test/empty" },
+      type: { value: "cors" },
+    });
+    const send = createSmartFetch({
+      baseUrl: "https://example.test",
+      timeoutMs: 20,
+      throwOnHttpError: false,
+      fetcher: async () => native,
+    });
+    const response = await send("/empty");
+    expect(response.status).toBe(status);
+    expect(response.body).toBeNull();
+    expect(response.type).toBe("cors");
+    expect(response.url).toBe(native.url);
+    expect(response.headers.get("x-request-id")).toBe("synthetic");
+    expect(await response.text()).toBe("");
+    expect(await response.clone().text()).toBe("");
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it.each(["request", "init"])("composes both signals when %s aborts", async (which) => {
     const first = new AbortController();
     const second = new AbortController();

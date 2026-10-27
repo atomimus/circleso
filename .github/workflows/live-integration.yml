@@ -1,0 +1,65 @@
+name: Circle integration (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      community_ack:
+        description: Type dedicated-test-community to attest the environment is authorized
+        required: true
+        type: string
+      scope:
+        description: Read-only by default; bookmark needs a fresh disposable test account
+        type: choice
+        default: read-only
+        options: [read-only, bookmark]
+      disposable_account_ack:
+        description: Bookmark only - type authorized-disposable-account
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: circle-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    if: github.ref == 'refs/heads/main'
+    environment: circle-integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.x'
+          check-latest: true
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Run explicitly scoped integration against the installed tarball
+        run: npm run test:integration -- --require-live
+        env:
+          CIRCLE_LIVE_TESTS: read-only
+          CIRCLE_TEST_COMMUNITY_ACK: ${{ inputs.community_ack }}
+          CIRCLE_TEST_BASE_URL: ${{ vars.CIRCLE_TEST_BASE_URL }}
+          CIRCLE_TEST_COMMUNITY_ID: ${{ vars.CIRCLE_TEST_COMMUNITY_ID }}
+          CIRCLE_TEST_SPACE_ID: ${{ vars.CIRCLE_TEST_SPACE_ID }}
+          CIRCLE_TEST_MEMBER_ID: ${{ vars.CIRCLE_TEST_MEMBER_ID }}
+          CIRCLE_TEST_POST_ID: ${{ vars.CIRCLE_TEST_POST_ID }}
+          CIRCLE_TEST_MEMBER_TOKEN: ${{ secrets.CIRCLE_TEST_MEMBER_TOKEN }}
+          CIRCLE_LIVE_WRITES: ${{ inputs.scope == 'bookmark' && 'bookmark' || '' }}
+          CIRCLE_DISPOSABLE_ACCOUNT_ACK: ${{ inputs.disposable_account_ack }}
+      - name: Preserve only the fixture ownership ledger
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fixture-ledger
+          path: .cache/integration/*.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 1

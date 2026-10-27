@@ -152,7 +152,11 @@ function createFetch(config: SmartFetchConfig) {
           signal: lifetime.signal,
           referrer: template.referrer,
           referrerPolicy: template.referrerPolicy,
-          ...(body != null ? { body, duplex: "half" } : {}),
+          // Preserve the native finite body's source on the first attempt. Explicitly
+          // replacing it with Request.body turns it into a browser streaming upload.
+          ...(body != null && (bodyFactory || body !== template.body)
+            ? { body, duplex: "half" }
+            : {}),
         };
         fetchRequest = new Request(template, attemptInit);
         if (bodyFactory) discardRequest(template);

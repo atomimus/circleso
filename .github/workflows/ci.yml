@@ -44,3 +44,29 @@ jobs:
         run: npm run validate:ci
       - name: Verify checks did not rewrite tracked files
         run: git diff --exit-code
+  browsers:
+    name: Browsers / Node ${{ matrix.node }} / ubuntu-24.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.x', '24.x']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+          package-manager-cache: false
+      - name: Record runtime
+        run: node --version && npm --version
+      - run: npm ci --no-audit --no-fund
+      - name: Install pinned browser builds and system libraries
+        run: node node_modules/playwright/cli.js install --with-deps chromium firefox webkit
+      - run: npm run build
+      - name: Qualify actual tarball in Chromium Firefox and WebKit
+        run: npm run test:browser
+      - run: git diff --exit-code
