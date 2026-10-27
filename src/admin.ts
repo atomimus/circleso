@@ -16,3 +16,4 @@ export type {
   QueryValue,
   RequestOptions,
 } from "./core/types";
+export type { DirectUploadInput, DirectUploadOptions, DirectUploadResult } from "./core/uploads";

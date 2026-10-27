@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add Admin/Member `directUploads.upload` for bounded file preparation, base64 MD5,
+  Circle registration and isolated signed storage PUTs with cancellation and deadlines.
+  Preserve `create`; document supported inputs, storage headers and failure recovery.
+
 - Add cancelable pagination with exact/zero caps, cursor-cycle detection and 62 typed
   Admin/Member iterator adapters. Preserve chat ID windows and existing helpers; document
   page limits, non-paged collections and the POST search cursor schema conflict.

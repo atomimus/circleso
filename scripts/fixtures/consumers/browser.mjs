@@ -32,6 +32,11 @@ export async function checkBrowser(consumer) {
     // Only web Fetch globals are present; no Node globals or module loader.
     const context = vm.createContext({
       fetch,
+      Blob,
+      File,
+      FormData,
+      btoa,
+      AbortSignal,
       Request,
       Response,
       Headers,
@@ -56,6 +61,43 @@ export async function checkBrowser(consumer) {
     });
     // JSON is parsed inside the VM; compare data without cross-realm prototype identity.
     assert.equal(JSON.stringify(await member.bookmarks.list()), '{"records":[]}');
+    let circleCalls = 0;
+    let storageCalls = 0;
+    const uploads = createHeadless({
+      token: "synthetic",
+      fetcher: async (request) => {
+        circleCalls++;
+        const { blob } = await request.json();
+        assert.equal(blob.checksum, "kAFQmDzST7DWlj99KOF/cg==");
+        return Response.json({
+          signed_id: "synthetic-id",
+          attachable_sgid: "synthetic-sgid",
+          direct_upload: {
+            url: "https://storage.example/synthetic?signature=synthetic",
+            headers: { "Content-Type": "text/plain" },
+          },
+        });
+      },
+    });
+    const uploaded = await uploads.directUploads.upload(new File(["abc"], "synthetic.txt"), {
+      key: "",
+      storageFetcher: async (request) => {
+        storageCalls++;
+        assert.equal(request.headers.get("authorization"), null);
+        assert.equal(request.credentials, "omit");
+        assert.equal(request.redirect, "error");
+        assert.equal(request.referrerPolicy, "no-referrer");
+        assert.equal(await request.text(), "abc");
+        return new Response(null, { status: 204 });
+      },
+    });
+    assert.equal(
+      JSON.stringify(uploaded),
+      '{"signed_id":"synthetic-id","attachable_sgid":"synthetic-sgid"}',
+    );
+    assert.equal(circleCalls, 1);
+    assert.equal(storageCalls, 1);
+    console.log("Browser VM uploads: File checksum/registration/isolated storage pass");
     console.log(
       `Browser bundle: ${entry}; no Node imports/globals; unused Admin/Auth removed; Member call passes (${code.length} bytes)`,
     );

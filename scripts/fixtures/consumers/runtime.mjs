@@ -202,3 +202,49 @@ for (const modules of [esm, cjs]) {
 console.log(
   "Package pagination: ESM/CJS typed resource iterators, cursor tuples, zero/exact caps, shared config errors pass",
 );
+
+for (const modules of [esm, cjs]) {
+  for (const entry of [0, 1, 2]) {
+    for (const surface of entry === 0
+      ? ["createAdmin", "createHeadless"]
+      : [entry === 1 ? "createAdmin" : "createHeadless"]) {
+      const client = modules[entry][surface]({
+        token: "synthetic",
+        fetcher: async (request) => {
+          const body = await request.json();
+          assert.equal(body.blob.checksum, "kAFQmDzST7DWlj99KOF/cg==");
+          assert.equal(body.blob.byte_size, 3);
+          return Response.json({
+            signed_id: "synthetic-id",
+            attachable_sgid: "synthetic-sgid",
+            direct_upload: {
+              url: "https://storage.example/synthetic?signature=synthetic",
+              headers: { "Content-Type": "text/plain" },
+            },
+          });
+        },
+      });
+      let calls = 0;
+      const result = await client.directUploads.upload(Buffer.from("abc"), {
+        key: "",
+        filename: "synthetic.txt",
+        storageFetcher: async (request) => {
+          calls++;
+          assert.equal(request.headers.get("authorization"), null);
+          assert.equal(request.headers.get("cookie"), null);
+          assert.equal(request.headers.get("host"), null);
+          assert.equal(request.credentials, "omit");
+          assert.equal(request.redirect, "error");
+          assert.equal(request.referrerPolicy, "no-referrer");
+          assert.equal(await request.text(), "abc");
+          return new Response(null, { status: 204 });
+        },
+      });
+      assert.deepEqual(result, { signed_id: "synthetic-id", attachable_sgid: "synthetic-sgid" });
+      assert.equal(calls, 1);
+    }
+  }
+}
+console.log(
+  "Package uploads: root/Admin/Member ESM/CJS end-to-end, bundled MD5 and storage isolation pass",
+);

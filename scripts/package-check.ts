@@ -164,7 +164,10 @@ try {
     assert.ok(map.sources.length);
     assert.equal(map.sources.length, map.sourcesContent.length);
     for (const [index, name] of map.sources.entries()) {
-      assert.match(name, /^\.\.\/src\/.+\.ts$/);
+      assert.match(
+        name,
+        /^(?:\.\.\/src\/.+\.ts|\.\.\/node_modules\/@noble\/hashes\/(?:_u64|_md|utils|legacy)\.js)$/,
+      );
       assert.doesNotMatch(name, /(?:\.test\.ts|type-tests|v1-release|examples|\.cache)/);
       assert.equal(
         map.sourcesContent[index],
@@ -172,6 +175,22 @@ try {
       );
     }
     maps++;
+  }
+  assert.equal(
+    (await json<{ version: string }>(path.join(root, "node_modules/@noble/hashes/package.json")))
+      .version,
+    "2.4.0",
+  );
+  assert.ok(
+    (await readFile(path.join(installed, "LICENSE"), "utf8")).includes(
+      await readFile(path.join(root, "node_modules/@noble/hashes/LICENSE"), "utf8"),
+    ),
+  );
+  for (const file of names.filter((name) => /\.(?:js|cjs|d\.ts|d\.cts)$/.test(name))) {
+    assert.doesNotMatch(
+      await readFile(path.join(installed, file), "utf8"),
+      /(?:from\s*["']|require\(["'])@noble\/hashes/,
+    );
   }
   for (const file of ["runtime.mjs"])
     await copyFile(path.join(fixtures, file), path.join(consumer, file));
@@ -192,6 +211,7 @@ try {
     "docs/admin-workflows-and-filters.md",
     "docs/admin-remaining-resources.md",
     "docs/pagination.md",
+    "docs/file-uploads.md",
   ]) {
     const source = await readFile(path.join(root, file), "utf8");
     for (const [index, block] of [...source.matchAll(/```ts\r?\n([\s\S]*?)```/g)].entries()) {

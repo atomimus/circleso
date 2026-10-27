@@ -15,6 +15,7 @@ export const packageBuildOptions: Options = {
   clean: true,
   splitting: false,
   target: "es2022",
+  noExternal: ["@noble/hashes"],
   // One canonical class module keeps instanceof valid across entry points AND import/require.
   // It contains no Node APIs; browser bundlers can include this small CommonJS module.
   esbuildPlugins: [

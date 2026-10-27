@@ -6,6 +6,8 @@ The published package is **0.3.0**. This checkout contains an unreleased API ref
 qualification is in progress. See [continuous validation](https://github.com/atomimus/circleso/blob/main/docs/ci.md)
 for the CI runtime matrix and local development checks.
 
+See [complete direct file uploads](docs/file-uploads.md) for metadata, MD5 and isolated storage PUTs via `directUploads.upload`.
+
 ## Features
 
 - Strongly typed requests and responses from the official OpenAPI specs

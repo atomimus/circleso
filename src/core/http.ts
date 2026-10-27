@@ -142,6 +142,8 @@ function createFetch(config: SmartFetchConfig) {
         const attemptInit: RequestInit & { duplex?: "half" } = {
           headers: template.headers,
           signal: lifetime.signal,
+          referrer: template.referrer,
+          referrerPolicy: template.referrerPolicy,
           ...(body != null ? { body, duplex: "half" } : {}),
         };
         fetchRequest = new Request(template, attemptInit);

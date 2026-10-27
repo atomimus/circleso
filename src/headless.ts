@@ -15,5 +15,7 @@ export type {
   QueryValue,
   RequestOptions,
 } from "./core/types";
+export type { DirectUploadInput, DirectUploadOptions, DirectUploadResult } from "./core/uploads";
 export type { HeadlessApi, HeadlessApiConfig } from "./headlessApi";
 export { createHeadless } from "./headlessApi";
+export type { HeadlessDirectUploadOptions } from "./headlessApi/resources/directUploads";

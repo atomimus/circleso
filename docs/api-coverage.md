@@ -155,7 +155,7 @@ Input SHA-256: `bad66ebb7a69acb0a0a0107020bf064cfa92b6f6b8ebfa440521954693f2a834
 | POST | `/api/admin/v2/contacts/{contact_id}/contact_notes` | Yes | `contactNotes.create` ([source](../src/adminApi/resources/contactNotes.ts)) |
 | POST | `/api/admin/v2/course_lessons` | Yes | `courses.lessons.create` ([source](../src/adminApi/resources/courses.ts)) |
 | POST | `/api/admin/v2/course_sections` | Yes | `courses.sections.create` ([source](../src/adminApi/resources/courses.ts)) |
-| POST | `/api/admin/v2/direct_uploads` | Yes | `directUploads.create` ([source](../src/adminApi/resources/directUploads.ts)) |
+| POST | `/api/admin/v2/direct_uploads` | Yes | `directUploads.create` ([source](../src/adminApi/resources/directUploads.ts)), `directUploads.upload` ([source](../src/adminApi/resources/directUploads.ts)) |
 | POST | `/api/admin/v2/embeds` | Yes | `embeds.create` ([source](../src/adminApi/resources/embeds.ts)) |
 | POST | `/api/admin/v2/event_attendees` | Yes | `events.attendees.create` ([source](../src/adminApi/resources/events.ts)) |
 | POST | `/api/admin/v2/events` | Yes | `events.events.create` ([source](../src/adminApi/resources/events.ts)) |
@@ -290,7 +290,7 @@ Input SHA-256: `0b934fce6204ac8a2664acdf39c70c8e06e9ee67a930310e1655ff439c02a6fc
 | POST | `/api/headless/v1/comments/{comment_id}/replies` | Yes | `comments.replies.create` ([source](../src/headlessApi/resources/comments.ts)) |
 | POST | `/api/headless/v1/comments/{comment_id}/user_likes` | Yes | `comments.likes.create` ([source](../src/headlessApi/resources/comments.ts)) |
 | POST | `/api/headless/v1/cookies` | Yes | `cookies.create` ([source](../src/headlessApi/resources/cookies.ts)) |
-| POST | `/api/headless/v1/direct_uploads` | Yes | `directUploads.create` ([source](../src/headlessApi/resources/directUploads.ts)) |
+| POST | `/api/headless/v1/direct_uploads` | Yes | `directUploads.create` ([source](../src/headlessApi/resources/directUploads.ts)), `directUploads.upload` ([source](../src/headlessApi/resources/directUploads.ts)) |
 | POST | `/api/headless/v1/events/{event_id}/event_attendees` | Yes | `events.attendees.create` ([source](../src/headlessApi/resources/events.ts)) |
 | POST | `/api/headless/v1/flagged_contents` | Yes | `flaggedContents.create` ([source](../src/headlessApi/resources/flaggedContents.ts)) |
 | POST | `/api/headless/v1/invitation_links/{token}/join` | Yes | `invitationLinks.join` ([source](../src/headlessApi/resources/invitationLinks.ts)) |

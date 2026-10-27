@@ -25,6 +25,9 @@ import { createPostsResource } from "./resources/posts";
 import { createQuizzesResource } from "./resources/quizzes";
 import { createSearchResource } from "./resources/search";
 import { createSpaceMembersResource } from "./resources/spaceMembers";
+
+export type { HeadlessDirectUploadOptions } from "./resources/directUploads";
+
 import { createSpacesResource } from "./resources/spaces";
 
 export type HeadlessApi = {
