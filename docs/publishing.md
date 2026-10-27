@@ -87,7 +87,14 @@ of regenerating hidden outputs. Publication concurrency spans the whole package.
 After publication, read the exact-version metadata and dist-tag endpoints; cached full
 package metadata may lag a successful publication. Verify the exact version, integrity,
 provenance metadata, intended tag and preservation of every unrelated existing tag.
-This read-only verification never resubmits publication. Then compare source/provenance, install the registry
+The publisher waits at most 180 seconds for verification, with a 10-second bound on
+each pair of GETs through body parsing and a five-second polling interval. Network
+errors, unreadable JSON, HTTP 404/408/429/5xx, missing provenance and a stale selected
+tag can retry; Retry-After is a lower bound within the remaining total budget.
+Unexpected versions/digests, changed unrelated tags and other HTTP failures stop
+immediately. No retry can call npm publish, change tags or rebuild the artifact.
+The GitHub environment links to the exact npm package version after verification.
+Then compare source/provenance, install the registry
 tarball in clean consumers, and run `npm audit signatures` there. Check the intended
 [dist-tag](https://docs.npmjs.com/adding-dist-tags-to-packages/); an RC must preserve the
 previous `latest`. Registry attestation metadata alone is not signature verification.
@@ -98,6 +105,14 @@ If a run fails or times out after submission, inspect the run, registry version/
 attestation and tags before taking another action. The workflow refuses existing versions;
 it never retries publication, changes tags separately, unpublishes or repairs state silently.
 Post-publish metadata may need read-only rechecking after registry propagation.
+
+A verification timeout means publication may already have succeeded. Do not rerun
+the publishing job to repair its status. First independently verify registry bytes,
+signatures/provenance, exact source and intended tags against retained evidence.
+An authorized deployment-status correction may then append a success status with
+the exact package URL and an explanation, retaining the original failed statuses
+and workflow conclusion. Mark superseded deployments inactive; do not delete their
+history or claim the old workflow passed. This changes GitHub metadata, not npm.
 
 For a bad candidate, preserve evidence, fix the owning source and qualify the next unused
 RC version. For a stable defect, prepare a tested forward patch. An owner may separately

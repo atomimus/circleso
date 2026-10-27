@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Wait up to three minutes for npm registry propagation after a single publication.
+  Retry only verification GETs with bounded request/body deadlines and Retry-After;
+  fail closed on contradictory artifacts, unrelated tags or authentication failures.
+- Link GitHub npm deployments to the exact published package version. Preserve failed
+  run history when verified publication requires a later deployment-status correction.
+
 ## 1.0.1 — 2026-10-27
 
 - Package the final v1 documentation and support decisions, preserving the 1.0.0 SDK

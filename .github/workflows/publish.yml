@@ -97,7 +97,9 @@ jobs:
   publish:
     needs: qualify
     if: github.ref == 'refs/heads/main' && github.repository == 'atomimus/circleso'
-    environment: npm-release
+    environment:
+      name: npm-release
+      url: https://www.npmjs.com/package/circleso/v/${{ inputs.version }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

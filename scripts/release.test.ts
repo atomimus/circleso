@@ -66,7 +66,7 @@ type Job = {
   if: string;
   "runs-on": string;
   "timeout-minutes": number;
-  environment?: string;
+  environment?: string | { name: string; url: string };
   needs?: string;
   permissions: Record<string, string>;
   steps: Step[];
@@ -293,7 +293,11 @@ it("confines OIDC to manually dispatched publication after unprivileged qualific
     actions: "read",
     "id-token": "write",
   });
-  expect(workflow.jobs.publish.environment).toBe("npm-release");
+  expect(workflow.jobs.publish.environment).toEqual({
+    name: "npm-release",
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: literal workflow expression
+    url: "https://www.npmjs.com/package/circleso/v/${{ inputs.version }}",
+  });
   expect(workflow.jobs.publish.needs).toBe("qualify");
   expect(source).not.toMatch(
     /secrets\.|NODE_AUTH_TOKEN|NPM_TOKEN|spec:sync|gen:types|dist-tag add|npm publish|git tag/,

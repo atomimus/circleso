@@ -127,6 +127,163 @@ export function checkPublished(
       assert.equal(tags[tag], previous, `Unrelated dist-tag changed: ${tag}`);
 }
 
+type PublishedVersion = Parameters<typeof checkPublished>[2];
+type PublishedRegistry = { version: PublishedVersion; tags: Registry["dist-tags"] };
+export const propagationLimits = Object.freeze({
+  timeoutMs: 180_000,
+  requestTimeoutMs: 10_000,
+  intervalMs: 5_000,
+});
+
+class RegistryVerificationError extends Error {
+  readonly retryable: boolean;
+  readonly retryAfterMs: number;
+
+  constructor(message: string, retryable: boolean, retryAfterMs = 0, options?: ErrorOptions) {
+    super(message, options);
+    this.retryable = retryable;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+async function readRegistry<T>(
+  url: string,
+  signal: AbortSignal,
+  fetcher: typeof fetch,
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetcher(url, { method: "GET", redirect: "error", signal });
+  } catch (cause) {
+    throw new RegistryVerificationError("Registry GET failed", true, 0, { cause });
+  }
+  if (response.status !== 200) {
+    const retryable = [404, 408, 429].includes(response.status) || response.status >= 500;
+    const header = response.headers.get("retry-after");
+    const wait =
+      header === null
+        ? 0
+        : /^\d+(?:\.\d+)?$/.test(header)
+          ? Number(header) * 1_000
+          : Date.parse(header) - Date.now();
+    await response.body?.cancel().catch(() => {});
+    throw new RegistryVerificationError(
+      `Registry GET returned HTTP ${response.status}`,
+      retryable,
+      Number.isFinite(wait) ? Math.max(0, wait) : 0,
+    );
+  }
+  try {
+    return (await response.json()) as T;
+  } catch (cause) {
+    throw new RegistryVerificationError("Registry metadata could not be read", true, 0, { cause });
+  }
+}
+
+async function registryAttempt(
+  input: ReleaseInput,
+  fetcher: typeof fetch,
+  timeoutMs: number,
+): Promise<PublishedRegistry> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const error = new RegistryVerificationError("Registry GET/body deadline exceeded", true);
+      controller.abort(error);
+      reject(error);
+    }, timeoutMs);
+  });
+  try {
+    const reads = Promise.all([
+      readRegistry<PublishedVersion>(
+        `${registryUrl}circleso/${input.version}`,
+        controller.signal,
+        fetcher,
+      ),
+      readRegistry<Registry["dist-tags"]>(
+        `${registryUrl}-/package/circleso/dist-tags`,
+        controller.signal,
+        fetcher,
+      ),
+    ]).then(([version, tags]) => ({ version, tags }));
+    return await Promise.race([reads, timeout]);
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+  }
+}
+
+/** Poll only public registry GETs; never repeat submission or mutate dist-tags. */
+export async function waitForPublished(
+  input: ReleaseInput,
+  beforeTags: Registry["dist-tags"],
+  fetcher: typeof fetch = fetch,
+): Promise<PublishedRegistry> {
+  const deadline = performance.now() + propagationLimits.timeoutMs;
+  let cause: unknown;
+  while (performance.now() < deadline) {
+    let retryAfterMs = 0;
+    try {
+      const snapshot = await registryAttempt(
+        input,
+        fetcher,
+        Math.min(propagationLimits.requestTimeoutMs, deadline - performance.now()),
+      );
+      const { version, tags } = snapshot;
+      // Contradictory immutable metadata or changed unrelated tags cannot be
+      // explained by ordinary propagation. Fail closed instead of hiding them.
+      if (version?.version !== undefined)
+        assert.equal(version.version, input.version, "Registry version mismatch");
+      if (version?.dist?.integrity !== undefined)
+        assert.equal(version.dist.integrity, input.integrity, "Registry artifact mismatch");
+      if (tags && typeof tags === "object")
+        for (const [tag, previous] of Object.entries(beforeTags))
+          if (tag !== input.distTag)
+            assert.equal(tags[tag], previous, `Unrelated dist-tag changed: ${tag}`);
+      if (
+        version?.version === input.version &&
+        version.dist?.integrity === input.integrity &&
+        version.dist.attestations &&
+        tags?.[input.distTag] === input.version
+      ) {
+        checkPublished(input, beforeTags, version, tags);
+        return snapshot;
+      }
+      cause = new RegistryVerificationError(
+        "Registry version, provenance or selected tag is still propagating",
+        true,
+      );
+    } catch (error) {
+      if (!(error instanceof RegistryVerificationError) || !error.retryable) throw error;
+      cause = error;
+      retryAfterMs = error.retryAfterMs;
+    }
+    const remaining = deadline - performance.now();
+    if (remaining <= 0) break;
+    const wait = Math.min(remaining, Math.max(propagationLimits.intervalMs, retryAfterMs));
+    console.log(`Registry verification pending; retrying GETs in ${Math.ceil(wait / 1_000)}s`);
+    await new Promise<void>((resolve) => setTimeout(resolve, wait));
+  }
+  throw new RegistryVerificationError(
+    "Registry verification timed out after 180s. Publication may have succeeded; inspect registry evidence and do not republish.",
+    false,
+    0,
+    { cause },
+  );
+}
+
+/** The submission boundary runs once, even if verification retries or times out. */
+export async function publishAndWait(
+  input: ReleaseInput,
+  beforeTags: Registry["dist-tags"],
+  submit: () => void,
+  fetcher: typeof fetch = fetch,
+): Promise<PublishedRegistry> {
+  submit();
+  return waitForPublished(input, beforeTags, fetcher);
+}
+
 type TagObject = { ref?: string; object: { type: string; sha: string } };
 export async function checkReleaseTag(
   input: ReleaseInput,
@@ -285,27 +442,20 @@ async function publish(): Promise<void> {
   );
   await save(`${directory}/registry-before.json`, { tags: registry["dist-tags"], ...input });
   // Publish the downloaded bytes once. No directory packing, rebuilding, spec download or retry.
-  process.stdout.write(
-    npm(
-      "publish",
-      `./${tarball}`,
-      "--ignore-scripts",
-      "--access=public",
-      "--registry=https://registry.npmjs.org/",
-      `--tag=${input.distTag}`,
-      "--provenance",
-      "--fetch-retries=0",
-    ),
-  );
-  // Full package metadata can remain cached after a successful publish. Read the
-  // exact version and tag endpoints without resubmitting the publication command.
-  const [version, tags] = await Promise.all([
-    get<{ version: string; dist: { integrity: string; attestations?: unknown } }>(
-      `${registryUrl}circleso/${input.version}`,
-    ),
-    get<Registry["dist-tags"]>(`${registryUrl}-/package/circleso/dist-tags`),
-  ]);
-  checkPublished(input, registry["dist-tags"], version, tags);
+  const { version, tags } = await publishAndWait(input, registry["dist-tags"], () => {
+    process.stdout.write(
+      npm(
+        "publish",
+        `./${tarball}`,
+        "--ignore-scripts",
+        "--access=public",
+        "--registry=https://registry.npmjs.org/",
+        `--tag=${input.distTag}`,
+        "--provenance",
+        "--fetch-retries=0",
+      ),
+    );
+  });
   await save(`${directory}/published.json`, {
     ...input,
     tags,
@@ -333,7 +483,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     console.error(
       "Release gate failed. Inspect version, source, CI, tag, digest and publisher access. Do not blindly retry publication.",
     );
-    if (cause instanceof assert.AssertionError) console.error(cause.message);
+    if (cause instanceof assert.AssertionError || cause instanceof RegistryVerificationError)
+      console.error(cause.message);
     process.exitCode = 1;
   }
 }
