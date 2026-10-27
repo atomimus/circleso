@@ -37,6 +37,11 @@ does not add new top-level resource families.
 
 ### Fixes
 
+- Honor caller cancellation through Admin, Headless and Auth resources, including pre-aborted
+  calls and retry waits. Preserve the original abort reason as `CircleNetworkError.cause`.
+- Keep each `timeoutMs` deadline active through response body reads. Release timers, signal
+  listeners and discarded bodies; expose deadline causes on `CircleTimeoutError`. Raw stream
+  consumers own consumption/cancellation, and retry waits remain outside the per-attempt budget.
 - Infer optional query parameters correctly so pagination and filters retain their generated types.
 - Send chat reaction and Admin event attendee deletion fields in JSON bodies, while keeping
   query-based deletion endpoints unchanged.

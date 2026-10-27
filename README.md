@@ -165,7 +165,7 @@ Default base URL for all clients is `https://app.circle.so`. `communityHost` is 
 
 Common options across all clients:
 
-- `timeoutMs`: request timeout in milliseconds
+- `timeoutMs`: per-attempt deadline in milliseconds, covering fetch and response body reads
 - `retries`: `{ retries, baseDelayMs, maxDelayMs, jitterRatio, retryNonIdempotent }`
 - `userAgent`: custom user-agent value
 - `logger`: hooks for request/response logging with redaction
@@ -180,6 +180,30 @@ Per-surface options:
 Note: the unified `CircleSo` class constructs all three surfaces, so it requires
 an Admin token, Headless token, and Headless refresh token. If you only need
 one surface, use `createAdmin`, `createHeadless`, or `createAuth` directly.
+
+`timeoutMs` starts immediately before each fetch attempt and remains active until the body reaches
+EOF or is canceled. It does not reset when headers or chunks arrive. Omit it or set it to `0` to
+disable the deadline. Retry waits (including `Retry-After`) are outside this per-attempt budget;
+each retry gets a fresh deadline. There is no built-in total request budget. Pass a caller-managed
+`AbortSignal` via the flat per-call `signal` option to cancel across attempts and retry waits.
+At the `createSmartFetch` boundary, both an input `Request.signal` and an `init.signal` are honored;
+either can cancel the call. An already-aborted signal prevents fetching.
+
+SDK deadlines throw `CircleTimeoutError` with `timeoutMs` and a `TimeoutError` cause. Caller
+cancellation throws `CircleNetworkError` whose `cause` is the original signal reason (even if
+that reason is itself a `TimeoutError`). Neither cancellation nor an SDK deadline is retried.
+Timers and SDK signal listeners are released on completion, failure, cancellation and body disposal.
+For auto-refresh, a canceled caller stops waiting for the shared refresh; the refresh keeps its own
+per-attempt deadline so other callers can still use its result.
+
+Low-level responses and `raw` calls with `parseAs: "stream"` transfer body ownership to the caller.
+Consume the body or cancel it when finished; use `reader.cancel()` before `reader.releaseLock()`
+when stopping a manual reader early. Stream iteration cancels on early exit by default. Deadlines
+and caller cancellation remain active until EOF/cancellation, including while the caller pauses.
+Clones share the upstream lifetime: cancel every unused clone, since a single tee branch cannot
+cancel the source alone. Once the source reaches EOF, buffered clone data belongs to the caller.
+The core preserves backpressure and adds no whole-body buffer. A custom fetcher/source must honor
+abort/cancel to actually stop its own I/O; the SDK stops waiting without waiting for its cleanup.
 
 ## Browser vs server caveats
 

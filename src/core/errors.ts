@@ -52,10 +52,12 @@ export class CircleNetworkError extends CircleSdkError {
 
 export class CircleTimeoutError extends CircleSdkError {
   readonly timeoutMs?: number;
+  readonly cause: unknown;
 
-  constructor(message: string, timeoutMs?: number) {
+  constructor(message: string, timeoutMs?: number, cause?: unknown) {
     super(message);
     this.name = "CircleTimeoutError";
+    this.cause = cause;
     if (timeoutMs !== undefined) {
       this.timeoutMs = timeoutMs;
     }

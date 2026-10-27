@@ -1,17 +1,18 @@
+import { CircleConfigError, CircleHttpError, CircleNetworkError, CircleSdkError } from "./errors";
 import {
-  CircleConfigError,
-  CircleHttpError,
-  CircleNetworkError,
-  CircleSdkError,
-  CircleTimeoutError,
-} from "./errors";
-import {
+  HEADER_CONTENT_LENGTH,
   HEADER_CONTENT_TYPE,
   HEADER_CORRELATION_ID,
   HEADER_REQUEST_ID,
   HEADER_RETRY_AFTER,
   HEADER_USER_AGENT,
 } from "./headers";
+import {
+  bindResponseLifetime,
+  createHttpLifetime,
+  discardResponse,
+  waitForRetry,
+} from "./httpLifetime";
 
 const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]);
 
@@ -27,6 +28,7 @@ export type SmartFetchConfig = {
   baseUrl: string;
   defaultHeaders?: Record<string, string>;
   userAgent?: string;
+  /** Per-attempt deadline through body consumption; excludes retry waiting. Zero disables it. */
   timeoutMs?: number;
   retries?: RetryConfig;
   throwOnHttpError?: boolean;
@@ -34,6 +36,7 @@ export type SmartFetchConfig = {
 };
 
 export type SmartFetchInit = RequestInit & {
+  /** Override the configured per-attempt deadline, including response body consumption. */
   timeoutMs?: number;
   retries?: RetryConfig;
 };
@@ -61,44 +64,63 @@ export function createSmartFetch(config: SmartFetchConfig) {
 
     let attempt = 0;
     while (true) {
-      const { signal, cleanup, timedOut } = createAbortSignal(
-        requestInit.signal,
-        timeoutMs ?? config.timeoutMs,
-      );
+      const signals = [request?.signal, requestInit.signal];
+      const lifetime = createHttpLifetime(signals, timeoutMs ?? config.timeoutMs);
+      let bodyOwnsLifetime = false;
+      let pendingResponse: Response | undefined;
 
       try {
+        lifetime.throwIfAborted();
         const fetchRequest = request
           ? new Request(request, {
               ...requestInit,
               method,
               headers,
-              signal,
+              signal: lifetime.signal,
               ...(initBody !== undefined ? { body: initBody } : {}),
             })
           : new Request(url, {
               ...requestInit,
               method,
               headers,
-              signal,
+              signal: lifetime.signal,
               ...(body !== undefined ? { body } : {}),
             });
 
-        const response = await fetcher(fetchRequest);
+        const received = await lifetime.wait(
+          Promise.resolve(fetcher(fetchRequest)).then((response) => {
+            pendingResponse = response;
+            if (lifetime.signal.aborted) discardResponse(response, lifetime.signal.reason);
+            return response;
+          }),
+        );
+        lifetime.throwIfAborted();
 
-        if (response.ok) {
-          return response;
-        }
-
-        if (shouldRetry && attempt < retryConfig.retries && isRetryableStatus(response.status)) {
-          await cancelBody(response);
-          const retryAfterMs = parseRetryAfter(response.headers.get(HEADER_RETRY_AFTER));
+        if (
+          !received.ok &&
+          shouldRetry &&
+          attempt < retryConfig.retries &&
+          isRetryableStatus(received.status)
+        ) {
+          discardResponse(received);
+          const retryAfterMs = parseRetryAfter(received.headers.get(HEADER_RETRY_AFTER));
           const delayMs = retryAfterMs ?? computeBackoff(attempt, retryConfig);
           attempt += 1;
-          await delay(delayMs);
+          lifetime.cleanup();
+          await waitForRetry(delayMs, signals);
           continue;
         }
 
-        if (throwOnHttpError) {
+        // openapi-fetch skips these bodies instead of consuming them.
+        const skipsBody = method === "HEAD" || received.headers.get(HEADER_CONTENT_LENGTH) === "0";
+        if (skipsBody) {
+          discardResponse(received);
+          lifetime.cleanup();
+        }
+        const response = skipsBody ? received : bindResponseLifetime(received, lifetime);
+        bodyOwnsLifetime = true;
+
+        if (!response.ok && throwOnHttpError) {
           const { bodyText, parsedJson } = await readErrorBody(response);
           const requestId = getRequestId(response.headers);
           const details = {
@@ -114,10 +136,7 @@ export function createSmartFetch(config: SmartFetchConfig) {
 
         return response;
       } catch (error) {
-        const timeoutError = timedOut();
-        if (timeoutError) {
-          throw timeoutError;
-        }
+        lifetime.throwIfAborted();
 
         if (isAbortError(error)) {
           throw new CircleNetworkError("Request was aborted.", error);
@@ -126,7 +145,8 @@ export function createSmartFetch(config: SmartFetchConfig) {
         if (shouldRetry && attempt < retryConfig.retries && isRetryableNetworkError(error)) {
           const delayMs = computeBackoff(attempt, retryConfig);
           attempt += 1;
-          await delay(delayMs);
+          lifetime.cleanup();
+          await waitForRetry(delayMs, signals);
           continue;
         }
 
@@ -134,7 +154,12 @@ export function createSmartFetch(config: SmartFetchConfig) {
           ? error
           : new CircleNetworkError("Network request failed.", error);
       } finally {
-        cleanup();
+        if (!bodyOwnsLifetime) {
+          if (pendingResponse && lifetime.signal.aborted) {
+            discardResponse(pendingResponse, lifetime.signal.reason);
+          }
+          lifetime.cleanup();
+        }
       }
     }
   };
@@ -321,44 +346,6 @@ function computeBackoff(attempt: number, config: RetryConfig) {
   return Math.round(min + Math.random() * (max - min));
 }
 
-function createAbortSignal(
-  userSignal: AbortSignal | null | undefined,
-  timeoutMs: number | undefined,
-) {
-  const controller = new AbortController();
-  let timedOut = false;
-  let timeoutError: CircleTimeoutError | undefined;
-  let timeoutId: NodeJS.Timeout | undefined;
-
-  if (timeoutMs && timeoutMs > 0) {
-    timeoutError = new CircleTimeoutError(`Request timed out after ${timeoutMs}ms`, timeoutMs);
-    timeoutId = setTimeout(() => {
-      timedOut = true;
-      controller.abort(timeoutError);
-    }, timeoutMs);
-  }
-
-  if (userSignal) {
-    if (userSignal.aborted) {
-      controller.abort(userSignal.reason);
-    } else {
-      userSignal.addEventListener("abort", () => controller.abort(userSignal.reason), {
-        once: true,
-      });
-    }
-  }
-
-  return {
-    signal: timeoutMs ? controller.signal : (userSignal ?? controller.signal),
-    cleanup: () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    },
-    timedOut: () => (timedOut ? timeoutError : undefined),
-  };
-}
-
 function isAbortError(error: unknown) {
   if (!error || typeof error !== "object") {
     return false;
@@ -378,7 +365,8 @@ async function readErrorBody(response: Response) {
   let bodyText: string | undefined;
   try {
     bodyText = await response.text();
-  } catch {
+  } catch (error) {
+    if (error instanceof CircleSdkError) throw error;
     return { bodyText: undefined, parsedJson: undefined };
   }
 
@@ -409,23 +397,6 @@ function isNodeStream(value: unknown): value is { pipe: (...args: unknown[]) => 
     return false;
   }
   return typeof (value as { pipe?: unknown }).pipe === "function";
-}
-
-async function delay(ms: number) {
-  if (ms <= 0) {
-    return;
-  }
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function cancelBody(response: Response) {
-  if (response.body) {
-    try {
-      await response.body.cancel();
-    } catch {
-      // ignore
-    }
-  }
 }
 
 function getRequestId(headers: Headers) {

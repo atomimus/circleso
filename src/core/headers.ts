@@ -1,6 +1,7 @@
 export const HEADER_ACCEPT = "accept";
 export const HEADER_AUTHORIZATION = "authorization";
 export const HEADER_CONTENT_TYPE = "content-type";
+export const HEADER_CONTENT_LENGTH = "content-length";
 export const HEADER_COOKIE = "cookie";
 export const HEADER_CORRELATION_ID = "x-correlation-id";
 export const HEADER_HOST = "host";

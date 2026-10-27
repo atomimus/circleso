@@ -1,4 +1,9 @@
-import { CircleConfigError, CircleHttpError } from "./errors";
+import {
+  CircleConfigError,
+  CircleHttpError,
+  CircleNetworkError,
+  CircleTimeoutError,
+} from "./errors";
 import {
   HEADER_ACCEPT,
   HEADER_AUTHORIZATION,
@@ -7,6 +12,7 @@ import {
   HEADER_REQUEST_ID,
 } from "./headers";
 import { createSmartFetch, type RetryConfig } from "./http";
+import { createHttpLifetime, discardResponse } from "./httpLifetime";
 
 const REFRESH_PATH = "/api/v1/headless/access_token/refresh";
 
@@ -101,7 +107,16 @@ export function createTokenManager(config: TokenManagerConfig): TokenManager {
         throw new CircleConfigError("refreshToken is required for auto-refresh.");
       }
 
-      await refreshAccessToken(refreshFetch, refreshTokenValue, authBaseUrl);
+      // This response will not be returned or parsed by the caller.
+      discardResponse(response);
+      // Cancellation stops this caller waiting; a shared refresh keeps its own attempt budget.
+      const refreshWait = createHttpLifetime([request.signal]);
+      try {
+        refreshWait.throwIfAborted();
+        await refreshWait.wait(refreshAccessToken(refreshFetch, refreshTokenValue, authBaseUrl));
+      } finally {
+        refreshWait.cleanup();
+      }
 
       const newAccessToken = await getAccessToken();
       if (!newAccessToken) {
@@ -222,7 +237,8 @@ async function readBody(response: Response) {
   let bodyText: string | undefined;
   try {
     bodyText = await response.clone().text();
-  } catch {
+  } catch (error) {
+    if (error instanceof CircleNetworkError || error instanceof CircleTimeoutError) throw error;
     return { bodyText: undefined, parsedJson: undefined };
   }
 
