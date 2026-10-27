@@ -75,6 +75,15 @@ jobs:
       - name: Record runtime
         run: node --version && npm --version
       - run: npm ci --no-audit --no-fund
+      - name: Configure bounded Ubuntu package downloads
+        shell: bash
+        run: |
+          test -f /etc/apt/apt-mirrors.txt
+          grep -Fq 'mirror+file:/etc/apt/apt-mirrors.txt' /etc/apt/sources.list.d/ubuntu.sources
+          printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttps://security.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          printf '%s\n' 'Acquire::Retries "2";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/80-circleso-network >/dev/null
+          cat /etc/apt/apt-mirrors.txt
+          apt-config dump | grep -E '^Acquire::(Retries|http::Timeout|https::Timeout) '
       - name: Install pinned browser builds and system libraries
         run: node node_modules/playwright/cli.js install --with-deps chromium firefox webkit
       - run: npm run build
